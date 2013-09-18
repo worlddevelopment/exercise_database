@@ -1,0 +1,268 @@
+@CHARSET "utf-8";
+/*+---------------------------------------------------------------------+
+  |                                                                     |
+@AUTHOR     Artiom K., Jan R.B.                                         |
+@COPYRIGHT  W. Weigel, Didaktik der Mathematik, Universitaet Wuerzburg  |
+@STRUCTURE  + At the beginning it's kept general: TAGS/ELEMENTS         |
+  |			+ In the middle it's more special:    #IDs                  |
+  |			+ At the end it's kept very special:  .CLASSES              |
+@TODO       IT MAY ALSO BE CATEGORIZED - I.E. DIVIDE BY CATEGORY        |
+  |                                                                     |
+  +---------------------------------------------------------------------+
+ */
+
+/*======= GENERAL ========================================================*/
+/* affects tags */
+button{
+    font-size : 16px;
+}
+li.ac_even{
+    font-size:16px;
+}
+li.ac_odd{
+font-size:16px;
+}
+li.ac_over{
+font-size:16px;
+}
+
+input[type="text"] {
+    min-width: 200px;
+    font-size : 16px;
+}
+
+input[type="file"] {
+    min-width: 400px;
+    /*font-size : 16px;*/
+}
+
+td {
+  padding-top:5px;
+  padding-bottom:5px;
+  padding-right:5px;   
+}
+
+
+td:first-child {
+  padding-left:5px;
+  padding-right:5;
+}
+
+#edit_buttons a:visited,a,a:LINK{
+    color: white;
+}
+body {
+    font-size:16px;
+    background-color:#FFFFFF;
+    font-family:Arial,Helvetica, sans-serif;
+}   
+div.gestaltung {
+    padding:0.5em;
+    margin-top:8px;
+    max-width: 1480px;
+    border:1px solid gray;
+}
+    
+a {
+    text-decoration: none;
+}
+a:link {
+    color:#0A3FCD;
+}
+a:visited {
+    color:#0A3FCD;
+}
+
+
+form.menue {
+    margin-left:2px;
+    font-family:Arial, Helvetica, sans-serif;
+    color:#000000;
+}
+button.menue {
+    font-family:Arial, Helvetica, sans-serif;
+    color:white;
+    background-color:#2E5FA9;
+    border:none;
+    margin-left:2px;
+    font-size: 16px;
+    //-moz-border-radius:30px;
+    //-khtml-border-radius:30px;
+    box-shadow:4px 4px 10px #666;
+}
+#ansicht label {
+	display: block;
+}
+#ansicht select {
+	width: 150;
+}
+
+
+
+
+
+
+
+/* affecting id bearing elements */
+#wrapper{
+    padding-left:30px;
+    min-width:1024px; // Wrapper: damit wird die Seite nich zerrisen.
+}
+
+#kopf{
+    /*width:95%;
+    background-color:#C1C9CA;*/
+    
+    background-image: url(../pictures/logo.png);
+    width: 95%;
+    height: 55px;
+    display: block;
+    z-index: 4;
+    background-position: 0px 0px;
+    background-repeat: no-repeat;
+    
+}   
+#navi{
+    width:95%;
+    /*min-height:250px;*/
+    height: 70px;
+    text-align:left;
+}
+
+#inhalt{
+    font-family:Arial, Helvetica, sans-serif;
+    /*background-color:#39C; */
+    width: 95%; 
+    min-height:300px;
+    
+}
+#fuss{
+    margin-top:10px;
+    width:95%;
+    clear:both;
+    
+}
+
+#screenshot {
+    position:absolute;
+    border:1px solid black;
+    background:white;
+    padding:5px;
+    display:none;
+    color:green;
+}
+
+#stern {
+    color: red;
+}
+#draft_img {
+    border: solid 3px gray;
+    padding: 8px;
+    margin: 10px;
+    margin-left: 100px;
+    }
+#info {
+    margin-top:50px;
+    background-color: #fafafa;
+    }
+#ansicht{
+    font-size : 16px;
+}
+
+
+
+
+
+
+
+/* classes */
+
+.login {
+	font-size : 16px;
+}
+
+
+
+
+/*======= GLOBAL MESSAGES ================================================*/
+div.globalMessage {
+	box-shadow: 0 0 2px;
+}
+body,
+.reset {
+	counter-reset: no;
+}
+div.globalMessage div {
+	counter-increment: no;
+}
+div.globalMessage div:before {
+    font-size: 110%;
+    position: absolute;
+    width:10px;
+    height: 20px;
+    left: 4px;
+    top: 50%;
+    margin-top: -10px;
+    margin-left: -5px;
+    text-align: center;
+    content: "" counter(no, upper-roman);
+     
+}
+
+.messageWrapper {
+	box-shadow: 0 0 2px;
+	padding: 0;
+    margin-top:8px;
+	width: 96.5%; /*95% + .5em*/
+    max-width: 1480px;
+}
+.info {
+    display: block;
+    margin: 2px;
+    color: midnightblue;
+    //text-shadow: 1px 1px 2px royalblue;
+    background-color: lavender;
+    box-shadow: 0 0 3px;
+}
+.info .info,
+.warning .info,
+.success .info,
+.nosuccess .info,
+.danger .info,
+.failure .info {
+	font-size: .7em;
+}
+
+
+
+.warning {
+	margin: 2px;
+    display: block;
+    color: darkorange;
+    //text-shadow: 1px 1px 2px goldenrod;
+    background-color: white;
+    box-shadow: 0 0 3px;
+}
+.success {
+	margin: 2px;
+	display: block;
+	color: darkgreen;
+	text-shadow: 1px 1px 2px yellowgreen;
+	background-color: yellowgreen;
+	box-shadow: 0 0 3px;
+}
+.nosuccess {
+	margin: 2px;
+    display: block;
+    color: chestnut;
+    text-shadow: 1px 1px 2px rose;
+    background-color: rose;
+    box-shadow: 0 0 3px;
+}
+
+
+/*-------START------------------------------------------------------------------*/
+.start_list {
+	clear: both;
+}
+}

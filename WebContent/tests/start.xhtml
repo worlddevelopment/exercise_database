@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+
+	<h:head>
+
+	</h:head>
+	
+	<h:body>
+
+	<style>
+/* 		.bullshit { */
+			
+/* 		} */
+/* 		.fileinput-button { */
+/* 			font-size: 8px; */
+/* 			height: 25px; */
+/* 			background-color: red; */
+/*     border: medium none; */
+/*     color: red; */
+/*     margin-left: 2px; */
+/* 		} */
+		
+	</style>
+
+	<h:messages />
+ 
+<p:fieldset legend="Tooltip">  
+		<h:panelGrid columns="3" cellpadding="5">
+
+    <h:outputText value="Content:  " />
+    <h:outputLink id="lnk" value="#">
+        <h:outputText value="PrimeFaces" />
+    </h:outputLink>
+    <p:tooltip for="lnk">
+        <p:graphicImage value="/pictures/1.png"/>
+    </p:tooltip>
+
+</h:panelGrid>
+                    
+</p:fieldset>
+ 
+ 
+<!-- <p:fieldset legend="Upload form advanced">   -->
+	<h:form enctype="multipart/form-data" prependId="false">
+
+		<h:selectOneRadio id="fg">
+			<f:selectItem id="item1" itemLabel="News" itemValue="1" />
+		</h:selectOneRadio>
+
+		<!-- 	<h:outputLabel for="oi" value="HALOOOOOOO DU" /> -->
+		<!-- 	<h:outputLabel for="oi" value="Name"/> -->
+		<h:inputText id="oi" title="MKLO" label="sdsdsdsds" />
+
+		<p:fileUpload
+			fileUploadListener="#{fileUploadController.handleFileUpload}"
+			label="choose" mode="advanced" update="messages" multiple="true"
+			uploadLabel="not fuck" cancelLabel="fuck" />
+
+		<p:growl id="messages" showDetail="true" showSummary="true" />
+
+	</h:form>
+	<!-- </p:fieldset> -->
+		
+	</h:body>
+</html>

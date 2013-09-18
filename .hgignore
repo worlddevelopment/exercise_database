@@ -1,0 +1,7 @@
+syntax: glob
+
+*.blend1
+*.blend2
+build*
+WebContent/WEB-INF/lib/*
+WebContent/WEB-INF/src/*
