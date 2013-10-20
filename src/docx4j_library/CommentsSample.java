@@ -28,6 +28,7 @@ import org.docx4j.convert.out.flatOpcXml.FlatOpcXmlCreator;
 import org.docx4j.jaxb.Context;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.CommentsPart;
+import org.docx4j.samples.AbstractSample;
 import org.docx4j.wml.Comments;
 import org.docx4j.wml.Comments.Comment;
 import org.docx4j.wml.P;

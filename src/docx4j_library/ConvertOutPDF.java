@@ -28,7 +28,10 @@ import org.docx4j.fonts.IdentityPlusMapper;
 import org.docx4j.fonts.Mapper;
 import org.docx4j.fonts.PhysicalFont;
 import org.docx4j.fonts.PhysicalFonts;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.docx4j.openpackaging.exceptions.InvalidFormatException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.samples.AbstractSample;
 
 /**
  * Demo of PDF output.
@@ -82,6 +85,31 @@ public class ConvertOutPDF extends AbstractSample {
 		} catch (IllegalArgumentException e) {
 		}
 		
+		process();
+		
+    }
+    
+    
+    /**
+     * This method may be called by the main function OR by another part of the programme.
+     * @throws Exception 
+     */
+    public static void process() throws Exception {
+    	process(inputfilepath);
+    }
+    /**
+     * Here the inputfilepath is obligatory. This also enforces that we don't have to check
+     * for the inputfilepath being null.
+     * Storing to a freely chosen OUT_FontConverted.xhtml+xml makes is less optimal for
+     * production usage if we want to keep individual pdfs for each file. Otherwise a
+     * standard export would only work if there are no semaphore issues, i.e. not many
+     * processes writing to this one identical file.
+     * 
+     * @param inputfilepath
+     * @throws Exception
+     */
+    public static void process(String inputfilepath) throws Exception {
+    	AbstractSample.inputfilepath = inputfilepath;
 		// Font regex (optional)
 		// Set regex if you want to restrict to some defined subset of fonts
 		// Here we have to do this before calling createContent,
@@ -99,9 +127,10 @@ public class ConvertOutPDF extends AbstractSample {
 		WordprocessingMLPackage wordMLPackage;
 		if (inputfilepath==null) {
 			// Create a docx
-			System.out.println("No imput path passed, creating dummy document");
+			System.out.println("No input path passed, creating dummy document");
 			 wordMLPackage = WordprocessingMLPackage.createPackage();
-			 SampleDocument.createContent(wordMLPackage.getMainDocumentPart());	
+			 //TODO fix this -- ONLY RELEVANT FOR standalone use, that is using main() above.
+			 //SampleDocument.createContent(wordMLPackage.getMainDocumentPart());	
 		} else {
 			// Load .docx or Flat OPC .xml
 			System.out.println("Loading file from " + inputfilepath);
@@ -133,12 +162,7 @@ public class ConvertOutPDF extends AbstractSample {
 		
 		
 		// exporter writes to an OutputStream.		
-		String outputfilepath;
-		if (inputfilepath==null) {
-			outputfilepath = System.getProperty("user.dir") + "/OUT_FontContent.pdf";			
-		} else {
-			outputfilepath = inputfilepath + ".pdf";
-		}
+		outputfilepath = inputfilepath + ".pdf";
 		OutputStream os = new java.io.FileOutputStream(outputfilepath);
     	
 

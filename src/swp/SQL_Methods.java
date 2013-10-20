@@ -96,12 +96,12 @@ public class SQL_Methods{
         for (String key : column_value.keySet()) {
             //System.out.println("Key: " + key + ", Value: " + column_value.get(key));
             where += key + "='" + column_value.get(key) + "' ";
-            if(count < column_value.size()){
+            if(count < column_value.size() - 1){
             	where += " AND ";
             }
             count++;
         }
-
+        
         //call overloaded method with generated where statement
         return exist(table, columns_to_select, where);
 	}
@@ -111,6 +111,7 @@ public class SQL_Methods{
     	query = conn.createStatement();
 
 		String sql = "SELECT " + columns_to_select + " FROM " + table + " WHERE " + where + ";";
+		System.out.print(sql);
         ResultSet result = query.executeQuery(sql);
         result.last();
         int zeilen_anzahl = result.getRow();
@@ -903,6 +904,8 @@ public class SQL_Methods{
 								varvaluesMap.put(varname5, varvalue5_sheetdraft_filelink);
 								
 								lastUL += ("<a href='#' id='ajaxlink0" + j + "'"
+										+ " rel='" + Global.convertToImageLink(varvalue5_sheetdraft_filelink) + "'"
+										+ " class='screenshot'"
 										+ " onclick = \"ajax_get_listing_exercises("
 										+ "'" + varvalue5_sheetdraft_filelink + "'"
 										+ ", '" + varvaluesMap.get("lecturer") + "'"
@@ -922,7 +925,8 @@ public class SQL_Methods{
 									+ " onclick=\"ajax_get_listing_sheetdrafts('" + varvalue5_sheetdraft_filelink + "'"
 									+ ",'" + varvalue1	+ "'"
 									+ ",'" + varvalue2 + "','" + varvalue3 + "','" + varvalue4
-									+ "','" + i +"')\">"
+									+ "','" + i +"');"
+									+ "/*event-propagation to treeview to unfold it too:*/this.previousSibling.click();\">"
 									+ varvalue4
 									 + "</a>"
 									 

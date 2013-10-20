@@ -3,10 +3,12 @@ package docx4j_library;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.docx4j.TextUtils;
 import org.docx4j.TraversalUtil;
 import org.docx4j.XmlUtils;
 import org.docx4j.TraversalUtil.CallbackImpl;
 import org.docx4j.finders.ClassFinder;
+import org.docx4j.finders.SectPrFinder;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.wml.CTFFCheckBox;
@@ -27,13 +29,16 @@ public class TraverseFind {
 		WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new java.io.File(inputfilepath));		
 		MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
 				
-		ClassFinder finder = new ClassFinder(FldChar.class); // <----- change this to suit
+		ClassFinder finderClass = new ClassFinder(FldChar.class); // <----- change this to suit
+		SectPrFinder finder = new SectPrFinder(documentPart);
 		new TraversalUtil(documentPart.getContent(), finder);
 		
-		System.out.println("got " + finder.results.size()  );
+		//System.out.println("got " + finder.results.size() );
+		System.out.println("got " + finder.getSectPrList().size() );
 		
-		for (Object o : finder.results) {
-						
+		for (Object o : finder.getSectPrList()) {
+			
+			TextUtils.extractText(o, w);
 			Object o2 = XmlUtils.unwrap(o);
 			// this is ok, provided the results of the Callback
 			// won't be marshalled			

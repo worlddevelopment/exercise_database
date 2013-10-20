@@ -75,7 +75,8 @@ public class RegExFinder {
 	 * Die zweiter Dimension hat nur 4 (0 bis 3) Eintr�ge. <br> <br>
 	 * String[x][0]: "zahl", Kennzahl, welchen Pattern zugetroffen hat (auch �bergabeparameter "zahl") <br>
 	 * String[x][1]: Der Ausdruck/ das Wort, das mit obigem Pattern gefunden wurde <br>
-	 * String[x][2]: Zeilennummer (Anmerkung: Ist das nicht �berfl�ssig?) <br>
+	 * String[x][2]: Zeilennummer (Anmerkung: Ist das nicht �berfl�ssig? --Addition J.R.I.B.: The line number 
+	 * 				 is required to know where the declaration can be found in the original non-plain-text document.) <br>
 	 * String[x][3]: Falls die Zeile mehr als ein Wort beinhaltet, noch das 2. nachfolgende Wort <br>
 	 *  <br>
 	 * @param text String-Array (zeilenweise) des zu untersuchenden Texts <br>
@@ -113,6 +114,7 @@ public class RegExFinder {
 				String[] woerter = MethodenWortSuche.teileZeileInWoerter(text[zeile]);
 				if (woerter.length > 0) {
 					wort = woerter[0];
+					//TODO Examine the other words of the line too, because of e.g. 'Loesung zu Aufgabe 1'.
 					System.out.println("das erste Wort lautet: " + wort);
 					gleich = RegExFinder.matches(wort, pattern);
 					// matcher = pattern.matcher(wort);
@@ -131,7 +133,7 @@ public class RegExFinder {
 						//die passende Zeile wird gespeichert
 						ergebnisFuerHashMap[zaehler][2] = Integer.toString(zeile);
 						// das 2. Wort der Zeile wird gespeichert, wenn es existiert 
-						// und falls es eine nonworded regex erf�llt
+						// und falls es eine nonworded regex erfuellt
 						// auch als Index gespeichert
 						if (woerter.length >= 2) {
 							for (Muster m : Muster.values()){
@@ -146,7 +148,7 @@ public class RegExFinder {
 							ergebnisFuerHashMap[zaehler][3] = woerter[1];
 						}
 						else {
-							ergebnisFuerHashMap[zaehler][3] = "";
+							ergebnisFuerHashMap[zaehler][3] = "";//Perhaps put complete line here?
 						}
 						// Head = Anfangswörter der Aufgabe werden gemerkt
 						boolean noMoreLines = false;						
@@ -246,8 +248,7 @@ public class RegExFinder {
 	
 	private static boolean matches(String wort, Pattern pattern) {
 		Matcher matcher = pattern.matcher(wort);
-		boolean gleich = matcher.matches();
-		return gleich;
+		return matcher.matches();
 	}
 	
 	/**
@@ -269,7 +270,7 @@ public class RegExFinder {
 				String c = Character.toString(charRep[k]);
 				// Wenn c Integer ist:
 				if (isInt(c)) {
-					// Wenn schon zahl gefunden wurde, f�ge Sie zu einer Zahl zusammen.
+					// Wenn schon zahl gefunden wurde, fuege Sie zu einer Zahl zusammen.
 					if (foundInt && j != null) {
 						j = (j*10) + Integer.parseInt(c);
 					// Wenn nicht, setze j auf den gefunden Integer

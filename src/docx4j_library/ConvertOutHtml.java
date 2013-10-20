@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import org.docx4j.Docx4J;
 import org.docx4j.convert.out.HTMLSettings;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.samples.AbstractSample;
 
 /**
  * This sample uses XSLT (and Xalan) to
@@ -61,13 +62,40 @@ public class ConvertOutHtml extends AbstractSample {
 		} catch (IllegalArgumentException e) {
 		}
 		
+		
+		process();
+		
+		
+    }
+		
+    /**
+     * This method may be called by the main function OR by another part of the programme.
+     * @throws Exception 
+     */
+    public static void process() throws Exception {
+    	process(inputfilepath);
+    }
+    /**
+     * Here the inputfilepath is obligatory. This also enforces that we don't have to check
+     * for the inputfilepath being null.
+     * Storing to a freely chosen OUT_FontConverted.xhtml+xml makes is less optimal for
+     * production usage if we want to keep individual pdfs for each file. Otherwise a
+     * standard export would only work if there are no semaphore issues, i.e. not many
+     * processes writing to this one identical file.
+     * 
+     * @param inputfilepath
+     * @throws Exception
+     */
+    public static void process(String inputfilepath) throws Exception {
 		// Document loading (required)
 		WordprocessingMLPackage wordMLPackage;
 		if (inputfilepath==null) {
 			// Create a docx
-			System.out.println("No imput path passed, creating dummy document");
+			System.out.println("No input path passed, creating dummy document");
 			 wordMLPackage = WordprocessingMLPackage.createPackage();
-			SampleDocument.createContent(wordMLPackage.getMainDocumentPart());	
+			//TODO fix line below (SampleDocument not exists)
+			//-- ONLY RELEVANT FOR standalone use, that is using main() above.
+			//SampleDocument.createContent(wordMLPackage.getMainDocumentPart());	
 		} else {
 			System.out.println("Loading file from " + inputfilepath);
 			wordMLPackage = Docx4J.load(new java.io.File(inputfilepath));

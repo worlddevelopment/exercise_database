@@ -46,12 +46,12 @@ public class DeclarationFinder {
 //			}
 //		}
 		
-		// Leere Sets (kein Match aufgetreten) werden gel�scht.
+		// Leere Sets (kein Match aufgetreten) werden geloescht.
 		boolean[] removeEmptyDeclarations = new boolean[foundDeclarationSets.size()];
 		for (int i = 0; i < removeEmptyDeclarations.length; i ++) {
 			removeEmptyDeclarations[i] = false;
 		}
-		for (int i = 0; i < foundDeclarationSets.size(); i++) {
+		for (int i = 0; i < foundDeclarationSets.size(); i++) {//TODO Prevent empty declarations being added.
 			if (foundDeclarationSets.get(i).declarations.size() == 0) {
 				removeEmptyDeclarations[i] = true;
 			}
@@ -139,8 +139,7 @@ public class DeclarationFinder {
 		}
 		
 		
-		System.out.println("Score wurde erstellt");
-		System.out.println(setWithHighestScore.getScore());
+		System.out.println("Score wurde erstellt: " + setWithHighestScore.getScore() + setWithHighestScore.getPattern());
 
 		// ------------------------------------------DEPRECATED----------------------------------------------//
 		// -------------------------------- Altlasten von Sabine --------------------------------------------//
@@ -149,17 +148,16 @@ public class DeclarationFinder {
 		if (anzahl == 1) {
 			HashMapVerwaltung.erweitereHashmapBoolean(HashMapVerwaltung.genauEineAufgabe, true);
 		}	
-			HashMapVerwaltung.erweitereHashmapInt(HashMapVerwaltung.keyAnzahl, anzahl);
-			System.out.println("Es wurden " + HashMapVerwaltung.getAufgabenzahlAusHashmap() + " Aufgabendeklarationen gefunden");
-//			HashMapVerwaltung.erweitereHashmapMuster(HashMapVerwaltung.keyDeklaration, muster);
-			for (int i = 0; i < anzahl; i++) {
-				String key = "Aufgabe" + (i + 1);
-				int zeile = setWithHighestScore.declarations.get(i).getLine();
-				String schluesselWort = setWithHighestScore.declarations.get(i).getFirstWord();
-				String aufgabenBezeichnung = setWithHighestScore.declarations.get(i).getSecondWord();
-				HashMapVerwaltung.erweitereHashmap(key, schluesselWort,
-						aufgabenBezeichnung, zeile);
-			}
+		HashMapVerwaltung.erweitereHashmapInt(HashMapVerwaltung.keyAnzahl, anzahl);
+		System.out.println("Es wurden " + HashMapVerwaltung.getAufgabenzahlAusHashmap() + " Aufgabendeklarationen gefunden");
+//		HashMapVerwaltung.erweitereHashmapMuster(HashMapVerwaltung.keyDeklaration, muster);
+		for (int i = 0; i < anzahl; i++) {
+			String key = "Aufgabe" + (i + 1);
+			int zeile = setWithHighestScore.declarations.get(i).getLine();
+			String schluesselWort = setWithHighestScore.declarations.get(i).getFirstWord();
+			String aufgabenBezeichnung = setWithHighestScore.declarations.get(i).getSecondWord();
+			HashMapVerwaltung.erweitereHashmap(key, schluesselWort,	aufgabenBezeichnung, zeile);
+		}
 		// -------------------------------------------------------------------------------------------------//
 		// -------------------------------------------------------------------------------------------------//
 	

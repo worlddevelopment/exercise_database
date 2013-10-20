@@ -1,6 +1,5 @@
 package aufgaben_db;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,6 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+
+import HauptProgramm.Declaration;
 import HauptProgramm.DeclarationSet;
 import Verwaltung.HashLog;
 
@@ -22,7 +24,7 @@ import aufgaben_db.LatexCutter;
 /**
  * A Draft is is a container for multiple exercises. 
  * 
- * @author administrator
+ * @author Jan R.I.B.-Wein
  *
  */
 public class Sheetdraft extends ContentToImage {
@@ -39,9 +41,9 @@ public class Sheetdraft extends ContentToImage {
 	private int lecturer_id;
 	private String description = "";
 	private String author;
-	private Calendar whencreated = Calendar.getInstance();
 	private int is_draft;	/*store it as an integer but handle it like a bool*/
 	private String headermixture;
+	private Calendar whencreated = Calendar.getInstance();
 	private Calendar whenchanged = Calendar.getInstance();
 	                                //Date. TODO: Clear if int or string suitable.
 									//Funny that now it turned out as Calendar. :)
@@ -49,11 +51,16 @@ public class Sheetdraft extends ContentToImage {
 
 	
 	//For easy fetching of exercises out of the mass by filelink as key!
-	private Map<String, Exercise> allExercises = new HashMap<String, Exercise>();
+	/* To avoid a false exercise count, plain text and raw format exercises are stored separately.*/
+	private Map<String, Exercise> allExercisesRawFormat = new HashMap<String, Exercise>();
+	private Map<String, Exercise> allExercisesPlainText = new HashMap<String, Exercise>();
 	private Map<String, String> exerciseEndingsAsKeysSplitterAsValues = new HashMap<String, String>();	
 	
 	
-	/* Analogon to splitter/split by. But with auto mode from SWP? */
+	/* From splitter/split by hint in the filelink we determine the best fitting pattern of enum Muster.java.
+	 * We also first try to determine the pattern/Muster on the fly with automatism for several exercise
+	 * declarations. The finally successful declarations with all the extra data like line of file, ... will
+	 * be stored here AND in the Exercise objects redundantly! */
 	private DeclarationSet declarationSet;//TODO not need! exercises bear them!
 	
 	
@@ -69,7 +76,7 @@ public class Sheetdraft extends ContentToImage {
 
 		//CREATE NEW DRAFT.
 		String new_draft_type = "Mix";
-		String new_draft_course = "Random-coursename_" + Math.round(Math.random() * 10000);
+		String new_draft_course = "Random-coursename-" + Math.round(Math.random() * 10000);
 		String new_draft_semester = Global.getSemtermFromCalendar(Calendar.getInstance()) + Global.now.get(Calendar.YEAR);
 		int new_draft_lecturer_id = 0; /*N.N. or N.A.*/
 		String new_draft_description = "";//a draft newly created automatically has no description
@@ -168,16 +175,19 @@ public class Sheetdraft extends ContentToImage {
 		
 		while (res.next()) {
 			//For easy fetching of exercises out of the mass by filelink as key!
-			allExercises.put(
+			allExercisesRawFormat.put(
 				res.getString("filelink")
 					,
 			    new Exercise(
 //					res.getString("sheetdraft_id"),
 					res.getString("filelink")
-//					,res.getString("originsheetdraft_filelink")
-					,res.getString("splitby")/*needed in db for joining sheets*/
+//					,res.getString("originsheetdraft_filelink")			
+					,new Declaration(Global.determinePatternBestFittingToSplitterHint(
+							res.getString("splitby"))/*needed in db for joining sheets*/
+							,""/*res.getString("declarationFirstWord")*//*currently not due to be stored*/
+							,0/*res.getString("declarationLineNumber")*/)
 					//,res.getString("content")/*raw content*/
-					,res.getString("header") /*needed in db for joining sheets*/
+					,res.getString("header") /*Needed in db for joining sheets AND not bloating resulting files because of unnecessary parts of the header still persisting.*/
 					//,res.getInt("is_native_format") created on the fly now!
 					,res.getLong("whencreated")
 					,res.getLong("whenchanged")
@@ -197,7 +207,7 @@ public class Sheetdraft extends ContentToImage {
 	 */
 	public void synchronizeExercisesLocationToFilelink() throws SQLException, IOException {
 		
-		//int exercisesL = sheetdraft.getAllExercises().size();
+		//int exercisesL = this.getAllExercises().size();
 		int i = 0;
 		for(Exercise e : this.getAllExercises().values()) {
 			
@@ -444,8 +454,8 @@ public class Sheetdraft extends ContentToImage {
 	}
 	/* If a foreign filelink=> sheetdraft is being copied,
 	 * then this method must ENSURE that this sheetdraft's
-	 * key (filelink) in allSheetdrafts of class Aufgaben_DB
-	 * are resynchronized to the new lecturer = user!
+	 * key (filelink) in the array allSheetdrafts of class Aufgaben_DB
+	 * are resynchronized to the new lecturer = user !
 	 * Author stays the same.
 	 * (3)
 	 * While semester could be updated to the new one,
@@ -543,56 +553,359 @@ public class Sheetdraft extends ContentToImage {
 //	    return this; //for chaining
 //	}
 	
-
+	
+	
+	//RETURN IF NO DECLARATIONS WERE FOUND 
+	private boolean wereDeclarationsFound() {
+		
+		/* Already looked for exercise declarations? */
+		if (this.getDeclarationSet().declarations == null) {
+			Global.addMessage("Declarations were null. (Look into DeclarationFinder to debug.) Calling DeclarationFinder now."
+					, "danger");
+			//self heal:
+			this.declarationSet = DeclarationFinder.findeDeklarationen(this);
+		}
+		/* Any exercise declarations found? */
+		if (this.getDeclarationSet().declarations.size() == 0) {
+			Global.addMessage("Sheet or Draft was not splittable because no Declarations were found."
+					, "danger");
+			return false;
+		}
+		
+		/* Exercise declarations were found! */
+		return true;
+		
+	}
 	
 	
 	
-	//SHEETDRAFT ONLY METHOD:
-	public void extractExercises() {
+	//SHEETDRAFT ONLY METHODS:
+	/**
+	 * EXTRACT EXERCISES PLAIN TEXT
+	 * 
+	 * @throws IOException
+	 */
+	public void extractExercisesPlainText() throws IOException {
+		
+		// Sheets, in denen keine Deklarationen gefunden wurden, abfangen
+		// because they are not splittable into exercises.
+		if(!wereDeclarationsFound()) {
+			return ;
+		}
+		
+		
+		/* Creation of exercise objects to store in the sheet's map. */
+		extractExercisesFromPlainText();		
+	}
+	
+	
+	
+	/**
+	 * EXTRACT EXERCISES RAW/NATIVE FORMAT
+	 * 
+	 * @throws IOException
+	 */
+	public void extractExercisesNativeFormat() throws IOException {
+		/*DANGER: IT'S A REAL PROBLEM TO DETERMINE THE RAW FILETYPE EXERCISE CONTENTS BY
+		  USING THE PLAIN TEXT LINE NUMBERS. IS IT GUARANTEED THAT THE LINES ARE EQUIVALENT?
+		  FOR NOW: => We should not store raw content.*/
+		
+		
+		// Sheets, in denen keine Deklarationen gefunden wurden, abfangen
+		// because they are not splittable into exercises.
+		if(!wereDeclarationsFound()) {
+			return ;
+		}
+		
+		
+		/* THE CREATION OF EXERCISES IN THE ORIGINAL FILE FORMAT */
+		//We store the link to the individual .type exercises in the exercise map (as keys).
 		String ending = Global.extractEnding(filelink);
-		if (ending == "pdf") {
+		//PDF
+		if (ending.equals("pdf")) {
 			HashLog.erweitereLogFile("Extract exercises PDF: Filelink: " + filelink + ".");
+			//1) Extract text.
+			//2) Same as text files.
+			//OR
+			//1) Convert to xHTML/tex.
+			//2) Extract exercises like in tex/html.
+			extractExercisesFromPDF();
 		}
-		else if (ending == "rtf") {
+		//RTF
+		else if (ending.equals("rtf")) {
 			HashLog.erweitereLogFile("Extract exercises RTF: Filelink: " + filelink + ".");
+			extractExercisesFromRTF();
 		}
-		else if (ending == "doc") {
+		//DOC
+		else if (ending.equals("doc")) {
 			HashLog.erweitereLogFile("Extract exercises DOC: Filelink: " + filelink + ".");
+			extractExercisesFromDOC();
 		}
-		else if (ending == "docx") {
+		//DOCX
+		else if (ending.equals("docx")) {
 			HashLog.erweitereLogFile("Extract exercises DOCX: Filelink: " + filelink + ".");
+			//1) The DOCX WordprocessingML object.
+			/*
+			Use HWPF Apache POI or DOCX4J for special tasks like exercise creation.
+			1) Instantiate object representation according to/for each filetype.
+			2) Find the content of the declarations in the formatted raw content.
+			3) Extract all dependant XML-tags, references, et alia to another file.
+			4) Store this filelink. Eventually put the sheetdraft-exercise relationship in the DB.
+			*/
+			extractExercisesFromDOCX();
+			WordprocessingMLPackage wMLPac = new WordprocessingMLPackage();
+			//TODO
 		}
-		else if (ending == "tex") {
-			HashLog.erweitereLogFile("Extract exercises RTF: Filelink: " + filelink + ".");
+		//TEX
+		else if (ending.equals("tex")) {
+			HashLog.erweitereLogFile("Extract exercises TEX: Filelink: " + filelink + ".");
 			//At this point a pdf file has to be generated again? TODO
+			//Similar to the plain text version, but look for begin and end tags.
 			this.setExercises(LatexCutter.cutExercises(this));
 		}
-		else if (ending == "txt") {
-			HashLog.erweitereLogFile("Extract exercises RTF: Filelink: " + filelink + ".");
+		//TXT
+		else if (ending.equals("txt")) {
+			HashLog.erweitereLogFile("Extract exercises TXT: Filelink: " + filelink + ".");
+			//Identical to the plain text version.
+			if (allExercisesPlainText != null) {
+				allExercisesRawFormat = allExercisesPlainText;
+			}
+			else {
+				/* This case not really exists because in the plain text
+				 * exercise extraction the exercise declarations get found!*/
+				extractExercisesPlainText();
+				allExercisesRawFormat = allExercisesPlainText;
+			}
+		}
+//		else if (ending.equals("php")) {
+			/*PHP IS REALLY NOT USEFUL FOR EXERCISE SHEETS, ONLY FOR GENERATION OF SUCH SHEETS.*/
+//			HashLog.erweitereLogFile("Extract exercises PHP: Filelink: " + filelink + ".");
+		    /*THE FOLLOWING RATHER BELONGS TO THE extractPlainText-Method.*/
+//			//1) Remove/convert php related to HTML output.
+//			//TODO
+//			String html_only = "";
+//		    //2) Same as html exercise extraction. (see below)
+//			String txt_only = html_only;
+//			//3) Now treat it like the txt-File.
+//			this.setExercisesMap(extractExercisesFromPlainText(txt_only));
+//		}
+		else if (ending.equals("html") || ending.equals("htm")) {
+			HashLog.erweitereLogFile("Extract exercises (x)HTML: Filelink: " + filelink + ".");
+			extractExercisesFromHTML();
 		}
 		
-		/* THE SEARCH FOR EXERCISES */
-		this.setDeclarationSet(DeclarationFinder.findeDeklarationen(this));
-		this.setExercisesMap(ExerciseCreator.erstelleEinzelaufgaben(this));
-		
-		Global.addMessage("Extracted plain text from " + filelink + ".", "success");
+		Global.addMessage("Extracted exercises in raw format from " + filelink + ".", "success");
 	}
+	
+	
+	
+
+	/**
+	 * PDF: Find and store exercises to filesystem. 
+	 */
+	private void extractExercisesFromPDF() {
+		
+		//TODO
+		
+	}
+		
+	
+	/**
+	 * RTF: Find and store exercises to filesystem. 
+	 */
+	private void extractExercisesFromRTF() {
+		
+		//TODO
+		
+	}
+	
+	/**
+	 * DOC: Find and store exercises to filesystem. 
+	 */
+	private void extractExercisesFromDOC() {
+		
+		//TODO
+		
+	}
+	
+	
+	
+	/**
+	 * DOCX: Find and store exercises to filesystem. 
+	 */
+	private void extractExercisesFromDOCX() {
+		
+		
+		
+	}
+	
+	
+	/**
+	 * HTML: Find and store exercises to filesystem. 
+	 */
+	private void extractExercisesFromHTML() {
+		// Erzeugt fuer alle Texte zwischen zwei Deklarationen eine neue Aufgabe,
+		// letzte Declaration bis zum Ende fehlt noch.
+		
+		//TODO
+		
+	}
+	
+	
+	/**
+	 * @author sabine, J.R.I.B.-Wein
+	 * Fuer das Textdokument sind DocAnfang und DokEnde unwichtig, auch wie
+	 * die Aufgabendeklarationen im einzelnen heissen ist unwichtig
+	 * daher werden nur die Info ueber die Anzahl der Aufgaben und die
+	 * Zeilennummern benoetigt.
+	 * 
+	 * Erstellt anhand der gefundenen Deklarationen des Sheetdraft einzelne Aufgabentexte
+	 * als String[], indem der plaintext des Sheetdraft entsprechend geschnitten wird.
+	 * 
+	 * @state completely reworked by J.R.I.B.-Wein
+	 * @param sheet Sheetdraft, dessen Einzelaufgaben bestimmt werden sollen.
+	 */
+	private void extractExercisesFromPlainText() {
+		extractExercisesFromPlainText(this.getPlainText());
+	}
+	private void extractExercisesFromPlainText(String[] plainText) {
+		
+		// Erzeugt fuer alle Texte zwischen zwei Deklarationen eine neue Aufgabe,
+		//letzte Declaration bis zum Ende fehlt noch.
+		String header_of_its_sheet = "";
+		String ex_filelink;
+		int ex_count_and_pos = 0;
+		for (; ex_count_and_pos < declarationSet.declarations.size() - 1; ex_count_and_pos++) {
+			// Neues String[] mit der groesse des Zeilenabstands zwischen zwei aufeinanderfolgenden Deklarationen
+			int ex_row_count_according_declarations
+			= (declarationSet.declarations.get(ex_count_and_pos + 1).getLine() - declarationSet.declarations.get(ex_count_and_pos).getLine());
+			String[] exerciseText = new String[ex_row_count_according_declarations];
+			//TODOString[] exerciseRaw = new String[exercise_count_according_declarations];
+//					String lineBeforeNewExerciseDeclaration;
+//					if (!(sheetsDeclarations.get(i).getLine() < 0)) {//Prevents out of bounds.
+//						lineBeforeNewExerciseDeclaration = this.getRawContent()[exercise_count_according_declarations];
+//					}
+			// von der Zeile der Declaration an wir ins neue String[] ruebergeschrieben
+			for (int j = 0; j < ex_row_count_according_declarations; j++) {
+				int nextLine = j + declarationSet.declarations.get(ex_count_and_pos).getLine();
+				exerciseText[j] = plainText[nextLine];
+				//TODOexerciseRaw[j] = this.getRawContent()[nextLine];
+				/*ATTENTION: The first (or last) exercise-raw-content-lines
+				 *           have to overlap because there is potential content
+				 *           of the previous/next exercise in the same declarations line. */
+			}
+//					String lineAfterNewExerciseDeclaration;
+//					if (this.getRawContent().length > exercise_count_according_declarations) {
+//						lineAfterNewExerciseDeclaration = this.getRawContent()[exercise_count_according_declarations];
+//					}
+			// Erzeugen eines neuen Aufgaben-objekts
+			//increment here because we start the exercise count human readable with 1 instead of 0
+			ex_filelink = getFilelinkForExerciseFromPosWithoutEnding(ex_count_and_pos + 1) + "." + this.getFileEnding() + ".txt";
+			//TODOString[] exerciseRawPlusExtraNextLine = new String[exerciseRaw.length + 1];
+			//System.arraycopy(exerciseRaw, 0, exerciseRawPlusExtraNextLine, 0, exerciseRaw.length);
+			Exercise loopExercise = new Exercise(
+					ex_filelink
+					, declarationSet.declarations.get(ex_count_and_pos)
+					, exerciseText
+					//, exerciseRaw/*TODO determine if the extra line really is req.)*/
+					, header_of_its_sheet
+			);
+			allExercisesPlainText.put(ex_filelink, loopExercise);
+			
+			//Write to filesystem.
+			//ReadWrite.write(exerciseText, ex_filelink);
+			
+			
+			
+		}
+		
+		
+		//Letzte Declaration bis zum Ende:
+		Declaration lastDec = declarationSet.declarations.get(declarationSet.declarations.size() - 1);
+		int exercise_count_according_declarations = this.getPlainText().length - lastDec.getLine();
+		String[] exerciseText = new String[exercise_count_according_declarations];
+		//String[] exerciseRaw = new String[exercise_count_according_declarations];
+		//String[] exerciseRawPlusExtraNextLine = new String[exerciseRaw.length + 1];
+		//TODO probably overflow here:System.arraycopy(exerciseRaw, 0, exerciseRawPlusExtraNextLine, 0, exerciseRaw.length);
+		for (int j = 0; j < exerciseText.length; j++) {
+			int nextLine = j + lastDec.getLine();
+			exerciseText[j] = this.getPlainText()[nextLine];
+			//exerciseRaw[j] = this.getRawContent()[nextLine];
+			/*ATTENTION: The first (or last) exercise-raw-content-lines
+			 *           have to overlap because there is potential content
+			 *           of the previous/next exercise in the same declarations line. */
+		}
+		// Erzeugen eines neuen Aufgaben-objekts
+									/*increment here because we start with 1 instead of 0 */
+		ex_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(ex_count_and_pos + 1) + "." + this.getFileEnding() + ".txt";
+		Exercise loopExercise = new Exercise(
+				ex_filelink
+				, lastDec
+				, exerciseText
+				//, exerciseRaw	/* Aufgaben_DB.extractRawContentDependingOnFiletype(filelink),*/
+				//above will not work because the file not yet is written to disk!
+				, header_of_its_sheet
+		); 
+		allExercisesPlainText.put(ex_filelink, loopExercise);
+		
+		//Write to filesystem.
+		//ReadWrite.write(exerciseText, ex_filelink);
+		
+	}
+
+			
+			
+	/**
+	 * Löscht die Inhalte aller angegebenen Zeilen
+	 * @param filename Text als String[] (Zeile pro Feld)
+	 * @param anfang
+	 * @param ende
+	 * @return String[] mit allen Zeilen zwischen anfang und ende geloescht.
+	 */
+	public static String[] loescheZeilen(String[] filename, int anfang, int ende) {
+		
+		for (int i = anfang; i <= ende; i++ ) {
+			filename[i] = "";
+			}
+		System.out.println("Die Zeilen " + anfang + " bis " + ende + " wurden gelöscht");
+		return filename;
+	}
+			
+	
 	
 	
 	/**
 	 * SET EXERCISES MAP
 	 * @param exercisesListToSet
 	 */
-	public void setExercisesMap(Map<String, Exercise> exercisesListToSet) {
+	public void setExercisesMap(Map<String, Exercise> exercisesMapToSet) {
 		//clearing old exercise list
-		this.allExercises = exercisesListToSet;
+		this.allExercisesRawFormat = exercisesMapToSet;
 		
 	}
+	
+	public void setExercisesPlainTextMap(Map<String, Exercise> exercisesMapToSet) {
+		//clearing old exercise list
+		this.allExercisesPlainText = exercisesMapToSet;
+		
+	}
+	
+	/* To avoid a false exercise count, plain text and raw format content exercises are
+	 * stored separately.*/
 	public void setExercises(ArrayList<Exercise> exercisesListToSet) {
 		//Clearing old exercises!? TODO investigate what better
-		this.allExercises = new HashMap<String, Exercise>();
+		this.allExercisesRawFormat = new HashMap<String, Exercise>();
 		for (Exercise e : exercisesListToSet) {
-			this.allExercises.put(e.filelink, e);
+			this.allExercisesRawFormat.put(e.filelink, e);
+		}
+		
+	}
+	
+	public void setExercisesPlainText(ArrayList<Exercise> exercisesListToSet) {
+		//Clearing old exercises!? TODO investigate what better
+		this.allExercisesPlainText = new HashMap<String, Exercise>();
+		for (Exercise e : exercisesListToSet) {
+			this.allExercisesPlainText.put(e.filelink, e);
 		}
 		
 	}
@@ -676,32 +989,85 @@ public class Sheetdraft extends ContentToImage {
 	
 
 	public Map<String, Exercise> getAllExercises() {
-		return allExercises;
+		return allExercisesRawFormat;
 	}
 	public List<String> getAllExerciseFilelinksAsList() {
 		List<String> allExerciseFilelinks = new ArrayList<String>();
-		allExerciseFilelinks.addAll(allExercises.keySet());
+		allExerciseFilelinks.addAll(allExercisesRawFormat.keySet());
 		return allExerciseFilelinks;
 	}
 	public Exercise getExerciseByFilelink(String key_filelink) {
-		if (allExercises.get(key_filelink) == null) {
+		if (allExercisesRawFormat.get(key_filelink) == null) {
 			return null;
 		}
-		return allExercises.get(key_filelink);
+		return allExercisesRawFormat.get(key_filelink);
 	}
 
+	public Map<String, Exercise> getAllExercisesPlainText() {
+		return allExercisesPlainText;
+	}
 	
 	
 	public String getFilelinkForExerciseFromPosWithoutEnding(int exercise_num_and_position) {
 		//For now we keep the . experimentally. If this turns out robust on all systems
 		//this is a better solution than __ because we then directly can use filelink.
-		String to_append_to_filename = "."/*"__"*/ + getFileEnding() /*simply . --> _*/
+		String to_append_to_filename = //"."/*"__"*/ +
+				getFileEnding() /*simply add ending instead of . --> _*/
 				+ "__Exercise_" + exercise_num_and_position
-				+ "__splitby_" + Global.extractSplitterFromFilelink(filelink);
-		return getFilelinkWithoutEnding() + to_append_to_filename; 
+				+
+				// ((declaration != null) ?
+				//	"__splitby_" + this.getSplitterRepresentation(declaration)
+				//:
+				/*Declarations are the same for this sheet/draft's plain text AND raw format exercises!*/
+					"__splitby_" + this.getSplitterRepresentation(this.declarationSet.declarations.get(exercise_num_and_position - 1))
+				//)
+				;
+		return getFilelinkWithoutEnding() + to_append_to_filename;
 	}
-	
-	
+
+	/**
+	 * If the splitterDeclaration is a custom one specified via the filelink __splitby_[splitPattern].
+	 * Then we have no equivalent Muster category name like INTDOT or INTBRACKET for it. That
+	 * is no problem as regex specific potentially dangerous characters like \\d for number are not
+	 * allowed in paths of filesystems anyway. So those signs should never occur for the optional
+	 * customized splitby pattern hint. => This can be written to the filepath directly.
+	 *  
+	 * The other preconfigured repository/catalogue patterns are more problematic. Here we 
+	 * use the category name (INTDOTINTDOT e.g.) and write this to the filepath.
+	 * 
+	 * @param splitterDeclaration
+	 * @return The best bet for a hopefully filepath compliant splitter pattern or representation
+	 * (e.g. INTDOT, INTBRACKET, ...).
+	 */
+	public String getSplitterRepresentation(Declaration splitterDeclaration) {
+		String splitter = null;
+		
+		if (splitterDeclaration != null) {
+			if (splitterDeclaration.getMatchedPattern() != null) {
+				if (splitterDeclaration.getFirstWord().equals("")//TODO evtlly store as attribute.
+						&& splitterDeclaration.getLine() < 1) {
+					/*It's a custom splitter to a very high percentage (not 100% because the line was chosen as 0 for this case and theoretically
+					it's still possible to have a successful splitbyDeclaration in the first line of document 
+					and still have no further FirstWord.*/
+					splitter = splitterDeclaration.getMatchedPattern().toString();
+					return splitter;
+				}
+				else {
+					/*It's a preconfigured repository/common splitby pattern.*/
+					splitter = Muster.getValueByPattern(splitterDeclaration.getMatchedPattern());
+					//Hopefully INTDOT, INTBRACKET, ...
+					return splitter;
+				}
+			}
+		}
+		
+		/*No pattern at all in the given splitterDeclaration or no or an empty declaration given.*/
+		splitter = Global.extractSplitterFromFilelink(filelink);//Take the one of the sheetdraft.
+		//This could and should be equal to the variant when the splitterDeclaration.pattern is
+		//a optional customized one.
+		return splitter;
+
+	}
 	
 	
 	/**
@@ -719,21 +1085,20 @@ public class Sheetdraft extends ContentToImage {
 		
 		ResultSet res = Global.query(query);
 		//instantiate and add all exercises.
-		Exercise ex;
 		while (res.next()) {
-			allExercises.put(
+			allExercisesRawFormat.put(
 					res.getString("exercise_filelink"),
-					(ex = new Exercise(
+					new Exercise(
 							//origin_sheetdraft_filelink this exercise belongs to
 							res.getString("filelink")
-							,res.getString("splitby")
+							,new Declaration(Global.determinePatternBestFittingToSplitterHint(res.getString("splitby")), "", 0)
 							//origin_sheetdraft_filelink
 							//,res.getString("content")//we have it in the filesystem!
 							,res.getString("header")
 							//,res.getInt("is_native_format") //created on the fly
 							,res.getLong("whencreated")
 							,res.getLong("whenchanged")
-					))
+					)
 			);
 		}
 		
@@ -744,8 +1109,6 @@ public class Sheetdraft extends ContentToImage {
 	
 	
 	
-	
-	//FROM SWP -- TODO ---------------------------------------------------------
 	
 	/**
 	 * WRITE TO HARDDISK
@@ -758,10 +1121,42 @@ public class Sheetdraft extends ContentToImage {
 	 */
 	public void writeSheetdraftContentToHarddisk() throws IOException {
 		String ext = Global.extractEnding(filelink);
-		/* Ends on '__ext.ext' because then we now if its the original filetype! */
-		ReadWrite.writeText(getRawContent(), getFilelinkWithoutEnding() + "__" + ext + "." + ext);
+		
+		//RAW CONTENT: is directly created by either the upload or the file conversion library.
+		//=> SO THIS IS NOT NECESSARY AT ALL. It could be necessary for exercise contents though.
+		
+		/* Ends on '__ext.ext' because then we know if it's the original filetype! NO LONGER! SEE BELOW!*/
+		//ReadWrite.writeText(getRawContent(), getFilelinkWithoutEnding() + "__" + ext + "." + ext);
+		//TODO ... complicated -- depending on filetype/ending.
+		//If not is native filetype, because we then already have the file representation on the harddisk.
+		if (filelink.endsWith("docx") && !filelink.endsWith(".docx.docx")) {
+			//If it is the original filetype then it would be load, change and save.
+			//Because here is nothing to change, the original filetype document has not to be saved.
+			//ReadWrite.write("", filelink);
+			//1) copy
+			//2) new DocxWordprocessingML(filelink_of_copy);
+			//3) delete unnecessary parts.
+			
+		}
+		else if (filelink.endsWith("tex") && !filelink.endsWith(".tex.tex")) {
+			
+		}
+		else if (filelink.endsWith("txt") && !filelink.endsWith(".txt.txt")) {
+			//Has not to be written as txt is raw and text format at the same time.
+		}
+		else if (filelink.endsWith("php") && !filelink.endsWith(".php.php")) {
+			
+		}
+		else if (filelink.endsWith("html") && !filelink.endsWith(".html.html")
+				|| filelink.endsWith("htm") && !filelink.endsWith(".htm.htm")) {
+			
+		}
+		
+		
+		//PLAIN TEXT:
 		//Also create this because we also need to generate images for plain text.
-		ReadWrite.writeText(getPlainText(), getFilelinkWithoutEnding() + "__" + ext + "." + ".txt");
+		//Do this by replacing the last of the double ending with .txt using 'Regular Expressions':
+		ReadWrite.writeText(getPlainText(), getFilelink().replaceAll("[.]" + ext + "$", ".txt"));
 	}
 	
 	
@@ -772,25 +1167,26 @@ public class Sheetdraft extends ContentToImage {
 	 * The reason for two and not only one raw content and on the fly extraction of
 	 * plain text is that there are images to be generated from the txt-Files too.
 	 * Even more important is the use of the plain text for finding declarations.
-	 * This way the lines of plainText and rawContent are always the same. Makes
-	 * exercise extraction for rawContent way easier: begin & end are given by
+	 * This way the line numbers of plainText and rawContent are always the equivalent.
+	 * This makes exercise extraction for rawContent way easier: begin & end are given by
 	 * the plain text version (where highest score declarations have been found).
 	 * Merely PROPAGATION to the next enclosing element/tag ends IS MISSING. 
 	 * @throws IOException 
 	 * @state completely rewritten
 	 */
-	public void writeExercisesToHarddisk() throws IOException {
-		int allExercisesL = allExercises.keySet().size();
-		Exercise[] allExercises_array = (Exercise[])(allExercises.keySet().toArray());
-		for (int pos = 0; pos < allExercisesL; pos++) {
+	public void writeExercisesToHarddisk(Map<String, Exercise> exerciseMap) throws IOException {
+		//int allExercisesL = allExercises.keySet().size();
+		//Exercise[] allExercises_array = (Exercise[])(allExercises.values().toArray());
+		int pos = 0;
+		for (Exercise exercise : exerciseMap.values()) {
 			
-			String dirs_reversed = new StringBuffer(Global.extractPathTo(filelink)).reverse().toString();
-			int last_slash =  dirs_reversed.indexOf("/");
-			String filename_t_reversed = dirs_reversed.substring(0,last_slash);
-			String filename_t = new StringBuffer(filename_t_reversed).reverse().toString();
-			int punkt = filename_t_reversed.indexOf('.');
-			String filename_t_g_reversed = filename_t_reversed.substring(punkt + 1,filename_t.length());
-			String filename_t_g = new StringBuffer(filename_t_g_reversed).reverse().toString();
+//			String dirs_reversed = new StringBuffer(Global.extractPathTo(filelink)).reverse().toString();
+//			int last_slash =  dirs_reversed.indexOf("/");
+//			String filename_t_reversed = dirs_reversed.substring(0,last_slash);
+//			String filename_t = new StringBuffer(filename_t_reversed).reverse().toString();
+//			int punkt = filename_t_reversed.indexOf('.');
+//			String filename_t_g_reversed = filename_t_reversed.substring(punkt + 1,filename_t.length());
+//			String filename_t_g = new StringBuffer(filename_t_g_reversed).reverse().toString();
 
 			/*We use the original filelink! Why changing it? Why not only add an exercise suffix?*/
 			String ext = Global.extractEnding(filelink);
@@ -801,10 +1197,21 @@ public class Sheetdraft extends ContentToImage {
 //				f.mkdir(); //erstelle Ordner mit bestehend aus der Name und Format der Datei
 //				
 //			}
-			String exercise_filelink_generated_for_pos = getFilelinkForExerciseFromPosWithoutEnding(pos);
-			ReadWrite.writeText(allExercises_array[pos].getRawContent(), exercise_filelink_generated_for_pos + "." + ext);
-			//Also create this because we also need to generate images for plain text.
-			ReadWrite.writeText(allExercises_array[pos].getPlainText(), exercise_filelink_generated_for_pos  + ".txt");
+			
+			//For building the exercise filelink string. Positioned here because exercises start at 1.
+			pos++;
+			String exercise_filelink_generated_for_pos = exercise.filelink;//already generated before
+			//= getFilelinkForExerciseFromPosWithoutEnding(pos);
+			
+			
+			//ReadWrite.writeText(allExercises_array[pos].getRawContent(), exercise_filelink_generated_for_pos + "." + ext);
+			//The above is no longer adequate, because we not only deal with one-file fileformats,
+			//but with archived OpenXML too. Therefore we create copies in the filesystem and
+			//delete unnecessary parts. Of course we then ALREADY HAVE the FILESYSTEM REPRESENTATION.
+			
+			//Create a plain text representation because we also need to generate images for plain text.
+			//ReadWrite.writeText(allExercises_array[pos].getPlainText(), exercise_filelink_generated_for_pos  + ".txt");
+			ReadWrite.writeText(exercise.getPlainText(), exercise_filelink_generated_for_pos/*  + ".txt"*/);
 			
 		}
 		
@@ -814,32 +1221,6 @@ public class Sheetdraft extends ContentToImage {
 	
 
 
-
-
-	/*======= OLD - of Artiom =============================================*/
-	private ArrayList<String> aufg_ids;
-	private ArrayList<String> bl_ids; 
-
-	public ArrayList<String> getBl_ids() {
-		return bl_ids;
-	}
-
-	public void setBl_ids(ArrayList<String> bl_ids) {
-		this.bl_ids = bl_ids;
-	}
-
-	public ArrayList<String> getAufg_ids() {
-		return aufg_ids;
-	}
-
-	public void setAufg_ids(ArrayList<String> aufg_ids) {
-		this.aufg_ids = aufg_ids;
-	}
-	
-	
-	
-	
-	
 
 	
 	

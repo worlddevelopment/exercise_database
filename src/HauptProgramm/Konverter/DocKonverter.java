@@ -7,6 +7,9 @@ import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
+import aufgaben_db.Global;
+import aufgaben_db.ReadWrite;
+
 
 
 /**
@@ -33,17 +36,17 @@ public class DocKonverter {
 	 * 
 	 * @param filename Pfad der Datei
 	 * @return String[] mit dem Plaintext
-	 * @throws FileNotFoundException Wenn der Pfadname ung�ltig ist.
+	 * @throws FileNotFoundException Wenn der Pfadname ungueltig ist.
 	 * @throws IOException Wenn der HWPFDocument converter nicht funktioniert.
 	 */
-	public static String[] erstelleTextausDoc(String filename) throws FileNotFoundException, IOException{
+	public static String[] erstelleTextausDoc(String filelink) throws FileNotFoundException, IOException{
 		
 		File file = null;
 		String[] textInLines = null;
 		HWPFDocument doc = null;
-//		try {
+		try {
 			// Read the Doc file
-			file = new File(filename);
+			file = new File(filelink);
 			System.out.println("Doc-File gelesen");
 			FileInputStream fis = new FileInputStream(file.getAbsolutePath());
 			System.out.println("FileStream generiert");	
@@ -57,6 +60,7 @@ public class DocKonverter {
 	        textInLines = text.split("\\r?\\n");
 			
 			//write the text in txt file
+			ReadWrite.write(text, file.getAbsolutePath().replaceAll(Global.extractEnding(filelink) + "$", "txt"));
 //			File fil = new File (filename + ausgabeName);
 //			System.out.println("Output File generiert");
 //			Writer output = new BufferedWriter(new FileWriter(fil));
@@ -66,11 +70,11 @@ public class DocKonverter {
 //			output.close();
 //			System.out.println("Output geschlossen");
 
-//		} catch (FileNotFoundException e) {
-//			System.out.println("File nicht gefunden - Fehler!: " + e.toString());
-//		} catch (IOException e) {
-//			System.out.println("Anderer Fehler!");
-//		}
+		} catch (FileNotFoundException e) {
+			System.out.println("File nicht gefunden - Fehler!: " + e.toString());
+		} catch (IOException e) {
+			System.out.println("Anderer Fehler!");
+		}
 		
 		return textInLines;
 	}
@@ -83,20 +87,20 @@ public class DocKonverter {
 	 * Extrahiert den Plaintext aus einem .docx-Dokument und gibt ihn Als String[]
 	 * (eine Zeile pro Feld) aus.
 	 * 
-	 * @param filename Pfad der Datei
+	 * @param filelink Pfad der Datei
 	 * @return String[] mit dem Plaintext
-	 * @throws FileNotFoundException Wenn der Pfadname ung�ltig ist.
+	 * @throws FileNotFoundException Wenn der Pfadname ungueltig ist.
 	 * @throws IOException Wenn der XHWPFDocument converter nicht funktioniert.
 	 */
-public static String[] erstelleTextausDocX(String filename)throws FileNotFoundException, IOException{
+public static String[] erstelleTextausDocX(String filelink)throws FileNotFoundException, IOException{
 		
 		File file = null;
 		String[] textInLines = null;
 		XWPFDocument doc = null;
 		
-//		try {
+		try {
 			// Read the Doc file
-			file = new File(filename);
+			file = new File(filelink);
 			System.out.println("DocX-File gelesen");
 			FileInputStream fis = new FileInputStream(file.getAbsolutePath());
 			System.out.println("FileStream generiert");
@@ -110,6 +114,7 @@ public static String[] erstelleTextausDocX(String filename)throws FileNotFoundEx
 			textInLines = text.split("\\r?\\n");
 			
 			//write the text in txt file
+			ReadWrite.write(text, file.getAbsolutePath().replaceAll(Global.extractEnding(filelink) + "$", "txt"));
 //			File fil = new File (filename + ausgabeName);
 //			System.out.println("Output File generiert");
 //			Writer output = new BufferedWriter(new FileWriter(fil));
@@ -119,11 +124,11 @@ public static String[] erstelleTextausDocX(String filename)throws FileNotFoundEx
 //			output.close();
 //			System.out.println("Output geschlossen");
 //			
-//		} catch (FileNotFoundException e) {
-//			System.out.println("File nicht gefunden - Fehler!: " + e.toString());
-//		} catch (Exception e) {
-//			System.out.println("Anderer Fehler!");
-//		}
+		} catch (FileNotFoundException e) {
+			System.out.println("File nicht gefunden - Fehler!: " + e.toString());
+		} catch (Exception e) {
+			System.out.println("Anderer Fehler!");
+		}
 		return textInLines;
 	}
 }

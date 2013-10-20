@@ -25,6 +25,7 @@ import java.io.File;
 
 import org.docx4j.Docx4J;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.samples.AbstractSample;
 
 
 /**

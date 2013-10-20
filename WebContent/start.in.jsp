@@ -213,6 +213,10 @@ reloadView = function(){
 			//alert("ajax success!!!!!");
 			$("#ac").html(data);
 			revertTree();
+			//screenshotPreview();//for tooltip preview it is necessary to update after loading
+			/*if the javascript for tooltip screenshot previews is included in the *.ajax.jsp
+			  then this is not required here; probably has no effect anyway.*/
+			//additional content per ajax.
 		},
 	    error: function (xhr, status) {
               switch (status) {

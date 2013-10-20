@@ -35,6 +35,7 @@ import org.docx4j.openpackaging.parts.WordprocessingML.BinaryPartAbstractImage;
 import org.docx4j.openpackaging.parts.WordprocessingML.HeaderPart;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.relationships.Relationship;
+import org.docx4j.samples.AbstractSample;
 import org.docx4j.utils.BufferUtil;
 import org.docx4j.wml.BooleanDefaultTrue;
 import org.docx4j.wml.Hdr;

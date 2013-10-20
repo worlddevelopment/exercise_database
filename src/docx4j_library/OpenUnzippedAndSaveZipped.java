@@ -34,6 +34,7 @@ import org.docx4j.openpackaging.io3.Save;
 import org.docx4j.openpackaging.io3.stores.UnzippedPartStore;
 import org.docx4j.openpackaging.io3.stores.ZipPartStore;
 import org.docx4j.openpackaging.packages.OpcPackage;
+import org.docx4j.samples.AbstractSample;
 
 
 /**

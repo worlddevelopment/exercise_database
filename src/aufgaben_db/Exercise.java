@@ -7,10 +7,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Calendar;
 
-import com.mysql.jdbc.ResultSet;
 
 import HauptProgramm.Declaration;
-import HauptProgramm.DeclarationSet;
 
 
 
@@ -35,13 +33,18 @@ public class Exercise extends ContentToImage {
 		
 	
 	//in content to image: private String filelink;
-	private int originsheetdraft_filelink = 0;
-	private String splitby = "Aufgabe";
-	private Declaration declaration;
-	private String[] plainText;
-	private String[] rawContent; //<-- main attribute (can be every dataformat).
+	//within the exercise filelink: private String sheetdraft_filelink = 0;//the exercise belongs to currently
+	//private String originsheetdraft_filelink; -- better not store this,load it from db if needed via getOriginsheetdraftFromDB
+	
+	/* From splitter/split by hint in the filelink we determine the best fitting pattern of enum Muster.java.
+	 * We also first try to determine the pattern/Muster on the fly with automatism for several exercise
+	 * declarations. The finally successful declarations with all the extra data like line of file, ... will
+	 * be stored here AND in the Exercise objects redundantly! */
+	private Declaration splitbyDeclaration;//if a splitby/splitter is given, determine best fitting declaration
+	
 	private String header;		 //each exercise goes with individual formatting
 //	private int is_native_format;//<-- storing in db for joining necessary, here not
+	
 	private Calendar whencreated = Calendar.getInstance();
 	private Calendar whenchanged = Calendar.getInstance();
 								//Date. TODO: Clear if int or string suitable. 
@@ -59,9 +62,9 @@ public class Exercise extends ContentToImage {
 		//if we need sheetdraft filelink, here it is: getSheetdraftFilelink()
 		this(	
 				filelink
-				, Global.extractSplitterFromFilelink(filelink)
+				, new Declaration(Global.determinePatternBestFittingToSplitterHint(splitby), "", 0)
 				, ReadWrite.loadText(filelink)
-				, ReadWrite.loadText(filelink)/*rawContent critical: docx is zip!*/
+				//, ReadWrite.loadText(filelink)/*rawContent critical: docx is zip!*/
 				, header
 				, Global.booleanToInt(Global.isFilelinkNativeFormat(filelink))
 				, Calendar.getInstance().getTimeInMillis()
@@ -69,16 +72,16 @@ public class Exercise extends ContentToImage {
 		);
 		
 	}
-	public Exercise(String filelink, String splitby, String header, 
+	public Exercise(String filelink, Declaration splitterDeclaration, String header, 
 			long whencreated, long whenchanged
 			/*, Sheetdraft sheetdraft*/) throws FileNotFoundException { 
 		//CREATE EXERCISE FROM DATABASE (plainText to be read from filesystem)
 		//if we need sheetdraft filelink, here it is: getSheetdraftFilelink()
 		this(	
 				filelink
-				, splitby
+				, splitterDeclaration
 				, ReadWrite.loadText(filelink)
-				, ReadWrite.loadText(filelink)/*rawContent critical: docx is zip!*/
+				//, ReadWrite.loadText(filelink)/*rawContent critical: docx is zip!*/
 				, header
 				, Global.booleanToInt(Global.isFilelinkNativeFormat(filelink))
 				, whencreated
@@ -86,33 +89,33 @@ public class Exercise extends ContentToImage {
 		);
 		
 	}
-	public Exercise(String filelink, Declaration declaration, String header  
+	public Exercise(String filelink, Declaration splitterDeclaration, String header  
 			/*, Sheetdraft sheetdraft*/) throws FileNotFoundException { 
 		//CREATE EXERCISE FROM DATABASE (plainText to be read from filesystem)
 		//if we need sheetdraft filelink, here it is: getSheetdraftFilelink()
 		this(	
 				filelink
-				, Global.extractSplitterFromFilelink(filelink)
+				, splitterDeclaration
 				, ReadWrite.loadText(filelink)
-				, ReadWrite.loadText(filelink)/*rawContent critical: docx is zip!*/
+				//, ReadWrite.loadText(filelink)/*rawContent critical: docx is zip!*/
 				, header
 				, Global.booleanToInt(Global.isFilelinkNativeFormat(filelink))
 				, Calendar.getInstance().getTimeInMillis()
 				, Calendar.getInstance().getTimeInMillis()
 		);
-		this.declaration = declaration;
 		
 	}
-	public Exercise(String filelink, Declaration declaration, String[] plainText
-			, String[] rawContent, String header  
+	public Exercise(String filelink, Declaration splitbyDeclaration, String[] plainText
+			/*, String[] rawContent*/
+			, String header  
 			/*, Sheetdraft sheetdraft*/){
 		//CREATE EXERCISE
 		//if we need sheetdraft filelink, here it is: getSheetdraftFilelink()
 		this(	
 				filelink
-				, Global.extractSplitterFromFilelink(filelink)
+				, splitbyDeclaration
 				, plainText
-				, rawContent
+				//, rawContent
 				, header
 				, Global.booleanToInt(Global.isFilelinkNativeFormat(filelink))
 				, Calendar.getInstance().getTimeInMillis()
@@ -122,16 +125,18 @@ public class Exercise extends ContentToImage {
 	}
 	public Exercise(/*String sheetdraft_id,*/ String filelink
 			/*, String originsheetdraft_filelink*/,
-			String splitby, String[] plainText, String[] rawContent, String header
+			Declaration declarationSplitbySuccessfully, String[] plainText
+			/*, String[] rawContent*/
+			, String header
 			, int is_native_format, long whencreated, long whenchanged
 			/*, Sheetdraft sheetdraft*/){
 		
+		this.splitbyDeclaration = declarationSplitbySuccessfully;
 //		this.sheetdraft_id = sheetdraft_id;
 		this.filelink = filelink;
 //		this.originsheetdraft_filelink = originsheetdraft_filelink;
-		this.splitby = splitby;
 		this.plainText = plainText;
-		this.rawContent = rawContent;
+		//this.rawContent = rawContent;
 		this.header = header;
 //		this.isNativeFormat = is_native_format;//WE DETERMINE THAT ON THE FLY
 		//IN THE DB WE NEED IT FOR JOINING! HERE WE DON'T!
@@ -148,7 +153,7 @@ public class Exercise extends ContentToImage {
 		
 		File file = new File(filelink);
 		if (!file.exists()) {
-			file.mkdirs();
+			//file.mkdirs();/*ATTENTION: CREATES THE FILE AS DIRECTORY!!! */
 		}
 //		ReadWrite.writeText(plainText, Global.extractFilename(filelink) + ".txt");
 //		ReadWrite.writeRawContentToDiskDependingOnEnding(this);
@@ -234,40 +239,46 @@ public class Exercise extends ContentToImage {
 	
 	/*======= HELPER ===================================================== */
 	public String getSplitBy() {
-		return this.splitby;
+		return Global.extractSplitterFromFilelink(filelink);
+		//The following is no longer used as we use e.g. INTDOT instead of the
+		//corresponding regex directly as the regex easily contains invalid
+		//filesystem characters.
+		//return this.splitbyDeclaration.getMatchedPattern().toString();
 	}
+	public String getSplitByRegexPattern() {
+		return this.splitbyDeclaration.getMatchedPattern().toString();
+	}
+	
 	public Declaration getDeclaration() {
-		return this.declaration;
+		return this.splitbyDeclaration;
 	}
 	
-	public String getSheetdraftFilelink() {
-		//IT HAS TO BE ENSURED THAT __Exercise is being added at exercise 
-		//AS FIRST ADDITION.
-		int filelink_to_remove_index_start = filelink.indexOf("__Exercise");
-		return filelink.substring(0, filelink_to_remove_index_start - 1);
-	}
-
 	
+	//This result can also be achieved via Global.extractSheetdraftFilelinkFromExerciseFilelink.
 	public String getSheetdraftFilelinkFromId() throws SQLException, IOException {
-		java.sql.ResultSet res = 
-		Global.query("SELECT filelink FROM sheetdraft"
-				+ " WHERE sheetdraft_filelink = " + getSheetdraftFilelink());
-		while (res.next()) {
-			return res.getString("filelink");
-		}
-		Global.addMessage("No sheetdraft! Concerned exercise: "
-				+ filelink + ". Returning empty string.", "warning");
-		return "";
+		return Global.extractSheetdraftFilelinkFromExerciseFilelink(filelink);
+		//The below is only needed if IDs are used for sheetdrafts! Currently not the case!
+//		java.sql.ResultSet res = 
+//		Global.query("SELECT sheetdraft.filelink FROM sheetdraft, exercise"
+//				+ " WHERE sheetdraft.id = exercise.sheetdraft_id");
+//		while (res.next()) {
+//			return res.getString("filelink");
+//		}
+//		Global.addMessage("No sheetdraft! Concerned exercise: "
+//				+ filelink + ". Returning empty string.", "warning");
+//		return "";
 	}
 	
+	//The entry in the database has once been stored using the Sheetdraft filelink from
+	//the generated exercise filelink at exercise creation/extraction time!
 	public String getOriginSheetdraftFilelink() throws IOException, SQLException {
 		java.sql.ResultSet res = 
-		Global.query("SELECT filelink FROM sheetdraft WHERE sheetdraft_id = "
-				+ originsheetdraft_filelink);
+		Global.query("SELECT originsheetdraft_filelink FROM exercise WHERE filelink = "
+				+ this.filelink);
 		while (res.next()) {
-			return res.getString("filelink");
+			return res.getString("originsheetdraft_filelink");
 		}
-		Global.addMessage("No originsheetdraft: Concerned exercise: "
+		Global.addMessage("No originsheetdraft found in database: Concerned exercise: "
 				+ filelink + ". Returning empty string.", "warning");
 		return "";
 	}

@@ -24,6 +24,7 @@ package docx4j_library;
 import org.docx4j.XmlUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
+import org.docx4j.samples.AbstractSample;
 
 
 /**

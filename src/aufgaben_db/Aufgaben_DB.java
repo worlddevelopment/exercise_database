@@ -1,21 +1,11 @@
 package aufgaben_db;
 
 
-import java.io.EOFException;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.*;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.io.File;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.openxml4j.util.ZipInputStreamZipEntrySource;
@@ -64,6 +54,7 @@ public class Aufgaben_DB {
 	 */
 	public static Sheetdraft processUploadedSheetdraft(String filelink)
 			throws FileNotFoundException, IOException, SQLException {
+		
 		HashLog.initialisiereLogFile();
 		
 		//--superfluous too-----------------------------------------------------
@@ -91,19 +82,36 @@ public class Aufgaben_DB {
 		//the filetype or content is being converted, the exercises are cut out. 
 		//1) plain text / raw content
 		sheetdraft.extractPlainText();
-		//2) 
+		System.out.println(Global.addMessage("[ready] Plain text extracted from Sheet. ----", "success"));
+		
+		//2) The search for exercise declarations.
 		sheetdraft.setDeclarationSet(DeclarationFinder.findeDeklarationen(sheetdraft));
-		System.out.println("Deklarationen wurden erstellt.");
-		//3)
-		sheetdraft.extractExercises();
-		System.out.println("Einzelaufgaben wurden erstellt.");
+		System.out.println(Global.addMessage("[ready] Aufgabendeklarationen wurden gesucht. Found " + sheetdraft.getDeclarationSet().declarations.size() + " in the set with the highest score. ----", "success"));
+		
+		//3) Create exercises.
+		sheetdraft.extractExercisesPlainText();
+		System.out.println(Global.addMessage("[ready] Einzelaufgaben (Plain Text) wurden erstellt. ----", "success"));
+		sheetdraft.extractExercisesNativeFormat();
+		System.out.println(Global.addMessage("[ready] Einzelaufgaben (Native format) wurden erstellt. ----", "success"));
+		
 		//4) synchronize filesystem/harddrive
-		sheetdraft.writeExercisesToHarddisk();
+		sheetdraft.writeExercisesToHarddisk(sheetdraft.getAllExercisesPlainText());
+		//sheetdraft.writeExercisesToHarddisk(sheetdraft.getAllExercises());
+		System.out.println(Global.addMessage("[ready] Einzelaufgaben wurden auf Festplatte geschrieben. ----", "success"));
 		
 		return sheetdraft;
 		
 	}
-		
+	
+	
+	
+	/**
+	 * LOAD ALL SHEETDRAFTS
+	 * @param user	- DB lecturer/author
+	 * @param includeSheetsWhereUserIsLecturer
+	 * @throws SQLException
+	 * @throws IOException
+	 */
 	public static void loadAllSheetdrafts() throws SQLException, IOException { /*and hence also the exercises*/
 		loadAllSheetdrafts((String)Global.session.getAttribute("user"), false);
 	}
@@ -114,6 +122,10 @@ public class Aufgaben_DB {
 	
 	public static void loadAllSheetdrafts(String user, boolean includeSheetsWhereUserIsLecturer)
 			throws SQLException, IOException { /*and hence also the exercises*/
+		
+		if (user != null) {
+			Global.session.setAttribute("user", user);
+		}
 		
 		//look for this user's drafts
 		String query = "SELECT DISTINCT *"
@@ -201,67 +213,10 @@ public class Aufgaben_DB {
 //		
 //	}
 	
-	/**
-	 * @throws IOException 
-	 * @throws ZipException 
-	 * 
-	 */
-	public static String[] extractRawContentDependingOnFiletype(String filelink)
-			throws ZipException, IOException {
-		
-		String[] rawDocumentContentOfFileArchive = null;
-		File file = new File(filelink);
-		String ending = Global.extractEnding(filelink);
-		if (ending.equals("docx")) {
-			//
-			String entry = "word/document.xml";
-			ZipFile docx = new ZipFile(file);
-//			IOUtils.copy(docx.getInputStream(entry),);
-			Global.addMessage("docx-Contents:\r\n<br />" + renderZipContents(docx)
-					, "info");
-//			ZipEntry docxXML = docx.getEntry(entry);
-			
-			//GET INPUT STREAM
-			boolean entry_found = false;
-			ZipInputStream zin = new ZipInputStream(new FileInputStream(file));
-			for (ZipEntry e; (e = zin.getNextEntry()) != null;) {
-				//zin.getNext moves pointer of InputStream to the next entry.
-				if (e.getName().equals(entry)) {
-					//now we have it at the correct position in the stream: the hydro plant ..
-					entry_found = true;
-					break;
-				}
-			}
-			//We have input stream here, if an entry has been found.
-			if (!entry_found) {
-				rawDocumentContentOfFileArchive
-				= ReadWrite.readInputStreamAsLines(Global.getInputStream(file, entry));
-			}
-		    rawDocumentContentOfFileArchive = ReadWrite.readInputStreamAsLines(zin);
-		}
-		return rawDocumentContentOfFileArchive;
-	}
 	
 	
 	
 	
-	//RENDER DOCX CONTENTS
-	public static String renderDocXContents(String filelink)
-			throws IOException {
-		return renderZipContents(new ZipFile(filelink));
-	}
-	public static String renderZipContents(ZipFile docx) {
-		String zipContents = "";
-		Enumeration<? extends ZipEntry> entriesIter = docx.entries();
-		while (entriesIter.hasMoreElements()) {
-			ZipEntry zipEntry = entriesIter.nextElement();
-			if (zipEntry.getName().equals("word/document.xml")) {
-				Global.addMessage("renderZipContents: document.xml found!","success");
-			}
-			zipContents += zipEntry.getName() + "\r\n<br />";
-		}
-		return zipContents;
-	}
 	
 	
 

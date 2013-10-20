@@ -13,10 +13,10 @@
 	rel="stylesheet" type="text/css" />
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 
-<script type="text/javascript" src="jquery/toolTipPreview.js"></script>
-
 <script src="bootstrap/js/bootstrap.js"></script>
 -->
+<script type="text/javascript" src="jquery/toolTipPreview.js"></script>
+
 
 <script type="text/javascript">
 
@@ -68,14 +68,14 @@ $('#edit_btn').click(function() {
 </script>
 
 <div id="dialog"></div>
-<div style="float: left; margin-left: 50px; border: 1px solid black;">
+<div class="ajax-loaded-content">
 	<form id="form" name='tf' action="index.jsp" method="get">
-		<table style="border-spacing: 10px;">
+		<table class="sheetdraft-listing">
 			<%
 			//retrieve & decide
 			boolean table_for_sheetdraft_listing = request.getParameter("exercise_listing") == null;
 			//retrieve
-			//for both the sjeetdraft and the exercise list
+			//for both the sheetdraft and the exercise list
 			    //session = (HttpSession)request.getParameter("session");
 				String session_user = request.getParameter("session_user");
 				String lecturer = new String(request.getParameter("lecturer").getBytes(
@@ -98,6 +98,7 @@ $('#edit_btn').click(function() {
 					//FILELINK IS EQUAL FOR BOTH CASES! SO THIS DOES NOT WORK:
 					//if (!filelink.matches("[Ee]xercise[_]?[0-9]+")) {
 				    if (table_for_sheetdraft_listing) {
+				    	//SHEETDRAFT LISTING
 						/* deliver all sheetdrafts of this lecturer listing */
 						out.println("<tr>"
 								  + "<th>Dateilink</th>"
@@ -120,7 +121,7 @@ $('#edit_btn').click(function() {
 						        + " FROM sheetdraft, lecturer l "
 						        + " WHERE semester = '" + semester
 								+ "' AND course = '" + course
-								+ "' AND type = '" + type //Exercise|Solution
+								+ "' AND type = '" + type //Exercise|Solution|Exam
 								+ "' AND l.lecturer = '" + lecturer
 								+ "' AND l.id = lecturer_id";
 						ResultSet res1 = statement1.executeQuery(str_query5);
@@ -149,6 +150,7 @@ $('#edit_btn').click(function() {
 
 					} else {
 
+						//EXERCISE LISTING
 						//Tabelle fuer Einzelaufgaben generieren
 						out.println("<tr>"
 								  + "<th>Belongs to Sheet</th>"
@@ -161,9 +163,13 @@ $('#edit_btn').click(function() {
                         );      
 						
 						
-						String str_query5 = "SELECT e.sheetdraft_id, e.originsheetdraft_filelink, e.filelink, author, e.splitby"
-						        +" FROM exercise e, sheetdraft"/*, lecturer l"*/
-								+ " WHERE sheetdraft.filelink = '" + filelink + "'"
+						String str_query5 = "SELECT e.sheetdraft_filelink"
+								+ ", e.originsheetdraft_filelink"
+								+ ", e.filelink"
+								+ ", author"
+								+ ", e.splitby"
+						        + " FROM exercise e, sheetdraft"/*, lecturer l"*/
+								+ " WHERE sheetdraft.filelink = e.sheetdraft_filelink"
 								/*filelink is a index => unique for each exercise.
 								+ " AND semester = '" + semester + "'"
 								+ " AND course = '" + course + "'"
@@ -180,17 +186,17 @@ $('#edit_btn').click(function() {
 							String exercise_filelink = res1.getString("filelink");
 							//get other missing variables for the table or a possible edit
 							String originsheetdraft_filelink = res1.getString("originsheetdraft_filelink");
-							String sheetdraft_id = res1.getString("sheetdraft_id");
+							String sheetdraft_filelink = res1.getString("sheetdraft_filelink");
 							//lecturer = res1.getString("lecturer");
 							uploader = res1.getString("author");
 							String exercise_splitby = res1.getString("splitby");
 							
 							out.println("<tr>");
 
-							out.println("<td>" + sheetdraft_id + "</td>");
+							out.println("<td>" + sheetdraft_filelink + "</td>");
                             out.println("<td>" + originsheetdraft_filelink + "</td>");
 							out.println("<td><a href='" + exercise_filelink
-									+ "' class = 'screenshot' rel='" + Global.convertToImageLink(exercise_filelink)
+									+ "' class='screenshot' rel='" + Global.convertToImageLink(exercise_filelink)
 									+ "'>" + Global.extractFilename(exercise_filelink) + "." + Global.extractEnding(exercise_filelink)
 									+ "</a></td>");
 							out.println("<td>" + lecturer + "</td>");

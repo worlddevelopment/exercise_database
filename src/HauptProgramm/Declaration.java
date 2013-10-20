@@ -4,6 +4,7 @@
 package HauptProgramm;
 
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 import aufgaben_db.Muster;
 
@@ -11,19 +12,24 @@ import aufgaben_db.Muster;
 /**
  * Klasse die eine Aufgabendeklaration repraesentiert
  * 
- * @author Schweiner
+ * @author Schweiner, J.R.I.B.-W.
  *
  */
 public class Declaration {
 
-	// Das Muster, welches auf diese Deklaration gepasst hat
-	private Muster matchedPattern;
+	/*====== ATTRIBUTES ==========================================================*/
+	// Das Muster, welches auf diese Deklaration gepasst hat.
+	// CHANGED: Use a helper function to determine the Muster from the Pattern
+	//          as the pattern shall be user customizable via the filelink variable: splitby. 
+	private Pattern matchedPattern;
 	
 	// Speichert das erste, zweite und dritte Wort der Aufgabendeklaration
 	// drittes Wort wird bisher nichts / kaum benutzt.
-	private String firstWord = "";
-	private String secondWord = "";
-	private String thirdWord = "";
+	private String firstWord = ""; 	/*of/after declaration!*/
+	private String secondWord = "";	/*of/after declaration!*/
+	private String thirdWord = ""; 	/*of/after declaration!*/
+	// Alternatively/Additionally for also covering "Lösung zu 1)" for example?
+	private String lineContent = "";/*firstWord here != declaration.firstWord*/
 	
 	// Speichert die Ersten Worte der der Deklaration folgenden Aufgabe.
 	private ArrayList<String> head = new ArrayList<String>();
@@ -35,23 +41,33 @@ public class Declaration {
 	// Index, dem diese Deklaration zugeordnet werden kann
 	private IndexNumber index;
 	
-	public Declaration(Muster pattern, String firstWord, int line) {
+	
+	
+	/*====== CONSTRUCTORS ========================================================*/
+	public Declaration(Muster m, String firstWord, int line) {
+		this(m.getPattern(), firstWord, line);
+	}
+	
+	public Declaration(Pattern pattern, String firstWord, int line) {
 		this.setMatchedPattern(pattern);
 		this.setFirstWord(firstWord);
 		this.setLine(line);
 	}
 
+
+	
+	/*====== METHODS =============================================================*/
 	/**
 	 * @return the matchedPattern
 	 */
-	public Muster getMatchedPattern() {
+	public Pattern getMatchedPattern() {
 		return matchedPattern;
 	}
 
 	/**
 	 * @param matchedPattern the matchedPattern to set
 	 */
-	public void setMatchedPattern(Muster matchedPattern) {
+	public void setMatchedPattern(Pattern matchedPattern) {
 		this.matchedPattern = matchedPattern;
 	}
 
@@ -187,5 +203,9 @@ public class Declaration {
 	public boolean hasHead() {
 		return hasHead;
 	}
+	
+	
+	
+	
 	
 }

@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 
@@ -23,20 +26,17 @@ import java.util.ArrayList;
 /**
  * 
  * @author sabine
- * @author J.R.I.B.-W.
+ * @author J.R.I.B.-W. complete overhaul.
  * 
- * Die Klasse dient zum Einlesen und Erstellen von Files 
- * die im  .txt, .rtf, oder .tex Format vorliegen.
+ * Die Klasse dient als Utility-Klasse der Kategorie IO/Read&Write.
+ * Textdateien können eingelesen oder zur Festplatte geschrieben werden.
  * 
- *	Beim Einlesen erhaelt man als Rueckgabe jeweils String[];
+ * Beim Einlesen erhaelt man als Rueckgabe jeweils String[];
  */
 
 
 
 public class ReadWrite {
-	
-	// Methode zum Einlesen, welche von aussen aufgerufen wird
-	// und dann die beiden anderen Methoden intern aufruft
 	
 	/**
 	 * 
@@ -63,6 +63,7 @@ public class ReadWrite {
 	 * @param exercise
 	 * @throws IOException
 	 */
+	//static void writeRawContentToDiskDependingOnEnding(Exercise exercise) throws IOException {
 	static void writeRawContentToDiskDependingOnEnding(Exercise exercise) throws IOException {
 		/* At this point we have the rough idea of an exercise and want
 		 * to create it on the harddisk. The idea is to copy the complete
@@ -130,8 +131,10 @@ public class ReadWrite {
 		//The general case: i.e. for all SINGLE-FILE AND NON-ARCHIVE DATATYPES!!!
 		else {
 			//Simply write it to a single file for: PLAIN TEXT, PDF
-			ReadWrite.writeText(exercise.getRawContent()
-					, exercise.filelink.replaceAll(Global.extractEnding(exercise.filelink) + "$", "txt"));
+			ReadWrite.writeText(
+					readInputStreamAsLines(exercise.filelink)
+					, exercise.filelink.replaceAll(Global.extractEnding(exercise.filelink) + "$", "txt")
+			);
 		}
 		
 				
@@ -141,9 +144,12 @@ public class ReadWrite {
 	
 	
 	
+	//READ INPUT STREAM AS LINES
+	public static String[] readInputStreamAsLines(String  filelink) throws IOException {
+		return readInputStreamAsLines(Global.getInputStreamDependingOnEnding(filelink));
+	}
 	
 	//READ FROM STREAM
-	
 	public static String[] readInputStreamAsLines(InputStream inputStream) {
 		//http://stackoverflow.com/questions/4473256/reading-text-files-in-a-zip-archive
 		//To decode from binary to text:
@@ -224,8 +230,8 @@ public class ReadWrite {
 			System.out.println("Die neue Datei : " + filelink + " wurde erstellt.");
 			bw.close();
 		}
-		catch (FileNotFoundException e) { }
-		catch (IOException e) { }
+		catch (FileNotFoundException e) { e.printStackTrace(); }
+		catch (IOException e) { e.printStackTrace(); }
 	}
 	
 	
@@ -255,6 +261,69 @@ public class ReadWrite {
 		}
 	}
 	
+	
+	
+	/**
+	 * WRITE
+	 * Text, binary currently not supported.
+	 * (http://stackoverflow.com/questions/2885173/java-how-to-create-and-write-to-a-file)
+	 * @param string    - The text to write to file.
+	 * @param filelink  - The destination file. Will be created or overwritten.
+	 * @param overwrite - Unless explicitely stated not to overwrite (default: true).
+	 */
+	public static void write(String[] lines, String filelink) {
+		String linesAsString = "";
+		for (String line : lines) {
+			linesAsString += line + "\r\n";
+		}
+		write(linesAsString, filelink);
+	}
+	
+	public static void write(String string, String filelink) {
+		
+//		ONLY WORKS IN JAVA 1.7 or if NEW IO (nio) package is available.
+//		Charset charset = Charset.forName("UTF-8");
+//		try (BufferedWriter writer = Files.newBufferedWriter(file, charset)) {
+//			writer.write(string, 0, string.length());
+//		} catch (IOException x) {
+//			System.err.format("IOException: %s%n", x);
+//		}
+		
+		Writer writer = null;
+		try {
+			writer = new BufferedWriter(
+					new OutputStreamWriter(
+							new FileOutputStream(filelink), "utf-8"
+					)
+			);
+			writer.write(string);
+		}
+		catch (IOException e) {
+			System.err.format("IOException: %s%n .", e);
+			e.printStackTrace();
+			Global.addMessage("Failed: Writing binary/text to file: " + filelink, "danger");
+		}
+		finally {
+			try { writer.close(); } catch (Exception e) { e.printStackTrace(); }
+		}
+		
+		
+//      //The non-proper way as this is for 
+//		PrintWriter writer = new PrintWriter("the-file-name.txt", "UTF-8");
+//		writer.println("The first line");
+//		writer.println("The second line");
+//		writer.close();
+//
+//		//Creating a binary file (will also overwrite the file):
+//
+//		byte dataToWrite[] = //...
+//		FileOutputStream out = new FileOutputStream("the-file-name");
+//		out.write(dataToWrite);
+//		out.close();
+		
+		
+	}
+
 	
 	
 	

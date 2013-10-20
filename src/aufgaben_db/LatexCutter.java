@@ -22,22 +22,20 @@ public class LatexCutter {
  * gibt die geschnittenen Aufgaben als Exercise-ArrayList auf
  * @param sheetdraft zu untersuchenden LatexSheet
  * @return ArrayList der geschnittenen Exercises (mit header und \begin / \end{document}, also theoretisch direkt komplierbar.
+ * @throws IOException 
  */
 //	public boolean cutExercise(String pathname, String head, String tail) {
-	public static ArrayList<Exercise> cutExercises(Sheetdraft sheetdraft) {	
-		
-		String headermixture = ""; //to determine
+	public static ArrayList<Exercise> cutExercises(Sheetdraft sheetdraft) throws IOException {	
 		
 		System.out.println("LatexCutter wurde aufgerufen.");
 		
-		BufferedReader texReader = null;
+		String headermixture = ""; //to be determined
 //		ArrayList<String> allLines = new ArrayList<String>();
 		String[] allTexLines = sheetdraft.getRawContent();//getTexText();
 		int indexOfFirstIdentifier = 0;
 		int indexOfLastIdentifier = 0 ;
 		int indexOfBeginDoc = 0;
 //		File cutExercise;
-		BufferedWriter fileWriter = null;
 		int indexOfFirstCut = 0;
 		int indexOfLastCut = 0;
 		boolean lastIdentifierFound = false;
@@ -124,14 +122,31 @@ public class LatexCutter {
 			Declaration dec = lineDecReference.get(linesToCut.get(i));
 			//creation of file for exercise on harddrive done in writeToHarddisk
 			ex_count_and_pos++; //increment here because we start with 1 instead of 0
-			Exercise loopExercise = new Exercise(
-					sheetdraft.getFilelinkForExerciseFromPosWithoutEnding(ex_count_and_pos) + sheetdraft.getFileEnding()
-					, dec
-					, exerciseText
-					, exerciseText /*TODO the above of those 2 should be plain text*/
-					, headermixture
-			); 
-			outputTexExercises.add(loopExercise);
+			
+			//write to filesystem 
+			String new_ex_filelink = sheetdraft.getFilelinkForExerciseFromPosWithoutEnding(
+					ex_count_and_pos) + sheetdraft.getFileEnding();
+			ReadWrite.write(exerciseText, new_ex_filelink);
+			
+			/*METHOD 1 via pdf*/
+			//Convert file to pdf.
+			//TODO
+			
+			//Extract plain text of this tex's pdf file.
+			//TODO
+			
+			/*METHOD 2 via removing all tex-related tags.*/
+			//TODO
+			
+			//Create Exercise instance for eventual further handling.
+//			Exercise loopExercise = new Exercise(
+//					new_ex_filelink
+//					, dec
+//					, exercisePlainText
+//					//, exerciseText
+//					, headermixture
+//			); 
+//			outputTexExercises.add(loopExercise);
 			
 		}
 		

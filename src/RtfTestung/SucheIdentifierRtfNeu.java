@@ -973,7 +973,7 @@ public static void schneideRtfteilweise(String[] rtf, int gefundeneAufgaben)
 		String[] ergebnis  = rtf.clone();
 		ergebnis[zeileDocAnfang] = startzeileBehalten; // in dieser Zeile wird nur der erste Teil behalten
 		ergebnis[zeileAufgabe] = endzeileBehalten; // in dieser Zeile wird nur der hintere Teil behalten
-		ergebnis = ExerciseCreator.loescheZeilen(ergebnis, zeileDocAnfang+1, zeileAufgabe-1);
+		ergebnis = Sheetdraft.loescheZeilen(ergebnis, zeileDocAnfang+1, zeileAufgabe-1);
 		
 		schreibeEinzelaufgabeRtfInHashMapStringArray(aufgabeNr, ergebnis);
 	//	String titel = HashMapVerwaltung.getDocTitleAusHashmap();
@@ -1085,7 +1085,7 @@ public static void schneideRtfteilweise(String[] rtf, int gefundeneAufgaben)
 		String[] ergebnis  = rtf.clone();
 		ergebnis[zeileAufgabe] = startzeileBehalten; // in dieser Zeile wird nur der erste Teil behalten
 		ergebnis[zeileDocEnde] = endzeileBehalten; // in dieser Zeile wird nur der hintere Teil behalten
-		ergebnis = ExerciseCreator.loescheZeilen(ergebnis, zeileAufgabe+1, zeileDocEnde-1);
+		ergebnis = Sheetdraft.loescheZeilen(ergebnis, zeileAufgabe+1, zeileDocEnde-1);
 		
 		
 		return ergebnis;

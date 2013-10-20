@@ -25,11 +25,14 @@ import javax.servlet.jsp.PageContext;
 
 
 import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -58,6 +61,7 @@ public class Global {
 	//======= GLOBALS - ATTRIBUTES ===============================================//
 	//GLOBALS - DECLARE
 	public static enum SUPPORTED_FILETYPES { pdf, tex, docx, doc, txt };
+	public static String imageTypeToGenerate = "png";
 	public static boolean debug = true;
 	public static boolean angemeldet = false;
 	public static String anzeige = "start";
@@ -68,7 +72,7 @@ public class Global {
 	//out of e.g. default, success, failure
 	
 	public static String root; //root - to be written once at startup
-	public static String uploadTarget = "uploads" + "/";
+	public static String uploadTarget = "uploads/";
 	public static HttpSession session;
 	public static Calendar now = new GregorianCalendar();
 	
@@ -108,10 +112,44 @@ public class Global {
 	public static boolean isFilelinkNativeFormat(String filelink) {
 		//For ease of debugging store it in a local variable first.
 		String last_ext_hence_current_format = Global.extractEnding(filelink);
-		return Global.getFilelinkNativeFormat(filelink)
-				.equals(last_ext_hence_current_format);
+		return getNativeFormatEnding(filelink).equals(last_ext_hence_current_format);
 	}
-	public static String getFilelinkNativeFormat(String filelink) {
+ 
+	public static String extractFilelinkOfMothersheet(String filelink) {
+		return filelink.replaceAll(filelink.substring(filelink.indexOf("__Exercise")) + "$", "");
+	}
+	
+	public static String getNativeFormatEnding(String filelink) {
+		//Get the stored ending .origext out of .origext.currentext.
+		String candidate;
+		String[] parts = filelink.split("[.]");
+		/*1) If an exercise has a double ending at the end:
+		 *   Then a .tex exercise results from a .originalext$ EXERCISE.*/
+		candidate = parts[parts.length - 2];
+		if (candidate.length() < 5) {/*No supported filetype with more than 4 digits.*/
+			return candidate;		 /*Furthermore the filenames are much longer as they
+									   obtain splitby data, exercise position/number, ...*/
+		}
+	
+		/*2) If an exercise has no double ending at the end:
+		 *   Then a .tex exercise results from a SHEETDRAFT .docx|ext.TEX.*/
+		parts = filelink.split("[.]" + parts[parts.length - 1]);
+		parts = parts[0].split("[.]");/* There may be many dots before in e.g. splitby definitions/hints et alia.*/
+		candidate = parts[parts.length - 1];/*However as only the last is taken it's okay.*/
+		//This is bonus only for this case.
+		if (candidate.length() < 5) {/*No supported filetype with more than 4 digits.*/
+			return candidate;		 /*Furthermore the filenames are much longer as they
+									   obtain splitby data, exercise position/number, ...*/
+		}
+		
+
+	
+		
+		//-----------------------------------------------------------------------------//
+		//Continue searching within our valid file extensions list if nothing found so far. 
+		//-----------------------------------------------------------------------------//
+		
+		
 		//Compare the stored ending __ext to the .ext at the end of filelink.
 		String value = null;
 		
@@ -155,8 +193,6 @@ public class Global {
 			//return true;
 			return Global.extractEnding(filelink); //this will result in null.
 		}
-		
-		
 		
 		
 		
@@ -467,35 +503,93 @@ public class Global {
 		return str;
 	}
 	
+	
+
+	//REMOVE ROOT PATH alias
+	public static String extractRelativePartOfFilelinkAtEndOnly(String filelink) {
+		return removeRootPath(filelink);
+	}
+	
+	//REMOVE ROOT PATH (returns relative path starting with the upload target directory!)
+	public static String removeRootPath(String filelink) {
+		
+		return filelink.replaceFirst(Global.root, "");
+		
+	}
 
 	public static String getImageLinkFromFile(String filelink) {
-		String[] parts = filelink.split(".");
+		
+		return getImageLinkFromFile(filelink, Global.imageTypeToGenerate);
+		
+	}
+	
+	public static String getImageLinkFromFile(String filelink, String ending) {
+		String[] parts = filelink.split("[.]");
 		if (parts.length < 2) {
 			addMessage("Filelink has no ending, after split it was null instead!"
 					+ " (getImageLinkFromFile)<br />filelink = " + filelink, "success");
 			return "ENDING WAS NULL";
 		}
 		String filelink_ending = parts[parts.length - 1];
-		String imagelink = filelink.replaceAll(filelink_ending, "jpg");
+		String imagelink = filelink.replaceAll(filelink_ending + "$", ending);
 		//TODO - optional:
 		//Test if file exists here.
 		return imagelink;
 	}
 	
+	
 
+	public static String getTxtLinkFromFilelink(String filelink) {
+		String[] parts = filelink.split("[.]");
+		if (parts.length < 2) {
+			addMessage("Filelink has no ending, after split it was null instead!"
+					+ " (getImageLinkFromFile)<br />filelink = " + filelink, "success");
+			return "ENDING WAS NULL";
+		}
+		String filelink_ending = parts[parts.length - 1];
+		String imagelink = filelink.replaceAll(filelink_ending + "$", "txt");
+		//TODO - optional:
+		//Test if file exists here.
+		return imagelink;
+	}
 	
 	
 
 	//======= GLOBALS - ARTIOMS IMPORTANT Global =============================//
-    public static void createImageFromText(String[] str, int width, String path,
-    		String name, String ext_desired) throws IOException {
+    public static void createImageFromText(String[] text, int width, String path,
+    		String filename, String ext_desired) throws IOException {
 		
 		File file = new File(path);
-		if (!file.exists()) {
-			file.mkdirs();
-		}
+		//IF A DIRECTORY
+    	if (file.isDirectory() && !file.exists()) {
+    		file.mkdirs();
+    	}
+    	//IF A FILE
+    	else if (file.getParentFile() != null && !file.getParentFile().exists()) {
+    		file.getParentFile().mkdirs();
+    	}
+		
+		createImageFromText(text, width, path + filename + "." + ext_desired);
+		
+    }
+    public static void createImageFromText(String[] text, int width, String imagelink) throws IOException {
+		
+    	String pathTo = imagelink.replaceAll(extractFilename(imagelink) + "$", "");
+    	File filePath = new File(pathTo);
+    	//IF A DIRECTORY
+    	if (filePath.isDirectory() && !filePath.exists()) {
+    		filePath.mkdirs();
+    	}
+    	//IF A FILE
+    	else if (filePath.getParentFile() != null && !filePath.getParentFile().exists()) {
+    		filePath.getParentFile().mkdirs();
+    	}
+    	
 		Font font = new Font("Serif", Font.PLAIN, 12);
-		int height = str.length*(font.getSize() + 10) ;//abhaengig von der schriftgroesse,anzahl der zeilen und abstand zwischen zeilen 10 un
+		
+		int height = text.length * (font.getSize() + 10) ;
+		//abhaengig von der schriftgroesse,anzahl der zeilen und abstand zwischen zeilen 10 un
+		
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = img.createGraphics();
 
@@ -507,24 +601,17 @@ public class Global {
         int x = 20;
         int y = 20;
         
-        for (int i = 0; i < str.length; i++) {
-        	g2.drawString(str[i],x,y+=20);
+        for (int i = 0; i < text.length; i++) {
+        	g2.drawString(text[i], x, y += 20);
 
 		}
         
-        
-        File outputfile = new File(path + name + "." + ext_desired);
-        ImageIO.write(img, ext_desired, outputfile);
+        String ext_and_format = Global.extractEnding(imagelink).replaceFirst("^[.]", "");
+        File outputfile = new File(imagelink);
+        ImageIO.write(img, ext_and_format, outputfile);
 	}
 	
 	
-	public static String getInhalt_as_String(String[] str) {
-		String res = "";
-		for (int i = 0; i < str.length; i++) {
-			res += str[i] + "\n";
-		}
-		return res;
-	}
 	
 	public static String encodeUmlauts(String str) {
 		//str = str.toLowerCase();
@@ -666,7 +753,10 @@ public class Global {
 
 	//CONVERT TO IMAGELINK
 	public static String convertToImageLink(String filelink) {
-		return filelink.replace("[.][a-zA-Z]+$", ".jpg");
+		return convertToImageLink(filelink, Global.imageTypeToGenerate);
+	}
+	public static String convertToImageLink(String filelink, String ending) {
+		return filelink.replaceAll("[.][a-zA-Z]+$", "." + ending);
 	}
 	//EXTRACT FILENAME
 	public static String extractFilename(String filelink) {
@@ -681,6 +771,53 @@ public class Global {
 				, "" /*replace with nothing => path to file left*/
 		);
 	}
+	
+	//EXTRACT ORIGINSHEETDRAFT FILELINK
+	public static String extractSheetdraftFilelinkFromExerciseFilelink(String filelink) {
+		String[] parts = filelink.split("__");
+		String result = "";
+		//The last two parts belong to the exercise only:
+		//		1) __Exercise_<number>
+		//      2) __splitby_<splitter>.<native_ending>.<derived_ending>
+		//So these two are to be skipped!
+		for (int i = 0; i < parts.length - 2; i++) {
+			result += parts[i];	// The rest is concatenated.
+		}
+		if (!new File(result).exists()) {
+			System.out.println(
+					Global.addMessage("The sheetdraft the exercise originates from could not"
+							+ " be found in the filesystem."
+							+ "Review Global.getOriginsheetdraftFilelink.", "danger")
+			);
+		}
+		return result;
+	}
+//	public String getSheetdraftFilelink() {
+//		//IT HAS TO BE ENSURED THAT __Exercise is being added at exercise 
+//		//AS FIRST ADDITION.
+//		//OR USE Global.extractSheetdraftFilelinkFromExerciseFilelink.
+//		int filelink_to_remove_index_start = filelink.indexOf("__Exercise");
+//		return filelink.substring(0, filelink_to_remove_index_start - 1);
+//	}
+	
+	
+	//EXTRACT EXERCISE PART ONLY FROM FILE LINK
+	public static String extractExercisePartOnlyFromExerciseFilelink(String filelink) {
+		String[] parts = filelink.split("__");
+		String result = "";
+		//The last two parts belong to the exercise only:
+		//		1) __Exercise_<number>
+		//      2) __splitby_<splitter>.<native_ending>.<derived_ending>
+		//=> So these two have to get concatenated!
+		for (int i = parts.length - 2; i < parts.length; i++) {
+			result += parts[i];	// The rest is concatenated.
+		}
+		//No existance check required here as the exercise in the filesystem includes
+		//the parent filelink at the beginning, the exercise only part is only a suffix
+		//to the filelink of the originsheetdraft.
+		return result;
+	}
+	
 	//EXTRACT ENDING
 	public static String extractEnding(String filelink) {
 		String[] parts = filelink.split("[.]");
@@ -700,13 +837,16 @@ public class Global {
 	}
 	//REPLACE ENDING
 	public static String replaceEnding(String filelink, String newext) {
-		return filelink.replace("[.]" + extractEnding(filelink) + "$i", newext);
+		return filelink.replaceAll("[.]" + extractEnding(filelink) + "$i", newext);
 	}
 	//EXTRACT SPLITTER
 	public static String extractSplitterFromFilelink(String filelink) {
 		return Global.extractSplitByFromFilelink(filelink);
 	}
 	public static String extractSplitByFromFilelink(String filelink) {
+		
+		filelink = Global.extractExercisePartOnlyFromExerciseFilelink(filelink); 
+		
 		//To be extracted:
 		String splitter = "";
 		//
@@ -745,19 +885,18 @@ public class Global {
 		int index_start = splitter_start_filelink_index;
 		if (index_start == -1) {
 			//no split by/splitter defined
-			//=> determine automatically (ideal solution if it works) <-- TODO
+			//=> determine automatically (ideal solution if it works) <-- TODO and ready in DeclarationFinder
 			//USE DECLARATIONS: 1., 2., ... e.g. (stored at sheetdraft.declarations)
-			//TODO
-			addMessage("NO SPLITTER SPECIFIED IN FILELINK OF UPLOADED DOCUMENT!"
-					+ "\r\n<br/>TODO: Auto-detect of declarations for the non-text-only"
-					+ " case if no splitter specified in the document's filename."
-					, "danger");
+			//Now we progagate up and use INTDOT/INTBRACKET/... depending on which fits best
+			//on a optionally specified custom __splitby_ in the filelink.
+			addMessage("NO OPTIONAL CUSTOM SPLITTER SPECIFIED IN FILELINK OF UPLOADED DOCUMENT!"
+					+ "\r\n<br/>=> Auto-detecting exercise declarations ..."
+					, "blackwhite");
 			
 			//=> or simply use a default splitter that has been defined as a convention
 			//e.g. Aufgabe. <-- this is what we use at first!!!
-			addMessage("=> USING 'Aufgabe' OR 'Exercise' instead."
-					, "info");
-			return "Aufgabe";
+			//addMessage("=> USING 'Aufgabe' OR 'Exercise' instead.", "info");
+			return "";
 		}
 		int index = index_start;
 		int substring_beginning_index = 0;
@@ -856,13 +995,17 @@ public class Global {
 	}
 	public static int extractLecturerIdFromFilelink(String filelink)
 			throws IOException, SQLException {
-		ResultSet res =
-		Global.query("SELECT id FROM lecturer WHERE lecturer = '"
-		+ Global.extractLecturerFromFilelink(filelink) + "'");
+		ResultSet res =	Global.query("SELECT id FROM lecturer WHERE lecturer = '"
+				+ Global.extractLecturerFromFilelink(filelink) + "'");
 		
 		int lecturer_id = -1;
 		while (res.next()) {
 			lecturer_id = res.getInt("id");
+		}
+		if (lecturer_id == -1) {
+			lecturer_id = 0; /*because the first entry (id = 0) is N.N. which is to be used if no lecturer is given*/
+			Global.addMessage("Lecturer id was -1. Query: " + "SELECT id FROM lecturer WHERE lecturer = '"
+				+ Global.extractLecturerFromFilelink(filelink) + "'", "warning");
 		}
 		
 		return lecturer_id;
@@ -886,11 +1029,30 @@ public class Global {
 
 	}
 	
+	
+	
+	
+	public static Pattern determinePatternBestFittingToSplitterHint(String splitter) {
+		
+		for (Muster m : Muster.values()) {
+			if (m.equals(splitter) || m.getPattern().matcher(splitter).matches()) {
+				return m.getPattern();
+			}
+		}
+		
+		return Pattern.compile(splitter);
+		
+	}
+	
+	
+	
 
 	
 //	Global.getExerciseFilelinkExtensionPattern() {
 //		return "";
 //	}
+	
+	
 	
 	
 	
@@ -1160,15 +1322,69 @@ public class Global {
 	//http://stackoverflow.com/questions/14603319/getinputstream-for-a-zipentry-from-zipinputstream-with-out-using-zipfile
 	static InputStream getInputStream(File zip, String entry) throws IOException {
 		ZipInputStream zin = new ZipInputStream(new FileInputStream(zip));
+		
 		for (ZipEntry e; (e = zin.getNextEntry()) != null;) {
+			//zin.getNext moves pointer of InputStream to the next entry.
 			if (e.getName().equals(entry)) {
+				//now we have it at the correct position in the stream: the hydro plant ..
 				return zin;
 			}
 		}
 		throw new EOFException("Cannot find zip-entry: " + entry + " !");
+		
+	}
+
+	
+	//GET INPUT STREAM DEPENDING ON ENDING 
+	static InputStream getInputStreamDependingOnEnding(String filelink) throws IOException {
+		File file = new File(filelink);
+		if (!file.exists()) {
+			Global.addMessage("Global.getInputStreamDependingOnEnding: File not found!", "danger");
+			return null;
+		}
+		
+		//DOCX
+		if (filelink.endsWith(".docx")/*
+				|| filelink.endsWith(".zip")
+				|| filelink.endsWith(".tar")
+				|| filelink.endsWith(".gz")
+				|| filelink.endsWith(".7z")
+				|| filelink.endsWith(".rar")*/) {
+			ZipFile docx = new ZipFile(file);
+//			IOUtils.copy(docx.getInputStream(entry),);
+//			ZipEntry docxXML = docx.getEntry(entry);
+			Global.addMessage("docx-Contents:\r\n<br />" + renderZipContents(docx), "info");
+			//word/document.xml entry of the zip/archive contains the content
+			return getInputStream(new File(filelink), "word/document.xml");
+		}
+		
+		//TODO OPENXML (Libre/OpenOffice)
+		
+		
+		
+		//all single source (non-binary) files
+		return new FileInputStream(new File(filelink));
 	}
 	
 	
+	//RENDER DOCX CONTENTS
+		public static String renderDocXContents(String filelink)
+				throws IOException {
+			return renderZipContents(new ZipFile(filelink));
+		}
+		public static String renderZipContents(ZipFile docx) {
+			String zipContents = "";
+			Enumeration<? extends ZipEntry> entriesIter = docx.entries();
+			while (entriesIter.hasMoreElements()) {
+				ZipEntry zipEntry = entriesIter.nextElement();
+				if (zipEntry.getName().equals("word/document.xml")) {
+					Global.addMessage("renderZipContents: document.xml found!","success");
+				}
+				zipContents += zipEntry.getName() + "\r\n<br />";
+			}
+			return zipContents;
+		}
+
     
     
 }
