@@ -3,6 +3,7 @@
     <wb-module deploy-name="aufgaben_db_v15">
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/src/docx4j_src/main/resources"/>
         <property name="java-output-path" value="/aufgaben_db_v15/build/classes"/>
         <property name="context-root" value="aufgaben_db_v15"/>
     </wb-module>

@@ -6,136 +6,7 @@ request.setCharacterEncoding("UTF-8");
 
 
 
-<style type="text/css">
-
-.auto-style1 { font-size: large; font-weight: bold; }
-label { width: 10em; float: left; }
-label.error { float: none; color: red; padding-left: .5em; vertical-align: top; }
-p { clear: both; }
-.submit { margin-left: 12em; }
-em { font-weight: bold; padding-right: 1em; vertical-align: top; }
-
-input[name^="description"] {
-    width: 100%;
-}
-
-</style>
-
-
-
-
-
-
-<!-- BOOTSTRAP -->
-<script src="bootstrap/js/bootstrap-tooltip.js"></script>  
-<script src="bootstrap/js/bootstrap-popover.js"></script>  
-<!-- Form-Validierung -->
-<script type="text/javascript" src="jquery/jquery.validate.min.js"></script>
-<!-- ToolTip -->
-<script type="text/javascript" src="jquery/toolTipPreview.js"></script>
-
-  <script type="text/javascript" charset="utf-8">
-
-  $(document).ready(function() {
-	    
-    $.validator.addMethod("noSpecialChars", function(value, element) {
-        //return this.optional(element) || value.match(/[^\\*\.\+\?\\\/<>:!\\"\\'Â§\\$%&]+$/);
-	   return this.optional(element) || value.match(/^[a-zA-Z0-9\_\u00FC\u00F6\u00E4\u00DC\u00D6\u00C4\/\s\(\)\.]+$/);
-    }, "nicht zulässige Zeichen");
-	$.validator.addMethod("falseFile", function(value, element) {
-        //return this.optional(element) || value.match(/[^\\*\.\+\?\\\/<>:!\\"\\'Â§\\$%&]+$/);
-	   return this.optional(element) || value.math(/[.](^odt)$/);
-    }, ".odt-Format nicht erlaubt");
-    $("#commentForm").validate();
-  });
-  </script>
-  <script type="text/javascript">
-
-  
-$(document).ready(function() {
-	$("#semester").autocomplete("get_autocomplete_data.jsp?change=semester", {
-		width: 260,
-		matchContains: true,
-		selectFirst: false
-	});
-	$("#course").autocomplete("get_autocomplete_data.jsp?change=course", {
-		width: 260,
-		matchContains: true,
-		selectFirst: false
-	});
-	$("#lecturer").autocomplete("get_autocomplete_data.jsp?change=lecturer", {
-		width: 260,
-		matchContains: true,
-		selectFirst: false
-	});
-});
-</script>
-
-<script type="text/javascript" src="jquery/toolTipPreview.js"></script>
-
-
-<div class="loader" id="loader" style="">
-      <img src="pictures/loader.gif" alt="Please wait..." />
-	 Bitte warten...
-</div>
-
-
-<!-- JQUERY -->
-<script type="text/javascript">
-function show_loader() {
-	if($("#commentForm").valid()) {
-		$(".loader").show();
-		$("#form").hide();
-	}
-}
-if($(document).ready()) {
-	$(".loader").hide();
-	$("#form").show();
-}
-
-$(function () {
-	$("#info_tooltip").tooltip({ placement: 'right'});  
-}); 
-
-
-deactivateIfFilledOrActivateIfEmpty = function(caller, differentTargetObjOrId) {
-	caller = arguments[0] || alert('At least one object, the caller has to be given to act upon.');
-	differentTargetObjOrId = arguments[1];
-	//Usually caller is easier to give as a object using 'this'. Anyway:
-	if (typeof caller != 'object') {
-		//it's an id string (high possibility)
-        caller = document.getElementById(caller);
-	}
-	//Now we have a caller at least.
-	//Check if we shall activate ourself? Strange enough this option
-	var targetObj = differentTargetObjOrId;
-	if (!differentTargetObjOrId || differentTargetObjOrId == 'undefined') {
-		targetObj = caller; 
-	} 
-	else if (typeof differentTargetObjOrId == 'string') {
-		//it's an id string (high possibility)
-		targetObj =
-		differentTargetObjOrId = document.getElementById(differentTargetObjOrId);
-	}
-	
-	//Now we have a target object to direct our actions to.
-	if (caller.value == '') {
-		//Activate the target object.
-		targetObj.disabled = false;
-		return ;
-	}
-	//Deactivate the target object.
-	targetObj.disabled = true;
-	return;
-}
-		
-		
-		
-		
-    </script>
-
-
-
+<jsp:include page="js/validateForm.js.jsp" />
 
 
 
@@ -149,7 +20,8 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
 
  -->
 
-<form class="cmxform" id="commentForm" method="post"  action="?id=upload_sheet&q=upload#add_result" enctype="multipart/form-data">
+<form class="cmxform" id="commentForm" method="post"  action="?id=upload_sheet&q=upload#add_result"
+enctype="multipart/form-data">
    <!-- To steer the ship. -->
    <!--
    <input type="hidden" name="q" value="upload" />
@@ -195,10 +67,10 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
                         	mMax = 9 - 1; /*<-- September as last month of semester.*/
                         	semterm_condition = nowMonth >= mMin && nowMonth <= mMax;
                         }
-                        out.print("<option "
+                        out.print("<option value='" + semterm + "_" + y + "'"
                         + ((y == Integer.valueOf(Global.now.get(Calendar.YEAR))
                         		&& semterm_condition) ? " selected='selected' ": "")
-                        +">" + semterm + "" + y + "</option>");                 
+                        +">" + semterm + " " + y + "</option>");                 
                     }
                 }
                 %>
@@ -226,11 +98,13 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
                    	}
                     //generate the option fields
                     if (res == null || resL == 0) {
-                        out.print("<option disabled='disabled'>-------</option>");
+                        out.print("<option selected='selected' disabled='disabled'>-------</option>");
                     } else {
 	                   	while (res.next()) {
 	                        //add option
-	                        out.print("<option>" + res.getString("course") + "</option>");             
+	                        out.print("<option value='"+ res.getString("course") +"'>"
+			                        + Global.decodeUmlauts(res.getString("course"))
+			                        + "</option>");             
 	                    }
                     }
                     %>
@@ -246,10 +120,10 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
             <td>
             <!-- (tbd) better load from database? -->
             <select class="required noSpecialChars" name="type" id="type">
-            <option selected="selected">Übung</option>
-            <option>Lösung</option>
-            <option>Klausur</option>
-            <option>Klausurlösung</option>
+            <option value="Uebung" selected="selected">Übung</option>
+            <option value="Loesung">Lösung</option>
+            <option value="Klausur">Klausur</option>
+            <option value="Klausurloesung">Klausurlösung</option>
             </select>
             </td>
         </tr>
@@ -264,15 +138,17 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
                 onchange="document.getElementById('lecturer').value=this.options[this.selectedIndex].text;">
 	                <%
 	                //fetch all distinct lecturer from database
-	                res = Global.query("SELECT `id`, `lecturer` FROM `lecturer`");
+	                res = Global.query("SELECT `id`, `lecturer` FROM `lecturer`" /*LIMIT 0, 30*/);
 	                if (!res.next()) {
 	                	out.print("<option disabled='disabled'>---(leer)---</option>");
 	                } else {
+	                	res.beforeFirst();//Because above we already increase by one!!
 		                while (res.next()) {
 		                    //add option
 		                    out.print("<option value='"+ res.getString("id") + ","
 		                              + res.getString("lecturer") +"'>"
-		                    		  + res.getString("lecturer") + "</option>");             
+		                    		  + Global.decodeUmlauts(res.getString("lecturer"))
+		                    		  + "</option>");             
 		                }
 	                }
 	                %>
@@ -302,14 +178,17 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
         </tr>
 		<tr>
 		<td></td>
-		<td> <input name="q" type="submit" value="upload" onclick="show_loader()" style="font-size : 16px;"/></td>
+		<td> <button name="q" type="submit" value="upload" onclick="/*validate();*/show_loader();" style="font-size : 16px;"
+			 class="btn btn-secondary"><i class="icon-gift"></i> Upload
+			</button>
+		</td>
 		</tr>
 		
     </table>
    
  </form>
  <br/>
-<small><b>Mit * markierte Felder dürfen nicht leer sein.</b></small>
+<small><b>Mit * markierte Felder d&uuml;rfen nicht leer sein.</b></small>
 </div>
 <%
 //if (request.getParameter("form") != null

@@ -3,9 +3,18 @@
  */
 package aufgaben_db;
 
+import java.awt.Insets;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+
+import javax.imageio.ImageIO;
+
+import org.scilab.forge.jlatexmath.TeXConstants;
+import org.scilab.forge.jlatexmath.TeXFormula;
+import org.scilab.forge.jlatexmath.TeXIcon;
 
 import HauptProgramm.Declaration;
 
@@ -49,9 +58,6 @@ public class LatexCutter {
 			return outputTexExercises;
 		}
 		
-		// ArrayList der heads des sheets, zur einfacheren Referenzierung
-		ArrayList<String> heads = new ArrayList<String>();
-		
 		// Anhand der heads, ArrayList mit den Zeilennummern, an denen geschnitten
 		// werden soll, erstellen.
 		ArrayList<Integer> linesToCut = new ArrayList<Integer>();
@@ -64,10 +70,10 @@ public class LatexCutter {
 					if (dec.hasHead()) {
 						if (dec.getHead() != null && singleLine != null) {				
 							System.out.println("Untersuchter Head lautet" + dec.getHead().toString());
-							if ((singleLine.contains(dec.getHead().get(0)) && singleLine.contains(dec.getHead().get(1)) && singleLine.contains(dec.getHead().get(2)))
-									|| (singleLine.contains(dec.getHead().get(0)) && singleLine.contains(dec.getHead().get(1)) && singleLine.contains(dec.getHead().get(3)))
-									|| (singleLine.contains(dec.getHead().get(0)) && singleLine.contains(dec.getHead().get(2)) && singleLine.contains(dec.getHead().get(3)))	
-									|| (singleLine.contains(dec.getHead().get(1)) && singleLine.contains(dec.getHead().get(2)) && singleLine.contains(dec.getHead().get(3)))) {
+							if ((singleLine.contains(dec.getHead()[0]) && singleLine.contains(dec.getHead()[1]) && singleLine.contains(dec.getHead()[2]))
+									|| (singleLine.contains(dec.getHead()[0]) && singleLine.contains(dec.getHead()[1]) && singleLine.contains(dec.getHead()[3]))
+									|| (singleLine.contains(dec.getHead()[0]) && singleLine.contains(dec.getHead()[2]) && singleLine.contains(dec.getHead()[3]))	
+									|| (singleLine.contains(dec.getHead()[1]) && singleLine.contains(dec.getHead()[2]) && singleLine.contains(dec.getHead()[3]))) {
 								System.out.println("Head " + dec.getHead() + "gefunden!");
 								Integer indexOfCut = i;
 								while (!allTexLines[indexOfCut].startsWith("\\begin")) {
@@ -153,6 +159,73 @@ public class LatexCutter {
 		System.out.println("LatexCutter Beendet");
 		return outputTexExercises;
 	}		
+	
+	
+	static void createImagesForExercises(Sheetdraft sheetdraft) throws FileNotFoundException {
+		createImagesForExercises(sheetdraft.getAllExercises().values());
+	}
+	static void createImagesForExercises(Collection<Exercise> exercises) throws FileNotFoundException {
+		for (Exercise exercise : exercises) {
+			tex2image(exercise.filelink);
+		}
+	}
+	
+	/**
+	 * Creates an image out of a chunk of tex that gets loaded from the filesystem.
+	 * 
+	 * @param filelink
+	 * @param writeToDisk -- write the image to the filesystem replacing the original ending with png.
+	 * @return a buffer of the image
+	 * @throws FileNotFoundException
+	 */
+	static BufferedImage tex2image(String filelink) throws FileNotFoundException {
+		return tex2image(filelink, true);
+	}
+	
+	static BufferedImage tex2image(String filelink, boolean writeToDisk) throws FileNotFoundException {
+//		String math = "\\frac {V_m} {K_M+S}";
+//		TeXFormula formula = new TeXFormula(math);
+//		TeXIcon ti = fomula.createTeXIcon(TeXConstants.STYLE_DISPLAY, 40);
+//		BufferedImage b = new BufferedImage(ti.getIconWidth(), ti.getIconHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+//		ti.paintIcon(new JLabel(), b.getGraphics(), 0, 0);
+		String tex;
+		tex = Global.arrayToString(ReadWrite.loadText(filelink));
+		
+		TeXFormula formula = new TeXFormula(tex);
+		TeXIcon icon = formula.new TeXIconBuilder()
+				.setStyle(TeXConstants.STYLE_DISPLAY)
+//				.setWidth(TeXConstants.UNIT_CM, 4, TeXConstants.ALIGN_LEFT)
+//				.setInterLineSpacing(TeXConstants.UNIT_CM, 0.5f)
+				.setSize(20)
+				.build();
+		
+		
+		icon.setInsets(new Insets(5, 5, 5, 5));
+		
+		BufferedImage tex_image_buffer
+		= new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+		
+		//Graphics2D g2 = image.createGraphics();
+		//g2.setColor(Color.white);
+		//g2.fillRect(0,0,icon.getIconWidth(),icon.getIconHeight());
+		//JLabel jl = new JLabel();
+		//jl.setForeground(new Color(0, 0, 0));
+		//icon.paintIcon(jl, g2, 0, 0);
+		if (writeToDisk) {
+			File tex_image_file = new File(Global.convertToImageLink(filelink));
+			try {
+			    ImageIO.write(tex_image_buffer, "png", tex_image_file.getAbsoluteFile());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		//ALTERNATIVELY
+		//formula.createPNG(TeXConstants.STYLE_DISPLAY, 20, "Example5.png", Color.white, Color.black);
+		
+		return tex_image_buffer;
+		
+	}
 
 		
 		
@@ -178,7 +251,7 @@ public class LatexCutter {
 //				indexOfLastCut = indexOfLastIdentifier;
 //				lastIdentifierFound = true;
 //			}
-//				
+//			
 //			if (lastIdentifierFound && singleLine.startsWith("\\end")) {
 //				indexOfLastCut = allLines.size() - 1;
 //				System.out.println("Cut in Zeile " + indexOfLastCut);

@@ -1,7 +1,7 @@
 
 <%-- <%@page import="com.sun.org.apache.xpath.internal.functions.Function"%>
 <%@page import="com.sun.org.apache.xpath.internal.functions.FuncBoolean"%> --%>
-<%@page import="com.mysql.jdbc.Statement"%>
+<%@page import="com.mysql.jdbc.Statement, java.net.URLEncoder"%>
 
 <%@page import="org.apache.pdfbox.examples.pdmodel.AddMessageToEachPage"%>
 
@@ -54,6 +54,7 @@
 	FileItemFactory factory = new DiskFileItemFactory();
 	ServletFileUpload upload = new ServletFileUpload(factory);
 	
+	//if (request.getContentType().equals("multipart/form-data"))
 	try {
 	    List<?> items = upload.parseRequest(request);
 	    Iterator<?> iterator = items.iterator();
@@ -65,33 +66,34 @@
 	    //Another form field transmitted? hopefully at least all required ones: course, lecturer, file
 	    while (iterator.hasNext()) {
 	        
-	FileItem item = (FileItem) iterator.next();
-	//preprocess items
-	if (item.isFormField()) {
-	
-		String name = item.getFieldName();
-		String value = item.getString(); //feldwert
-		value = new String(value.getBytes("ISO-8859-1"),"UTF-8");
-		//value = Global.encodeUmlauts(value);
-		//speichere in hashmapp felnamen und feldwert
-		form_data.put(name, value);
-		message += "name = " + name + " => ";
-		message += " value = " + form_data.get(name) + "</br>\n\r";
-		//dir += form_data.get(name) + "\\";
-		
-		continue; /* the same as if an else statement was to follow */
-		
-	}
-	//ELSE
-	//ITEM IS A FILE !!!
-	//Datei-endung ermitteln
-	ext = Global.extractEndingPerReverse(item.getName());
-	//build all data containing filename
-	filename = Global.encodeUmlauts(item.getName())/* + ".original_" + ext*/ + "." + ext;
-	/*Results in a double ending. That is required for always knowing which filetype is the original file format.*/
-	Global.addMessage("Uploaded-Filename = " + filename, "info");
-	//Store the fileitem for later saving as filesystem FILE.
-	fileItem = item;
+			FileItem item = (FileItem) iterator.next();
+			//preprocess items
+			if (item.isFormField()) {
+			
+				String name = item.getFieldName();
+				String value = item.getString(); //feldwert
+				value = new String(value.getBytes("ISO-8859-1"),"UTF-8");
+				//value = Global.encodeUmlauts(value);
+				//speichere in hashmapp felnamen und feldwert
+				form_data.put(name, value);
+				message += "name = " + name + " => ";
+				message += " value = " + form_data.get(name) + "</br>\n\r";
+				//dir += form_data.get(name) + "\\";
+				
+				continue; /* the same as if an else statement was to follow */
+				
+			}
+			//ELSE
+			//ITEM IS A FILE !!!
+			//Datei-endung ermitteln
+			ext = Global.extractEndingPerReverse(item.getName());
+			//build all data containing filename
+			filename = Global.encodeUmlauts(item.getName())/* + ".original_" + ext*/ + "." + ext;
+			/*Results in a double ending. That is required for always knowing which filetype is the original file format.*/
+			//Global.addMessage("Uploaded-Filename = " + filename, "info");
+			
+			//Store the fileitem for later saving as filesystem FILE.
+			fileItem = item;
 		    
 	    } /* <-- Here's the long looked for end of while. -END */
 	    //Global.addMessage(message, "info"/*, request, pageContext*/);
@@ -125,17 +127,22 @@
         
         File uploadedFile = new File(path + "/" + filename);
         //String dir_for_link = dir.replaceAll("\\", "/");
-        filelink = "uploads" + "/" + dir + filename;
+        filelink = Global.uploadTarget + dir + filename;
         form_data.put("filelink", filelink);
         pdf_link = Global.replaceEnding(filelink, "pdf");
         tex_link = Global.replaceEnding(filelink, "tex");
         //link = Global.encodeUmlauts(link);
         //out.println("upl_file: "+ link + "</br>");
-        fileItem.write(uploadedFile);
+        fileItem.write(uploadedFile);/*write the file to harddisk*/
         //out.print("uplf_path: " + uploadedFile.getAbsolutePath() + "</br>");
 
+        
         //=========================================================================
-        //=======             EXTRACT EXERCISES                             =======
+        //=======             GENERATE FLAVOURS                             =======
+        //=========================================================================
+        
+        //=========================================================================
+        //=======             EXTRACT EXERCISES (plain text & native format)=======
         //=========================================================================
         String uploadedFileLink = uploadedFile.getAbsolutePath();
         Sheetdraft sheetdraft = Aufgaben_DB.processUploadedSheetdraft(
@@ -168,7 +175,7 @@
         doc.add(new Field("description", form_data.get("description"), Field.Store.YES,Field.Index.ANALYZED));
         doc.add(new Field("semester", form_data.get("semester") , Field.Store.YES,Field.Index.ANALYZED));
         doc.add(new Field("course", form_data.get("course") , Field.Store.YES,Field.Index.ANALYZED));
-        doc.add(new Field(" in_type", form_data.get("type") , Field.Store.YES,Field.Index.ANALYZED));
+        doc.add(new Field("type", form_data.get("type") , Field.Store.YES,Field.Index.ANALYZED));
         //doc.add(new Field("datei_typ", ext , Field.Store.YES,Field.Index.NOT_ANALYZED_NO_NORMS));
         
         
@@ -180,11 +187,13 @@
         //bild_link ="bilder/" + bild_name + "__" + ext + ".jpg";
         try {
             //hopefully in this Thread happens the creations/conversions of tex-/html-files
+            Global.ImageMagick_qualityScale = 1;//this quality/density is high enough here 
             UnixComandosThread p = new UnixComandosThread(
                     response,
                     uploadedFile.getAbsolutePath(),
                     Global.root + Global.uploadTarget + dir
             );
+            p.d_o();
             //p.start(); //for debug purposes better not start another thread, so currently
             //p.start() is not used. Instead the cmd-execution is started in the constructor.
             
@@ -192,7 +201,8 @@
             e.printStackTrace();
         }
         
-        //PLAIN TEXT:
+        
+        //PLAIN TEXT EXERCISES:
         
         /* At this point the exercises are extracted, stored in the filesystem and the 
         relationships between exercise-sheetdrafts are stored in the database via filelink as id.*/
@@ -220,9 +230,44 @@
             );
             doc.add(new Field(al.get(i).getFilelink(), al.get(i).getPlainTextAsString(), Field.Store.YES, Field.Index.ANALYZED));
         }
-        Global.addMessage("Created images to each exercise ...", " success "/*, request, pageContext*/);
+        Global.addMessage("Created images to each exercise (plain text) ...", " success "/*, request, pageContext*/);
         
         
+        //NATIVE FORMAT EXERCISES
+        //al.addAll(sheetdraft.getAllExercises().values());
+        //Generate images for exercise:
+        for (Exercise exercise : sheetdraft.getAllExercises().values()) {
+        
+            String sheetdraft_ending = Global.extractEnding(sheetdraft.getFilelink());
+        	String exercise_ending = Global.extractEnding(exercise.getFilelink());
+        	
+        	//Figure out which plain text exercise that has been generated corresponds to 
+        	//this raw/native format one:
+            int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.getFilelink());
+        	String exercisePT_filelink
+        	= sheetdraft.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber)
+        			+ "." + sheetdraft_ending + ".txt" //+ exercise_ending
+        			;
+        	
+        	Exercise exercisePT = sheetdraft.getAllExercisesPlainText().get(exercisePT_filelink);
+        	String correspondingPlainText = "";
+        	if (exercisePT != null) {
+        	    correspondingPlainText = exercisePT.getPlainTextAsString();
+        	    //doc.add(new Field(exercise.getFilelink(), correspondingPlainText, Field.Store.YES, Field.Index.ANALYZED));
+        	    doc.add(new Field("content", correspondingPlainText, Field.Store.YES, Field.Index.ANALYZED));
+        	}
+        	else {
+        		Global.addMessage("No corresponding plain text exercise found.", "danger");
+        	}
+        	
+        	//for now this would overwrite odt.txt -> odt.png!! Now using triple endings for images only?
+            //exercise.generateImage();
+            
+        	al.add(exercise);
+        }        
+        
+        //not to forget!!
+        aufg_anz = al.size();
         
         iwriter.addDocument(doc);
         iwriter.close();
@@ -245,24 +290,39 @@
 	    String in_type = form_data.get("type");
 	    String in_course = form_data.get("course");
 	    String in_semester = form_data.get("semester");
-	    String in_lecturer = form_data.get("lecturer");//<--this is the the new lecturer
+	    String in_lecturer = Global.encodeUmlauts(form_data.get("lecturer"));//<--this is the the new lecturer
 	    
 	    if (in_lecturer == null) {
-	        Global.addMessage("No lecturer given? If no lecturerID given, too => then we will use default lecturer: N.N.", "info");
+	    	System.out.print(
+	    			//Global.addMessage(
+	    					"No lecturer given? If no lecturerID given, too => then we will use default lecturer: N.N."
+	    			//		, "info"
+ 					//)
+ 			);
 	    }
 	    String in_lecturer_id_select = form_data.get("lecturer_id_select");
-	    String in_lecturer_id = null;
+	    int in_lecturer_id = -1;
 	    String in_lecturer_according_to_id = null;
 	    if ((in_lecturer_id_select == null || in_lecturer_id_select == "") && in_lecturer == null) {
-	        Global.addMessage("Neither existant lecturerID nor new lecturer data transmitted? => Using default lecturer: N.N.", "warning");
-	        in_lecturer_id = "0"; /*requires N.N. to have ID of 0*/
+	    	System.out.print(
+	    			//Global.addMessage(
+	    					"Neither existant lecturerID nor new lecturer data transmitted? => Using default lecturer: N.N."
+	    			//		, "warning"
+   					//)
+			);
+	        in_lecturer_id = 0; /*requires N.N. to have ID of 0*/
 	    }
 	    else if (in_lecturer_id_select == null || in_lecturer_id_select == "") {
-	        Global.addMessage("No lecturerID transmitted by form? => Inserting new one.", "info");
+	        System.out.print(
+// 	        		Global.addMessage(
+	        				"No lecturerID transmitted by form? => It's a new lecturer."
+// 	        				, "info"
+//        			)
+    		);
 	    }
 	    else {/*split given parameter tuple into two separate strings */
 	        String[] parts = in_lecturer_id_select.split(",");//if empty->new lecturer to db
-	        in_lecturer_id = parts[0].replace(" ", "");//Integer.valueOf(parts[0]);
+	        in_lecturer_id = Integer.valueOf(parts[0].replace(" ", ""));
 	        in_lecturer_according_to_id = parts[1]; /*<- required for checking if a new lecturer
 	                                           shall be inserted (as it's thinkable that
 	                                           user first select one of the lecturers of
@@ -273,7 +333,7 @@
 	        if (!in_lecturer.equals(in_lecturer_according_to_id)) {
 	            //then clear the in(coming)_id => insert new lecturer to database
 	            //because they are different, hence the new different one has to be inserted
-	            in_lecturer_id = "";
+	            in_lecturer_id = -1;
 	            Global.addMessage("Did you want to insert a new/different Lecturer with a name"
 	                    + " that already exists? Theoretically this is possible:"
 	                    + " To achieve that you have to RESET" 
@@ -308,14 +368,14 @@
 	    //------Holle ids - potentially overwrites in_lecturer_id
 	    //----------------fetch-lecturer_id---------------only if a new lecturer to be inserted
 	    /* No or at least no valid id value been transmitted? */
-	    if (in_lecturer_id == null || in_lecturer_id == "") { //now it can be overwritten
+	    if (/*in_lecturer_id == null ||*/ in_lecturer_id == -1) { //now it can be overwritten
 	        //=> aha new one to be inserted
 	        
-	        column_value.put("lecturer", in_lecturer);
+	        column_value.put("lecturer", Global.encodeUmlauts(in_lecturer));
 	        //Is name of potential new lecturer already in database?
 	        if (!Global.sqlm.exist("lecturer", "lecturer", column_value)) {
 	            String query = "INSERT INTO lecturer"
-	                    + "(`lecturer`) VALUES ('" + in_lecturer + "');";
+	                    + "(`lecturer`) VALUES ('" + Global.encodeUmlauts(in_lecturer) + "');";
 	                    //execute
 	            Global.sqlm.executeUpdate(query);
 	        }
@@ -329,9 +389,9 @@
 	        column_value.remove("lecturer");
 	        
 	        //fetch the id of the lecturer -overwrite given one as this is now obsolete
-	        in_lecturer_id = Global.sqlm.getId("lecturer", "lecturer", in_lecturer);
+	        in_lecturer_id = Global.sqlm.getId("lecturer", "lecturer", Global.encodeUmlauts(in_lecturer));
 	        //make known
-	        column_value.put("lecturer_id", in_lecturer_id);
+	        column_value.put("lecturer_id", in_lecturer_id + "");//will be reconverted in getId
 	        
 	    }
 	    
@@ -370,7 +430,8 @@
 	        //=======              INSERT SHEET(OR)DRAFT                        =======
 	        //=========================================================================
 	        String query = "INSERT INTO sheetdraft "
-	        + "(`filelink`, `type`, `course`, `semester`, `lecturer_id`, `description`, `author`, `is_draft`)"
+	        + "(`filelink`, `type`, `course`, `semester`, `lecturer_id`, `description`"
+	        + ", `author`, `is_draft`, `whencreated`, `plain_text`)"
 	                    + "VALUES ("
 	                            + "'" + filelink + "'"
 	                            + ",'" +  in_type + "'"
@@ -379,10 +440,13 @@
 	                            + "," + in_lecturer_id + ""
 	                            + ",'" + in_description + "'"
 	                            + ",'" + session.getAttribute("user") + "'"
-	                            //+"','" + Global.sqlm.mysql_real_escape_string(content) + "'"
 	                            + ", " + is_draft /* <- uploaded ones usually are no drafts but sheets */
+	                            + ", UNIX_TIMESTAMP()"
+	                            + ",'" + Global.sqlm.mysql_real_escape_string(Global.encodeUmlauts(sheetdraft.getPlainTextAsString())) + "'"
+	                            //alternatively use URLEncoder.encode() here:
+	                            //+ "'" + URLEncoder.encode(sheetdraft.getPlainTextAsString(), "utf-8") + "'"
 	                            + ");";
-	        Global.addMessage("query: " + query, "info");
+	        //Global.addMessage("query: " + query, "info");
 	        //execute
 	        Global.sqlm.executeUpdate(query);
 	        
@@ -391,7 +455,7 @@
 	        
 	        
 	        //holle sheetdraft id
-	        String sheetdraft_id = Global.sqlm.getIds("sheetdraft", column_value);
+	        int sheetdraft_id = Global.sqlm.getId("sheetdraft", column_value);
 	        //String sheetdraft_id = Global.sqlm.getId("sheetdraft", "", "");
 	
 	        
@@ -399,7 +463,7 @@
 	        message = "<b>Hochgeladene Dateien: </b><br /><br />"
 	          + "<a href='" + filelink + "' class='screenshot' rel='"
 	          + Global.getImageLinkFromFile(filelink) + "'>"
-	          + form_data.get("filelink") + "." + Global.extractEnding(filelink) + "</a>"
+	          + form_data.get("filelink") + "</a>"
 	                  +"</br>"
 	                  +"</br>";
 	        //=========================================================================
@@ -409,11 +473,16 @@
 	        	//The convert the absolute part to the relative one.
 	        	
 	        	String exercise_filelink_relative_part = Global.extractRelativePartOfFilelinkAtEndOnly(al.get(i).getFilelink());
-	        	Global.addMessage("Generated relative filelink: " + exercise_filelink_relative_part, "info");
+	        	System.out.print(
+	        			  //Global.addMessage(
+	        					  "Generated relative filelink: " + exercise_filelink_relative_part
+	        					  //, "info"
+       					  //)
+			    );
 	        	String exercise_sheetdraft_filelink = Global.extractSheetdraftFilelinkFromExerciseFilelink(al.get(i).getFilelinkRelative());
 	            query = "INSERT INTO exercise ("
 	            		   + "sheetdraft_filelink"
-	            		   + ", filelink"
+	            		   + ", `filelink`"
 	            		   + ", `originsheetdraft_filelink`"
           				   + ", `splitby`"
         				   + ", is_native_format"
@@ -422,13 +491,13 @@
       				   + ")"
 	                   + "VALUES ("
 		               		+ "'" + exercise_sheetdraft_filelink + "'"//sheetdraft_filelink
-			                + ",'" + al.get(i).getFilelinkRelative() + "'"
-			                + ",'" + exercise_sheetdraft_filelink + "'"//originsheetdraft_filelink
-			                + ",'" + al.get(i).getSplitBy() + "'"
-			                //+ ",'" + Global.sqlm.mysql_real_escape_string(al.get(i).getPlainTextAsString())
-			                + ", " + al.get(i).isNativeFormat() /*is_native_format <-- all directly uploaded sheets are initially in native format*/
-			                /*whenchanged - never changed so far*/
-			                + ", UNIX_TIMESTAMP() " /*whencreated - automatically given the current db date*/
+	                + ",'" + al.get(i).getFilelinkRelative() + "'"
+	                + ",'" + exercise_sheetdraft_filelink + "'"//originsheetdraft_filelink
+	                + ",'" + al.get(i).getSplitBy() + "'"
+	                //+ ",'" + Global.sqlm.mysql_real_escape_string(al.get(i).getPlainTextAsString())
+	                + ", " + al.get(i).isNativeFormat() /*is_native_format <-- all directly uploaded sheets are initially in native format*/
+	                /*whenchanged - never changed so far*/
+	                + ", UNIX_TIMESTAMP() " /*whencreated - automatically given the current db date*/
 	                   + ");";
 	            //Global.addMessage("query: " + query, "info");
 	            //execute

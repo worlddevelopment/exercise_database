@@ -50,7 +50,7 @@ else {/*ajax request*/
 }
 %>
  
+<!-- 
+<div id="ajaxcontent">
 
-<span id = 'ajaxcontent'>
-
-</span>
+</div> -->

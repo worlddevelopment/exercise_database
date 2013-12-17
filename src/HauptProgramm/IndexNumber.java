@@ -32,7 +32,7 @@ public class IndexNumber {
 	}
 	
 	/**
-	 * Zügt eine Zahl dem Index hinzu (x = neue Zahl, aus 4.1 wird 4.1.x)
+	 * Appends a number to the Index (x = neue Zahl, aus 4.1 wird 4.1.x)
 	 *
 	 * @param i int, die an den Index angefügt werden soll.
 	 */

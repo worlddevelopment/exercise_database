@@ -1,46 +1,68 @@
-/**
- * Here happen several important things:
- * - If a new draft:    1) create new sheetdraft 2) add all given exercises by reference 3) add the relationships from point 2) to the db.
- * - If existing draft: 1) add all given (per POST/GET, request) exercises by ref. 2) write relationships from 1) to  
- *
- */
-
-
-<%@page import="swp.SQL_Methods"%>
-<%@page import="java.util.List,java.util.ArrayList,java.util.LinkedList,java.util.Map"%>
+<%@page import="java.util.List, java.util.ArrayList,java.util.Map"%>
 <%@page import="java.sql.ResultSet"%>
 <%@page import="aufgaben_db.Global, aufgaben_db.Exercise, aufgaben_db.Sheetdraft"%>
 <jsp:useBean id="draft" class="aufgaben_db.Sheetdraft" scope="session"></jsp:useBean>
 <%
+/**
+ * Here happen several important things:
+ * - If a new draft:    1) create new sheetdraft 2) add all given exercises by reference 3) add the relationships from point 2) to the db.
+ * - If existing draft: 1) add all given (per POST/GET, request) exercises by ref. 2) write relationships from 1) to db.
+ *
+ */
+
+	//Preconditions not met?
+	if (request.getParameter("filelink") == null
+			&& request.getParameterValues("exercise_filelinks_to_add[]") == null
+			&& request.getParameterValues("exercise_filelinks[]") == null
+			&& request.getParameterValues("sheetdraft_filelinks[]") == null) {
+	    Global.addMessage("No exercise/sheetdraft filelinks or ids were given. Without that, obviously, nothing can be added to a draft."
+	          + " Use the treeview of the start page for editing sheetdrafts and selecting exercises."
+	          + " Currently only exercises are supported.", "warning");
+	    return ;
+	}
+	if (request.getParameter("filelink") == null
+	         && request.getParameterValues("exercise_filelinks_to_add[]") == null
+	         && request.getParameterValues("exercise_filelinks[]") == null
+	         ) {
+	     Global.addMessage("No exercises have been selected. Without that, nothing can be added to a draft."
+	           + " Use the treeview of the start page for editing sheetdrafts and selecting exercises."
+	           + " Currently only exercises are supported.", "warning");
+	     return ;
+	}
+	
+	
+	String[] exercise_filelinks = (String[]) request.getParameterValues("exercise_filelinks_to_add[]");
+	if (exercise_filelinks == null) {
+		exercise_filelinks = (String[]) request.getParameterValues("exercise_filelinks[]");
+	}
+	
+    //redirect/correct target page
+    request.setAttribute("id", "drafts");
+    Global.anzeige = "drafts";
+
     //initialization using a number less than 0 happens if no destination is given 
     //int destination_draft_id;
     String destination_draft_filelink;
     String new_or_latest_changed_or_other_draft = "";
-
+    //already existing destination draft is given.
+    //destination_draft_id = Integer.parseInt(request.getParameter("destination_draft_id"));
+    destination_draft_filelink = request.getParameter("destination_draft_filelink");
     //Check if no destination is given and hence a new draft has to be generated. (a filelink is unique)   
-   	if (request.getParameter("destination_draft_filelink") == null) {
+   	if (destination_draft_filelink == null) {
     	//Without filelinks to add to the draft continuing is senseless.
     	//=>Are there filelinks?
-    	if (request.getParameter("exercise_filelinks_to_add[]") == null) {
-	    	//cancel
+    	if (exercise_filelinks == null || exercise_filelinks.length == 0) {
 	    	Global.addMessage("`Add to draft` was forced to cancel due to lack of a "
 	    			   + "destination draft and exercise identifiers(filelinks) required to know what to add."
 	    			   , "danger");
-	    	
-	    	return ;
+	    	return ;  //cancel
     	}
     	//else 
-    	//warning
         Global.addMessage("`Add to draft` was not given a (sheet)draft as destination."
         		+ "\r\n<br />Using a new draft as default now instead."
                    , "warning");
         //destination_draft_id = -1;        /*=> -1 is for indicating a new draft*/
         destination_draft_filelink = null;  /*=> null is for indicating a new draft*/
-    }
-    else {
-    	//already existing destination draft is given.
-    	//destination_draft_id = Integer.parseInt(request.getParameter("destination_draft_id"));
-    	destination_draft_filelink = request.getParameter("destination_draft_filelink");
     }
     
     
@@ -50,21 +72,20 @@
 	exercise_filelinks_to_add.addAll(draft.getAllExercises().keySet());
     
     //Add all given exercise filelinks to the list.
-    //this is now happening here
-    for (String l : (String[])request.getAttribute("exercise_filelinks_to_add[]")) {
+    for (String l : exercise_filelinks) {
         exercise_filelinks_to_add.add(l);
     }
     
     //Intermezzo, how many exercises have been added so far?
 	//Note: Arrays are given by reference!
-	int exercise_filelinks_to_add_size = exercise_filelinks_to_add.size();   /*for performance
+ 	int exercise_filelinks_to_add_size = exercise_filelinks_to_add.size();   /*for performance
                                                  it's being used in three loops */ 
 
 	
 	//HANDLE DESTINATION DRAFT.
 	/*first real appearance of the draft bean comes here*/
-	if (destination_draft_filelink == null || destination_draft_filelink == ""
-			|| destination_draft_filelink == "-1") {
+	if (destination_draft_filelink == null || destination_draft_filelink.isEmpty()
+			   || destination_draft_filelink.equals("-1")) {
 		//CREATE NEW DRAFT.
 	    draft = new Sheetdraft(); // the garbage 
 		
@@ -77,6 +98,8 @@
 	    
 		//save it to the database
 		draft.synchronizeDatabaseToThisInstance();
+	    
+	    
 		new_or_latest_changed_or_other_draft = "<em>neu erstellten</em>";
 		//Global.addMessage("Created new draft with no exercises in it.", "success");
 	}
@@ -112,14 +135,13 @@
 			; exercise_position++) {
 		
 		if ( Global.sqlm.exist(" `draftexerciseassignment` ", " sheetdraft_filelink "
-				, "exercise_filelink = 'exercise_filelinks_to_add.get(exercise_position)'")	) {
+				, "exercise_filelink = '" + exercise_filelinks_to_add.get(exercise_position) + "'")	) {
 			continue;
 		}
 		
 	    String query = "INSERT INTO `draftexerciseassignment`"
-		   + " (sheetdraft_filelink, position, exercise_filelink)"
-		   + " VALUES("
-		           + draft.getFilelink()
+		   + " (sheetdraft_filelink, `position`, exercise_filelink)"
+		   + " VALUES('" + draft.getFilelinkRelative() + "'"
 		           + ", " + exercise_position
 		           + ", '" + exercise_filelinks_to_add.get(exercise_position) + "'"
 		           + ");";
@@ -134,7 +156,7 @@
 	
 	
 	//To keep integrity between DB and the object/instance of the active draft:
-	draft.loadAssignedAndReferencedSingleSourceExercisesFromDatabase();
+	//draft.loadAssignedAndReferencedSingleSourceExercisesFromDatabase();
 	
 	
 	
@@ -194,9 +216,10 @@
                 + " Aufgaben zum " + new_or_latest_changed_or_other_draft
                 + " Entwurf (filelink: " + draft.getFilelink() + ") hinzugefügt (per Referenz).</p>"
                 + "Insgesamt umfasst der Entwurf nun " + draft.getAllExercises().size()
-                + "Aufgaben.";
-		out.print(message);
-        Global.addMessage(message, "success");
+                + " Aufgaben.";
+		System.out.print(
+			    Global.addMessage(message, (exercise_filelinks_added_actively_count > 0 ? "success" : "nosuccess"))
+        );
         Global.addMessage("Filelink of draft been added to: " + draft.getFilelink(), "info");
 	//}
 	

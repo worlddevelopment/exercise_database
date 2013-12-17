@@ -1,24 +1,43 @@
 <%@page import="aufgaben_db.Global" %>
-
 <hr />
 <div style="float: left;">
     <form action="index.jsp" method="get">
 
-        <button class="btn btn-primary <%= Global.getIfActive(session, "start") %>" name="id" value="start">Start</button>
-        <button class="btn btn-primary <%= Global.getIfActive(session, "upload_sheet") %>" name="id" value="upload_sheet">Blatt
-            hinzuf&uuml;gen</button>
-        <button class="btn btn-primary <%= Global.getIfActive(session, "drafts") %>" name="id" value="drafts">Entwürfe</button>
-        <button class="btn btn-primary <%= Global.getIfActive(session, "statistik") %>" name="id" value="statistik">Statistik</button>
+        <!-- 
+        <button class="btn btn-primary <%= Global.getIfActive(session, "start") %>" name="id" value="start"><%=Global.display("start")%></button>
+        <button class="btn btn-primary <%= Global.getIfActive(session, "upload_sheet") %>" name="id" value="upload_sheet">
+        <%=Global.display("add a sheet")%></button>
+        <button class="btn btn-primary <%= Global.getIfActive(session, "drafts") %>" name="id" value="drafts">
+        <%=Global.display("drafts")%></button>
+        <button class="btn btn-primary <%= Global.getIfActive(session, "statistik") %>" name="id" value="statistik">
+        <%=Global.display("statistics")%></button>
+        -->
+        <a class="btn btn-primary <%= Global.getIfActive(session, "start") %>" href="?id=start">
+            <i class="icon-home icon-white"></i>
+            <%=Global.display("start")%></a>
+        <a class="btn btn-primary <%= Global.getIfActive(session, "upload_sheet") %>" href="?id=upload_sheet">
+            <i class="icon-plus icon-white"></i><i class="icon-leaf icon-white"></i>
+            <%=Global.display("add a sheet")%></a>
+        <a class="btn btn-primary <%= Global.getIfActive(session, "drafts") %>" href="?id=drafts">
+            <i class="icon-book icon-white"></i>
+            <%=Global.display("drafts")%>
+        </a>
+        <a class="btn btn-primary <%= Global.getIfActive(session, "statistik") %>" href="?id=statistik">
+            <i class="icon-fire icon-white"></i>
+            <%=Global.display("statistics")%>
+        </a>
         <%
-        if (Global.angemeldet) {
+        if (Global.isLoggedIn(session)) {
         %>
-            <button class="btn btn-danger" name="q" value="logout">Logout</button>
+            <button class="btn btn-danger" name="q" value="logout">
+                Logout<i class="icon-magnet"></i></button>
             
         <%
         }
         %>
         <!--  <button class="menue" name="id" value="usermanagement">Nutzerverwaltung</button>-->
-        <button class="btn btn-secondary" style="color:rgb(75,150,200);font-size:auto !important;" name="id" value="profile">Profil</button>
+        <button class="btn btn-secondary" style="color:rgb(75,150,200);font-size:auto !important;" name="id" value="profile">
+             <%=Global.display("profile")%> <i class="icon-wrench"></i> <!-- <i class="icon-wrench"></i> --></button>
     </form>
 </div>
 <!-- Fuer Firefox 2px,fuer Chrome ohne top margin -->
@@ -26,10 +45,11 @@
 <div style="float: right;">
     <form action="index.jsp" method="get">
     <div>
-        <input type="text" name="search_string" placeholder="Suche"/>
-        <button name="id" value="search_result_lucene" style="height: 27px;" ><i class="icon-search"></i></button>
-        <a href="index.jsp?id=ext_search" style="margin-top: 10px;"
-            >Erweiterte Suche</a>
+        <input id="search_string" type="text" name="search_string" placeholder="<%=Global.display("search") %>" value="" />
+        <button id="search_btn" name="id" value="search_result_lucene" style="height: 27px;" >
+            <i class="icon-search"></i></button>
+        <a href="?id=ext_search" style="margin-top: 10px;"
+            ><%=Global.display("extended search")%></a>
             </div>
     </form>
 </div>

@@ -83,13 +83,26 @@ public class ConvertOutHtml extends AbstractSample {
      * standard export would only work if there are no semaphore issues, i.e. not many
      * processes writing to this one identical file.
      * 
+     * @author Jason Harrop, J. R.I.B.-Wein
      * @param inputfilepath
      * @throws Exception
      */
     public static void process(String inputfilepath) throws Exception {
+    	process(inputfilepath, inputfilepath + ".html", save);
+    }
+    public static void process(String inputfilepath, boolean save) throws Exception {
+    	process(inputfilepath, inputfilepath + ".html", save);
+    }
+    public static void process(String inputfilepath, String outputfilepath) throws Exception {
+    	//if an output path is specified saving is implied
+    	process(inputfilepath, outputfilepath, true);
+    }
+    public static void process(String inputfilepath, String outputfilepath, boolean save) throws Exception {
+    	AbstractSample.inputfilepath = inputfilepath;
+    	
 		// Document loading (required)
 		WordprocessingMLPackage wordMLPackage;
-		if (inputfilepath==null) {
+		if (inputfilepath == null) {
 			// Create a docx
 			System.out.println("No input path passed, creating dummy document");
 			 wordMLPackage = WordprocessingMLPackage.createPackage();
@@ -126,7 +139,7 @@ public class ConvertOutHtml extends AbstractSample {
 		// output to an OutputStream.		
 		OutputStream os; 
 		if (save) {
-			os = new FileOutputStream(inputfilepath + ".html");
+			os = new FileOutputStream(outputfilepath);
 		} else {
 			os = new ByteArrayOutputStream();
 		}
@@ -139,7 +152,7 @@ public class ConvertOutHtml extends AbstractSample {
 		//Docx4J.toHTML(htmlSettings, os, Docx4J.FLAG_EXPORT_PREFER_NONXSL);
 
 		if (save) {
-			System.out.println("Saved: " + inputfilepath + ".html ");
+			System.out.println("Saved to: " + outputfilepath);
 		} else {
 			System.out.println( ((ByteArrayOutputStream)os).toString() );
 		}

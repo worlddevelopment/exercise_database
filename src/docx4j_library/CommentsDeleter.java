@@ -18,6 +18,7 @@ import org.docx4j.wml.R.CommentReference;
 import org.jvnet.jaxb2_commons.ppp.Child;
 
 
+
 public class CommentsDeleter {
 
 	public static void main(String[] args) throws Exception {
@@ -52,5 +53,21 @@ public class CommentsDeleter {
 		}
 		return false;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+	
 	
 }

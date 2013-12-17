@@ -1,12 +1,17 @@
 
-<%@page import="swp.*"%>
-<!-- Tooltip -->
-<script src="jquery/toolTipPreview.js" type="text/javascript"></script>
+<%@page import="swp.*, aufgaben_db.Global"%>
+
 <!-- Treeview -->
 <link rel="stylesheet" href="jquery.treeview/jquery.treeview.css" />
 <script src="jquery.treeview/jquery.treeview.js" type="text/javascript"></script>
 <!-- <script type="text/javascript" src="jquery.treeview/demo/demo.js"></script>-->
 <script src="jquery.treeview/lib/jquery.cookie.js" type="text/javascript"></script>
+
+
+<!-- Tooltip -->
+<script type="text/javascript" src="jquery/toolTipPreview.js"></script>
+<script type="text/javascript" src="js/validateSelectionDependingOnButton.js"></script>
+
 
 <script type="text/javascript" >
 
@@ -23,61 +28,70 @@
  *@param String:Link_id
  */
 function ajax_get_listing_sheetdrafts(filelink, semester,course,lecturer,type, ajaxlink_num) {
-	//alert(typeof(par1));
-	//alert(par1);
-	$(document).ready(function(){
-		
-		$("#ajaxlink" + ajaxlink_num).click(function(){
-			//alert(par1+par2+par3);
-			$.ajax({
-			type: "GET",
-			url: "table.ajax.jsp",
-			data: "filelink=" + filelink
-				+ "&semester=" + semester +"&course="+ course
-				+ "&lecturer=" + lecturer + "&type=" + type
-				+ "&ajaxlink_num=" + ajaxlink_num,
-			success: function(data){
-			    $("#ajaxcontent").html(data);
-			
-			}
-			});
-			
-		});
-	
-	
-	});
+    //$(document).ready(function(){
+        
+    	/* If the commented ready functions and click event assignments are used then
+    	  thise ajax get listing sheetdraft|exercise functions have to be called
+    	  via function(//...)(); at the end of the site to assign the click event! */
+        //$("#ajaxlink" + ajaxlink_num).click(function(){
+            //alert(par1+par2+par3);
+            $.ajax({
+            type: "GET",
+            url: "table.ajax.jsp",
+            data: "filelink=" + filelink
+                + "&semester=" + semester
+                + "&course="+ course
+                + "&lecturer=" + lecturer
+                + "&type=" + type
+                + "&ajaxlink_num=" + ajaxlink_num
+                + "&session_user=<%=Global.getUserURLEncoded(session)%>"/*for exercise table.ajax.jsp!*/
+                //+ "&sheetdraft_listing"//superfluous
+                ,
+            success: function(data){
+                $("div#ajaxcontent").html(data);
+            }
+            });
+            
+        //});
+    
+    
+    //});
 };
 
 /**
  * Loads a table containing all exercises of the lecturer.
  */
 function ajax_get_listing_exercises(sheetdraft_filelink, lecturer /*par1,par2,par3,par4,par5*/, ajaxlink_num) {
-	/* Lecturer is required because this saves us one join operation in table.ajax.jsp. */
-	$(document).ready(function(){
-		$("#ajaxlink0" + ajaxlink_num).click(function(){
-		$.ajax({
-		type: "GET",
-		url: "table.ajax.jsp",
-		//data: "semester="+par1+"&course="+ par2 + "&lecturer=" + par3 + "&type=" + par4 + "&filelink=" + par5,
-		data: "filelink=" + sheetdraft_filelink + "&lecturer=" + lecturer
-			+ "&session_user=<%=session.getAttribute("user")%>"/*for exercise table.ajax.jsp!*/
-			+ "&exercise_listing"
-			+ "&ajaxlink_num=" + ajaxlink_num,
-		success: function(data){
-			  $("#ajaxcontent").html(data);
-		}
-		});
-	
-	});
+    /* Lecturer is required because this saves us one join operation in table.ajax.jsp. */
+    //$(document).ready(function(){
+    	/* If the commented ready functions and click event assignments are used then
+          thise ajax get listing sheetdraft|exercise functions have to be called
+          via function(//...)(); at the end of the site to assign the click event! */
+        //$("#ajaxlink0" + ajaxlink_num).click(function(){
+	        $.ajax({
+	        type: "GET",
+	        url: "table.ajax.jsp",
+	        //data: "semester="+par1+"&course="+ par2 + "&lecturer=" + par3 + "&type=" + par4 + "&filelink=" + par5,
+	        data: "filelink=" + sheetdraft_filelink
+	            + "&lecturer=" + lecturer
+	            + "&session_user=<%=Global.getUserURLEncoded(session)%>"/*for exercise table.ajax.jsp!*/
+	            + "&exercise_listing"
+	            + "&ajaxlink_num=" + ajaxlink_num,
+	        success: function(data){
+	              $("#ajaxcontent").html(data);
+	        }
+	        });
+	    
+        //});
 
 
-});
+    //});
 };
 //-->
 </script>
 <!-- rewritten May 2013
-     Reason: old approach was not working for attribute value.
-             The value attribute was required because the inner html
+     Reason: old approach was not working for attribute 'value=""'.
+             The 'value'-attribute was required because the inner html
              text was already used for displaying the field in the proper 
              language. The db is in English, hence the value bears the BE.
      Change: Using native javascript instead of jquery and giving callee.
@@ -116,71 +130,52 @@ function showHideStaticLists(target) {
 function get_ansicht() {
     //alert("target = " + target);
     //alert("<br />\n\rSelected value = " + target.options[target.selectedIndex].value);
-	$(document).ready(function(){
-		$.ajax({
-			type: "GET",
-			url: "tree.ajax.jsp",
-			//data: "ansicht="+ this_obj.options[this_obj.selectedIndex].value,/*text();*/
-			data: "ansicht="+ $("ansichtWrapper option:selected").val(),/*text();*/
-			success: function(data) {
-				//alert("get_ansicht: ajax success!!!!!");
-				$("#ac").html(data);
-			}
-		});
-	});
-	
-	//showHideStaticLists(this_obj);TODO: only if static non-ajax solution
+    $(document).ready(function(){
+        $.ajax({
+            type: "GET",
+            url: "tree.ajax.jsp",
+            //data: "ansicht="+ this_obj.options[this_obj.selectedIndex].value,/*text();*/
+            data: "ansicht="+ $("ansichtWrapper option:selected").val(),/*text();*/
+            success: function(data) {
+                //alert("get_ansicht: ajax success!!!!!");
+                $("#ac").html(data);
+            }
+        });
+        
+    });
+    
+    //showHideStaticLists(this_obj);TODO: only if static non-ajax solution
 };
 //-->
 </script>
 
 
 <div id="ansichtWrapper">
-<label for="ansicht">Ansicht:</label><!-- Attention: time is important! Wait for ajax!! -->
+<label for="ansicht"><%=Global.display("view") %>:</label><!-- Attention: time is important! Wait for ajax!! -->
 <select id="ansicht" onchange="reloadView();/*revertTree()*/return false;">
-	<option value="semester" selected="selected">Semester</option>
-	<option value="lecturer">Dozent</option>
-	<option value="course">Veranstaltung</option>
+    <option value="semester" selected="selected"><%=Global.display("semester") %></option>
+    <option value="lecturer"><%=Global.display("lecturer") %></option>
+    <option value="course"><%=Global.display("course") %></option>
 </select>
 <p>&nbsp;</p>
 </div>
-<div id="treecontrol">
-	<a title="Den ganzen Baum minimieren" href="#"><img src="jquery.treeview/images/minus.gif" /></a>
-	<a title="Den ganzen Baum ausklappen" href="#"><img src="jquery.treeview/images/plus.gif" /></a>
+<div id="treecontrol"><!-- ScreenshotPreview is required as document.ready() come BEFORE the elements have loaded. -->
+    <a title="<%=Global.display("minimize the whole tree") %>" onclick="screenshotPreview(); return false;" href="#"><img src="jquery.treeview/images/minus.gif" /></a>
+    <a title="<%=Global.display("expand the whole tree") %>" onclick="screenshotPreview(); return false;" href="#"><img src="jquery.treeview/images/plus.gif" /></a>
 </div>
 
 
 
 <!-- Baum -->
 
-<div id="ac" class="">
-    <jsp:include page="tree.ajax.jsp" />
-   
+<div id="ajax" class="">
+   <div id="ac" class="">
+        <jsp:include page="tree.ajax.jsp" />
+   </div>
+   <div id="ajaxcontent">&nbsp;</div>
 </div>
 
 
-<!--  
-<ul id='ac' class="treeview">
-	<li>Item1
-		<ul>
-			<li>I1.1
-				<ul>
-					<li>Item1.1.1</li>
-				</ul>
-			</li>
-			<li>I1.2</li>
-		</ul>
-	</li>
-	
-	<li>Item2
-		<ul>
-
-
-			<li>I2.1</li>
-		</ul>
-	</li>
-</ul>
--->
 
 
 <script type="text/javascript">
@@ -188,37 +183,37 @@ function get_ansicht() {
 //there will be shown all lists - if statically loaded -->
 //<!--
 reloadView = function(){
-	var target = /*(Object HtmlSelectElement)*/($("#ansicht"));
-	
-	/*1st way -- ajax request*/
-	/* var selectedIndex = -1;
-	for (var i = 0; i < target.options.length; i++) {
-		if (target.options[i].selected == true) {
-		    selectedIndex = i;
-		    break; //we have what we want
-		}
-	}
-	if (selectedIndex == -1) {
-		alert("no selection! selectedIndex = " + selectedIndex
-				+ "<br />Aborting ...");
-	} */
-	//alert("target = " + target);
-	//alert("<br />\n\rSelected value = " + target.options[selectedIndex].value);
-	$.ajax({
-		type: "GET",
-		url: "tree.ajax.jsp",
-		//data: "ansicht=" + target.options[target.selectedIndex].value,
-		data: "ansicht=" + $("#ansichtWrapper option:selected").val(),
-		success: function(data){
-			//alert("ajax success!!!!!");
-			$("#ac").html(data);
-			revertTree();
-			//screenshotPreview();//for tooltip preview it is necessary to update after loading
-			/*if the javascript for tooltip screenshot previews is included in the *.ajax.jsp
-			  then this is not required here; probably has no effect anyway.*/
-			//additional content per ajax.
-		},
-	    error: function (xhr, status) {
+    var target = /*(Object HtmlSelectElement)*/($("#ansicht"));
+    
+    /*1st way -- ajax request*/
+    /* var selectedIndex = -1;
+    for (var i = 0; i < target.options.length; i++) {
+        if (target.options[i].selected == true) {
+            selectedIndex = i;
+            break; //we have what we want
+        }
+    }
+    if (selectedIndex == -1) {
+        alert("no selection! selectedIndex = " + selectedIndex
+                + "<br />Aborting ...");
+    } */
+    //alert("target = " + target);
+    //alert("<br />\n\rSelected value = " + target.options[selectedIndex].value);
+    $.ajax({
+        type: "GET",
+        url: "tree.ajax.jsp",
+        //data: "ansicht=" + target.options[target.selectedIndex].value,
+        data: "ansicht=" + $("#ansichtWrapper option:selected").val(),
+        success: function(data){
+            //alert("ajax success!!!!!");
+            $("#ac").html(data);
+            revertTree();
+            //screenshotPreview();//for tooltip preview it is necessary to update after loading
+            /*if the javascript for tooltip screenshot previews is included in the *.ajax.jsp
+              then this is not required here; probably has no effect anyway.*/
+            //additional content per ajax.
+        },
+        error: function (xhr, status) {
               switch (status) {
                  case 404:
                      alert('File not found');
@@ -234,23 +229,23 @@ reloadView = function(){
              } 
          }
     
-	});
-	
-	
-	/*2nd way -- statically built lists != built per ajax request*/
-	//showHideStaticLists(target);
-	
+    });
+    
+    
+    /*2nd way -- statically built lists != built per ajax request*/
+    //showHideStaticLists(target);
+    
 };
 $(document).ready(reloadView());
 
 revertTree = function(){
 
-	//$.each($(".treeview"), function(obj) {
+    //$.each($(".treeview"), function(obj) {
     //$("#ac").treeview({
-   	$("#becometreeviewnull").treeview({
-	            animated: "fast",
-	            collapsed: true,
-	            control: "#treecontrol"
+    $("#becometreeviewnull").treeview({
+                animated: "fast",
+                collapsed: true,
+                control: "#treecontrol"
     });
 
 

@@ -1,167 +1,263 @@
-
-<%@page import="aufgaben_db.*"%>
-<%@page import="java.util.ArrayList"%>
-<%@page import="java.util.HashMap"%>
-<%@page import="java.io.File"%>
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
-
-<%@page import="java.sql.ResultSet"%>
-<%@page import="java.sql.SQLException"%>
-<%@page import="swp.MysqlHelper"%>
-<%@page import="swp.SQL_Methods"%>
-<%@page import="java.sql.Statement"%>
-<%@page import="java.sql.Connection"%>
-
-
+<%@page import="java.util.*, java.text.*,
+        aufgaben_db.*,
+        HauptProgramm.DocType,
+        java.net.URLDecoder,
+        java.sql.ResultSet;" %>
 <%
-	String filelink = "";
-	String type = "";
-	String course = "";
-	String semester = "";
-	String lecturer = "";
-	String lecturer_id = "";
-	String ext = "";
-	String description = "";
+response.setContentType("text/html; charset=UTF-8");
+request.setCharacterEncoding("UTF-8");
 
-	filelink = request.getParameter("filelink");
-	semester = request.getParameter("semester");
-	course = request.getParameter("course");
-	lecturer = request.getParameter("lecturer");
-	type = request.getParameter("type");
-	description = request.getParameter("description");
+//Preconditions not met?
+if (request.getParameter("filelink") == null) {
+	Global.addMessage("No filelink or sheetdraft id was given. Without that, nothing can be edited."
+		    +" Use the treeview of the start page for editing sheetdrafts.", "warning");
+	return ;
+}
 
-	String sheetdraft_filelink = request.getParameter("filelink");//wird im hidden feld uebrgeben
-	Sheetdraft sheetdraft = Aufgaben_DB.getSheetdraftByFilelink(sheetdraft_filelink);
 
+%>
+<jsp:include page="js/validateForm.js.jsp" />
+<%
+
+
+
+
+String filelink = URLDecoder.decode(request.getParameter("filelink"), "utf-8");
+
+//The values as so far assignment made available for later use.
+String semester = "";
+String course = "";
+int lecturer_id = 0;
+String lecturer = "N.N.";
+String type = "";//request.getParameter("type");
+
+String description = "";
+
+
+//LOAD required data from database (exactly one sheet/draft).
+ResultSet res0 = Global.query(
+		"SELECT sheetdraft.*, lecturer.lecturer"
+	    + " FROM sheetdraft, lecturer"
+		+ " WHERE filelink = '" + filelink + "'"
+		+ " AND lecturer.id = sheetdraft.lecturer_id"
+);
+
+while (res0.next()) {
+	semester = res0.getString("semester");
+	course = res0.getString("course");
+	lecturer_id = res0.getInt("lecturer_id");
+	lecturer = res0.getString("lecturer");
+	type = res0.getString("type");
 	
-	HashMap<String, String> hm = new HashMap<String, String>();
-	hm.put("semester", semester);
-	boolean verschieben = false;
-	boolean rename = false;
+	description = res0.getString("description");
+}
 
-	//-------UPDATE SEMESTER ------
-	//aendere wenn Eintrag in der DB ex und neuer Semester ist unterschiedlich von altem.
-	//anderfalls fuege neuen Eintarg in Semeseter Tabelle
-	Global.sqlm.executeUpdate("UPDATE sheetdraft SET semester='" + semester
-		+ "' WHERE filelink='" + sheetdraft_filelink + "' ");
-	out.print(Global.addMessage("Semester erneuert.", " success "));
-	verschieben = true;
-	hm.clear();
-	
 
-	//-------UPDATE COURSE ------
-	//aendere wenn Eintrag in der DB ex und neuer Veranstaltung ist unterschiedlich von altem.
-	//anderfalls fuege neuen Eintarg in Veranstaltung Tabelle
-	hm.put("course", course);
-	Global.sqlm.executeUpdate("UPDATE blatt SET course ='" + course
-	+ "' WHERE filelink='" + sheetdraft_filelink + "' ");
-	out.print(Global.addMessage("Veranstaltung wurde erneuert.", " success "));
-	verschieben = true;
-	hm.clear();
-
-	
-	//-------UPDATE LECTURER ------
-	//aendere wenn Eintrag in der DB ex und neuer Dozent ist unterschiedlich von altem.
-	//anderfalls fuege neuen Eintarg in Dozent Tabelle
-	hm.put("lecturer", lecturer);
-	if (!Global.sqlm.exist("lecturer", "lecturer", hm)) {
-		Global.sqlm.executeUpdate("INSERT INTO lecturer(lecturer) VALUES('" + lecturer + "');");
-		out.print(Global.addMessage("Neuer Dozent eingefÃ¼gt.", "success"));
-		verschieben = true;
-		lecturer_id = Global.sqlm.getId("lecturer", "lecturer", lecturer);
-		Global.sqlm.executeUpdate("UPDATE sheetdraft SET lecturer_id='" + lecturer_id
-		+ "' WHERE filelink=" + sheetdraft_filelink + " ");
-	} else if (lecturer_id != null
-			&& !lecturer_id.equals(sheetdraft.getLecturerId())) {
-		lecturer_id = Global.sqlm.getId("lecturer", "lecturer", lecturer);
-		Global.sqlm.executeUpdate("UPDATE sheetdraft SET lecturer_id='" + lecturer_id
-		+ "' WHERE filelink='" + sheetdraft_filelink + "' ");
-		out.print(Global.addMessage("Dozent zum Blatt erneuert.", " success "));
-		verschieben = true;
-	} //else nothing to change
-	hm.clear();
-
-	
-	//-------UPDATE TYPE ------
-	hm.put("type", type);
-	if (type != null && !type.equals(sheetdraft.getType())) {
-		Global.sqlm.executeUpdate("UPDATE sheetdraft SET type='" + type
-		+ "' WHERE filelink='" + sheetdraft_filelink + "' ");
-		out.print(Global.addMessage("Typ geandert.", " success "));
-	}
-	hm.clear();
-
-	//-------UPDATE DESCRIPTION ------
-	if (!description.equals(sheetdraft.getDescription())) {
-		Global.sqlm.executeUpdate("UPDATE sheetdraft SET description='" + description
-		+ "' WHERE filelink='" + sheetdraft_filelink + "' ");
-		out.print(Global.addMessage("Beschreibung geandert.", " success "));
-	}
-	
-	
-	//-------RENAME FILES - DATEIEN VERSCHIEBEN-------
-	String filelink_target_new = "uploads/"
-	+ Global.encodeUmlauts(semester) + "/"
-	+ Global.encodeUmlauts(course) + "/"
-	+ Global.encodeUmlauts(lecturer) + "/"
-	+ Global.encodeUmlauts(type);
-
-	//Aendere Blattsname?
-	if (!filelink.equals(sheetdraft.getFilelink())) {
-
-		rename = true;
-		Global.sqlm.executeUpdate("UPDATE sheetdraft SET filelink='" + filelink
-		+ "' WHERE filelink='" + sheetdraft_filelink + "' ");
-
-		out.print(Global.addMessage("Sheet Filelink erneuert.", " success "));
-	}
-	if (rename) {
-		Global.sqlm.executeUpdate("UPDATE sheetdraft SET filelink='" + filelink_target_new
-		+ "' WHERE filelink='" + sheetdraft_filelink + "' ");
-		
-	    //First rename/move the filesystem file.
-		Global.renameFile(Global.root + sheetdraft.getFilelink(),
-		Global.root + filelink_target_new);
-		
-		//Then update stored filelink (the main, initial e.g. uploaded one).
-		//Herein the old filelink gets stored as previous filelink, too!
-		sheetdraft.setFilelink(filelink_target_new);
-		
-		//nenne Bild um
-		Global.renameFile(Global.root + sheetdraft.getImageLinkPrevious(),
-		Global.root + sheetdraft.getImageLink());
-		Global.renameFile(Global.root + sheetdraft.getPDFLinkPrevious(),
-		Global.root + sheetdraft.getPDFLinkPrevious());
-		
-		
-		//Verschiebe auch die Aufgaben des Uebungsblatts.
-		//Also move the exercises of the sheet.
-		sheetdraft.synchronizeExercisesLocationToFilelink();
-		
-		
-		Global.renameFile(Global.root + sheetdraft.getFilelinkPrevious()
-				, Global.root + sheetdraft.getFilelink()); 		
-	    Global.addMessage("Datei " + (sheetdraft.getFilelink()) + " verschoben."
-	    		," success ", request, pageContext);
-
-	}
-
-	//-------ACTION:MOVE-------
-	if (verschieben) {
-		Global.sqlm.executeUpdate("UPDATE sheetdraft SET filelink='" + filelink_target_new
-		+ "' WHERE filelink='" + sheetdraft_filelink + "' ");
-		new File(Global.root + filelink_target_new).mkdirs(); //erstelle die Zielordner
-		sheetdraft.setFilelink(filelink_target_new);
-		Global.moveDir(Global.root + sheetdraft.getFilelinkPrevious(),
-		Global.root	+ filelink_target_new, ""); // verschiebe Ordner mit dem Blatt und Aufgaben
-
-		Global.renameFile(Global.root + sheetdraft.getImageLinkPrevious(), Global.root
-		+ sheetdraft.getImageLink()); //rename Name von Bild des Blattes
-		out.print(Global.addMessage("Blatt verschoben", " success ")); 
-
-	}
 %>
 
-<!-- Update Index von Suchmaschine  -->
-<% /*@include file="action.update_index.jsp"*/%>
+
+
+
+
+
+
+
+
+
+
+<!-- FORM -->
+<div id="form">
+<!-- MULTIPART CONTENT FORM
+request.getAttribute("attr") will be NULL if not in action part!!! if multiform/form-data
+see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-server-using-jsp-servlet
+-->
+<form class="cmxform" id="commentForm" method="post"  action="index.jsp?id=edit&q=edit_sheet#add_result">
+   <!-- To steer the ship. -->
+   <!--
+   <input type="hidden" name="id" value="edit" /><!-- load the edit page -- >
+   <input type="hidden" name="q" value="edit_sheet" />
+   -->
+   <p class="auto-style1 screenshot">Blatt hinzuf&uuml;gen:
+        <a id="info_tooltip" href='#' rel="tooltip" title="Es sind nur alphanumerische und _ . ) ( Leerzeichen /  Symbole erlaubt.">
+            <img src="pictures/info3.png" />
+        </a>
+   </p>
+    <table >
+        
+        <!-- SEMESTER -->
+        <tr>
+            <td><label for="semester">Semester: *</label></td>
+            <td>
+               <!--
+               <input type="text" name="semester" class="required noSpecialChars" id="semester"/>
+               -->
+            
+                <% DateFormat dF = new SimpleDateFormat("EEE,  MMM d, ''yy");
+                //Calendar now = new GregorianCalendar();//.getInstance();
+                //offer all semesters from -5 to +5 years
+                int YEAR_AMPLITUDE_TO_SHOW = 5;
+                int y = Global.now.get(Calendar.YEAR) - YEAR_AMPLITUDE_TO_SHOW - 1;
+                int mMin;// = Global.now.get(Calendar.MONTH);
+                int mMax;
+                //out.print("y = " + y + "<br />now[YEAR] = " + Global.now.get(Calendar.YEAR));
+                %>
+                <select name="semester" class="required" id="semester_select"
+                >
+                <%
+                //System.out.println("GregCal: " + dF.format(Global.now.getTime()));
+                int nowMonth = Global.now.get(Calendar.MONTH);
+                //out.println("nowMonth = " + nowMonth);
+                //YEAR-LOOP
+                while (++y < Global.now.get(Calendar.YEAR) + YEAR_AMPLITUDE_TO_SHOW) {
+                    //TERM-LOOP
+                    String[] semterms = {"SS", "WS"};//TODO: PUT IN CONFIGURATION-FILE!
+                    for (String semterm : semterms) {
+                        //add option
+                        mMin = 10 - 1; /*<-- Oktober as first month of semester.*/
+                        mMax =  3 - 1; /*<-- March as last month of semester.*/
+                        boolean semterm_condition = nowMonth >= mMin || nowMonth <= mMax;
+                        //if (semterm == "SS") {
+                        //    mMin = 4 - 1; /*<-- April as first month of semester.*/
+                        //    mMax = 9 - 1; /*<-- September as last month of semester.*/
+                        //    semterm_condition = nowMonth >= mMin && nowMonth <= mMax;
+                        //}
+                        out.print("<option value='" + semterm + "_" + y + "'"
+                        + ( (semterm + "_" + y).equals(semester) ? " selected='selected' ": "" )
+                        +">" + semterm + " " + y + "</option>");                 
+                    }
+                }
+                %>
+                </select>
+            </td>
+            
+        </tr>
+        
+        
+        <!-- COURSE -->
+        <tr>
+            <td><label for="course">Veranstaltung: *</label></td>
+            <td><input type="text" name="course" class="required noSpecialChars"
+             id="course" value="<% out.print(course); %>" onkeyup="deactivateIfFilledOrActivateIfEmpty(this, 'course_select');"/>
+                <select name="course_select" class="" id="course_select"
+                 onchange="document.getElementById('course').value=this.value">
+                    <%
+                    //fetch all distinct courses from database
+                    ResultSet res = Global.query("SELECT DISTINCT `course` FROM `sheetdraft`");
+                    //get length
+                    int resL = 0;
+                    if (res.last() /*&& res.getType() == res.TYPE_SCROLL_SENSITIVE*/) {
+                        resL = res.getRow();
+                        res.beforeFirst();/*because afterwards follows a next()*/
+                    }
+                    //generate the option fields
+                    if (res == null || resL == 0) {
+                        out.print("<option disabled='disabled'>-------</option>");
+                    } else {
+                        while (res.next()) {
+                            //add option
+                            out.print("<option ");
+                            if (res.getString("course").equals(course)) out.print(" selected='selected'");
+                            out.print(">" + Global.decodeUmlauts(res.getString("course")) + "</option>");
+                        }
+                    }
+                    %>
+                </select>
+            </td>
+            
+        </tr>
+
+
+        <!-- TYPE -->
+        <tr>
+            <td><label for="type">Typ: *</label></td>
+            <td>
+            <!-- (tbd) better load from database? -->
+            <select class="required noSpecialChars" name="type" id="type">
+            <option <% if (type.equals("Uebung")) out.print(" selected='selected'"); %>
+                value="Uebung">Übung</option>
+            <option <% if (type.equals("Loesung")) out.print(" selected='selected'"); %>
+                value="Loesung">Lösung</option>
+            <option <% if (type.equals("Klausur")) out.print(" selected='selected'"); %>
+                value="Klausur">Klausur</option>
+            <option <% if (type.equals("Klausurloesung")) out.print(" selected='selected'"); %>
+                value="Klausurloesung">Klausurlösung</option>
+            </select>
+            </td>
+        </tr>
+        
+
+        <!-- LECTURER ID -->
+        <tr>
+            <td><label for="lecturer">Dozent: *</label></td>
+            <td><input type="text" name="lecturer" class="required noSpecialChars"
+             id="lecturer" value="<% out.print( Global.decodeUmlauts(lecturer) ); %>"
+                    onkeyup="deactivateIfFilledOrActivateIfEmpty(this, 'lecturer_id_select');"/>
+                <select name="lecturer_id_select" class="" id="lecturer_id_select"
+                onchange="document.getElementById('lecturer').value=this.options[this.selectedIndex].text;">
+                    <%
+                    //fetch all distinct lecturer from database
+                    res = Global.query("SELECT `id`, `lecturer` FROM `lecturer`");
+                    if (!res.next()) {
+                        out.print("<option disabled='disabled'>---(leer)---</option>");
+                    } else {
+                    	res.beforeFirst();//Because above we already increase by one!!
+                        while (res.next()) {
+                            //add option
+                            out.print("<option"
+                            	    + " value='"+ res.getString("id") + "," + res.getString("lecturer") +"'");
+                            if (res.getInt("id") == (lecturer_id)) {
+                            	out.print(" selected='selected'");
+                            }
+                            out.print(">" + Global.decodeUmlauts(res.getString("lecturer")) + "</option>");             
+                        }
+                    }
+                    %>
+                </select>
+            </td>
+        </tr>
+        
+        
+        
+        <!-- DESCRIPTION -->
+        <tr>
+            <td><label for="description">Beschreibung &amp; Tags: </label></td>
+            <td colspan="2"><input type="text" name="description" value="<% out.print(description); %>"/></td>
+        </tr>
+
+
+        <!-- EMPTY -->
+        <tr>
+            
+        </tr>
+        
+        
+        <!-- FILE -->
+        <tr>
+            <td><label for="File">Datei: * <span class="anno">(currently not editable)</span></label></td>
+            <td><input class="falseFile" disabled="disabled" name="File" type="" type_that_will_change_action.edit_sheet="file" /></td>
+        </tr>
+        <tr>
+        <!-- FILELINK -->
+        <td>
+            <input type="hidden" name="filelink" class="" value="<%=filelink %>"/></td>
+        <!-- SUBMIT -->
+        <td><button name="q" type="submit" value="edit_sheet" class="btn btn-primary"
+            onclick="show_loader();" style="font-size : 16px;">OK</button></td>
+        </tr>
+        
+    </table>
+   
+ </form>
+ <br/>
+<small><b>Mit * markierte Felder dürfen nicht leer sein.</b></small>
+</div>
+<%
+//if (request.getParameter("form") != null
+//&& request.getParameter("form").equals("multi")) {
+    %>
+    <!--jsp:include page='action.upload.jsp' /-->
+    <%
+//}
+%>
+<p id="add_result"></p>
+

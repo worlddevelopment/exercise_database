@@ -2,11 +2,8 @@
 <%@page import="aufgaben_db.Global"%>
 <%@page import="java.sql.SQLException"%>
 <%@page import="java.sql.ResultSet"%>
-<%@page import="java.sql.Statement"%>
-<%@page import="java.sql.Connection"%>
+<%@page import="java.io.File, java.net.URLDecoder"%>
 
-<%@page import="swp.MysqlHelper"%>
-<%@page import="java.io.File"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 
@@ -31,11 +28,11 @@
 	String lecturer = "";
 	String description = "";
 	String author = "";
-	String whencreated = "";
-	String is_draft = "";
-	String headermixture = "";
-	String whenchanged = "";
-	
+// 	String whencreated = "";
+// 	String is_draft = "";
+// 	String headermixture = "";
+// 	String whenchanged = "";
+	String plain_text = "";
 	
 	//delete index_data directory
 	Global.deleteDir(new File(Global.root + "index_data"));
@@ -46,8 +43,8 @@
 	
 	try {
 		ResultSet res =
-		Global.query("SELECT content, filelink, course,"
-				+ " semester, l.lecturer, type"
+		Global.query("SELECT filelink, course,"
+				+ " semester, l.lecturer, type, plain_text"
 				+ " FROM sheetdraft, lecturer l"
 				+ " WHERE l.id = lecturer_id"); /*join over id, lecturer,sheetdraft*/
 	    int count = 0;
@@ -66,7 +63,8 @@
             //is_draft = res.getString("is_draft");
             //headermixture = res.getString("headermixture");
             //whenchanged = res.getString("whenchanged");
-			
+			//plain_text = URLDecoder.decode(res.getString("plain_text"), "utf-8");
+			plain_text = Global.decodeUmlauts(res.getString("plain_text"));
 			
 			Analyzer analyzer = new GermanAnalyzer(Version.LUCENE_36);
 			// Store the index in memory:
@@ -89,7 +87,7 @@
 			doc.add(new Field("lecturer", lecturer,	Field.Store.YES, Field.Index.ANALYZED));
 			doc.add(new Field("author", filelink,	Field.Store.YES, Field.Index.ANALYZED));
 			doc.add(new Field("description", description, Field.Store.YES, Field.Index.ANALYZED));
-			//doc.add(new Field("content", content, Field.Store.YES, Field.Index.ANALYZED));
+			doc.add(new Field("content", plain_text, Field.Store.YES, Field.Index.ANALYZED));
 			
 			
 			

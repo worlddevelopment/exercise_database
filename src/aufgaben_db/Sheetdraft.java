@@ -1,23 +1,76 @@
 package aufgaben_db;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
+import org.apache.catalina.tribes.util.Arrays;
+import org.apache.commons.io.IOUtils;
+import org.docx4j.Docx4J;
+import org.docx4j.TraversalUtil;
+import org.docx4j.XmlUtils;
+import org.docx4j.TraversalUtil.CallbackImpl;
+import org.docx4j.finders.CommentFinder;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
+import org.docx4j.org.xhtmlrenderer.docx.Docx4jDocxOutputDevice;
+import org.docx4j.utils.ResourceUtils;
+import org.docx4j.wml.Body;
+import org.docx4j.wml.CommentRangeEnd;
+import org.docx4j.wml.CommentRangeStart;
+import org.docx4j.wml.ContentAccessor;
+import org.docx4j.wml.R.CommentReference;
+import org.dom4j.io.SAXWriter;
+import org.jdom2.Content;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.Text;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.SAXOutputter;
+import org.junit.Assert;
+import org.jvnet.jaxb2_commons.ppp.Child;
 
 import HauptProgramm.Declaration;
 import HauptProgramm.DeclarationSet;
 import Verwaltung.HashLog;
 
+import aufgaben_db.Exercise.Docx4JTravelCallback;
 import aufgaben_db.LatexCutter;
 
+import org.odftoolkit.odfdom.pkg.OdfPackage;
+import org.odftoolkit.odfdom.pkg.OdfPackageDocument;
+import org.odftoolkit.simple.TextDocument;
+import org.odftoolkit.simple.text.Paragraph;
+/*For generating images from tex-chunks, i.e. LaTeX exercises.*/
+import org.scilab.forge.jlatexmath.TeXConstants;
+import org.scilab.forge.jlatexmath.TeXFormula;
+import org.scilab.forge.jlatexmath.TeXIcon;
+import org.w3c.dom.Node;
+
+import docx4j_library.HeaderFooterRemove;
+
+import java.awt.image.BufferedImage;
+
+import javax.xml.bind.JAXBElement;
 
 
 
@@ -38,7 +91,7 @@ public class Sheetdraft extends ContentToImage {
 	private String type;
 	private String course;
 	private String semester;
-	private int lecturer_id;
+	private int lecturer_id;/*if new then at first the N.N., ie. lecturer_id = 1 is set*/
 	private String description = "";
 	private String author;
 	private int is_draft;	/*store it as an integer but handle it like a bool*/
@@ -64,6 +117,10 @@ public class Sheetdraft extends ContentToImage {
 	private DeclarationSet declarationSet;//TODO not need! exercises bear them!
 	
 	
+	/* As in a ArrayList the order gets confused. That means we have to store which Exercise
+	 * had been found last explicitely.
+	 * (This is needed for getting deepest all exercises' common parent element!) */
+	private Exercise lastExercisePlainText;
 	
 	
 	
@@ -76,17 +133,17 @@ public class Sheetdraft extends ContentToImage {
 
 		//CREATE NEW DRAFT.
 		String new_draft_type = "Mix";
-		String new_draft_course = "Random-coursename-" + Math.round(Math.random() * 10000);
-		String new_draft_semester = Global.getSemtermFromCalendar(Calendar.getInstance()) + Global.now.get(Calendar.YEAR);
+		String new_draft_course = "Random_coursename_" + Math.round(Math.random() * 10000);
+		String new_draft_semester = Global.getSemtermFromCalendar(Calendar.getInstance()) + "_" + Global.now.get(Calendar.YEAR);
 		int new_draft_lecturer_id = 0; /*N.N. or N.A.*/
 		String new_draft_description = "";//a draft newly created automatically has no description
 		String new_draft_headermixture = "";     //the same applies here. 
 		
 		//build the filelink
-		String new_draft_filelink = new_draft_semester + "/" + new_draft_course
+		String new_draft_filelink = Global.uploadTarget + new_draft_semester + "/" + new_draft_course
 				+ "/N.N." + /*new_draft_lecturer_id*/"" + "/" + new_draft_type
 				+ "/" + new_draft_course + "_" + new_draft_semester
-				+ "_" + new_draft_type + "_randomsheet" + Math.round(Math.random() * 10000) + ".tex";
+				+ "-" + new_draft_type + "-randomsheet" + Math.round(Math.random() * 10000) + ".none";//".tbd";
 		
 		setAllAttributes(
 				//-1	/*new draft id -- to be set by the database!*/
@@ -220,9 +277,8 @@ public class Sheetdraft extends ContentToImage {
 
 			    
 			    //Update/set the filelink according to the sheetdraft's filelink!
-			    //TODO
-			    e.moveToNewFilelink(this.getFilelink() + "-Exercise_" + (++i)
-			    		+ "-splitby_" + e.getSplitBy() +"." + e.getFileEnding());
+			    e.moveToNewFilelink(this.filelink + "__Exercise_" + (++i)
+			    		+ "__splitby_" + e.getSplitBy() +"." + e.getFileEnding());
 			    
 				//Update the new filelinks in the database too.
 				e.updateDBToNewFilelink();
@@ -249,18 +305,8 @@ public class Sheetdraft extends ContentToImage {
 			boolean include_exercises_thus_possibly_copying_all_referenced_exercises)//making this draft independent 
 			throws IOException, SQLException {
 
-		//For determining if this sheetdrat exists:
-		ResultSet res = Global.query(
-				"SELECT is_native_format"
-						+ " FROM `sheetdraft`"
-						+ " WHERE filelink = " + filelink);
-		//determine length
-	   	int resL = 0;
-	   	if (res.last() /*&& res.getType() == res.TYPE_SCROLL_SENSITIVE*/) {
-	        resL = res.getRow();
-	   	    res.beforeFirst();/*because afterwards follows a next()*/
-	   	}
-		if (resL > 0) {
+		//For determining if this sheetdraft exists:
+		if (Global.sqlm.exist(" sheetdraft ", "*", "filelink = '" + filelink + "'")) {
 			//Update already existent entry/row.
 		    String query = "UPDATE `sheetdraft`"
 		    		   + " SET"
@@ -277,7 +323,7 @@ public class Sheetdraft extends ContentToImage {
 		    		   + " ,whenchanged = "	+ "NOW()"//CURRENT_TIMESTAMP() OR CURRENT_TIMESTAMP" all valid
 		    		   + "";
 		    		          
-		    //execute
+		    //TODO Better not updating the database if draft content is strange!
 		    Global.query(query);
 		    
 		}
@@ -289,19 +335,19 @@ public class Sheetdraft extends ContentToImage {
 		    		   + ", whencreated"
 		    		   + ", author, is_draft, headermixture, whenchanged)"
 		    		   + " VALUES ("
-		    		           + "'" + this.filelink + "'"
+		    		           + " '" + this.getFilelinkRelative() + "'"
 		    		           + ",'" + this.type + "'"
 		    		           + ",'" + this.course + "'"
 		    		           + ",'" + this.semester + "'"
-		    		           + "," + this.lecturer_id + ""
+		    		           + ", " + this.lecturer_id + ""
 		    		           + ",'" + this.description + "'"
-		    		           + ",'" + new Timestamp(Global.now.getTimeInMillis()) + "'"
+		    		           + ",'" + /*new Timestamp(*/Global.now.getTimeInMillis()/*)*/ + "'"
 	  		        		   + ",'" + Global.session.getAttribute("user") + "'"
-	  		        		   + ", " + this.is_draft
+	  		        		   + ", " + this.is_draft //TODO:is_draft == 1 implies no plain text? 
 	  		        		   + ",'" + this.headermixture + "'"
 	  		        		   + ", NOW()" //CURRENT_TIMESTAMP() OR CURRENT_TIMESTAMP" all valid
 		    		   + ")";
-		    //execute
+		    //Executive branch.
 		    Global.query(query);
 		}
 	    
@@ -315,8 +361,9 @@ public class Sheetdraft extends ContentToImage {
 	    	//If no more draftexerciseassignments are left!
 		    //ATTENTION this can include related ones, i.e. those assigned by
 		    //reference which are in draftreferenceassignment.
-	    	Global.addMessage("Functionality for synchronizing DB to Instance"
-	    			+ "/Object not implemented.", "nosuccess");
+	    	Global.addMessage("Synchronizing from an instance/object to the DB not supported. (Would make"
+	    			+ " exercise assignments real standalone.)"
+	    			, "nosuccess");
 	    	
 	    }
 	    
@@ -602,10 +649,9 @@ public class Sheetdraft extends ContentToImage {
 	
 	/**
 	 * EXTRACT EXERCISES RAW/NATIVE FORMAT
-	 * 
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public void extractExercisesNativeFormat() throws IOException {
+	public void extractExercisesNativeFormat() throws Exception {
 		/*DANGER: IT'S A REAL PROBLEM TO DETERMINE THE RAW FILETYPE EXERCISE CONTENTS BY
 		  USING THE PLAIN TEXT LINE NUMBERS. IS IT GUARANTEED THAT THE LINES ARE EQUIVALENT?
 		  FOR NOW: => We should not store raw content.*/
@@ -621,23 +667,8 @@ public class Sheetdraft extends ContentToImage {
 		/* THE CREATION OF EXERCISES IN THE ORIGINAL FILE FORMAT */
 		//We store the link to the individual .type exercises in the exercise map (as keys).
 		String ending = Global.extractEnding(filelink);
-		//PDF
-		if (ending.equals("pdf")) {
-			HashLog.erweitereLogFile("Extract exercises PDF: Filelink: " + filelink + ".");
-			//1) Extract text.
-			//2) Same as text files.
-			//OR
-			//1) Convert to xHTML/tex.
-			//2) Extract exercises like in tex/html.
-			extractExercisesFromPDF();
-		}
-		//RTF
-		else if (ending.equals("rtf")) {
-			HashLog.erweitereLogFile("Extract exercises RTF: Filelink: " + filelink + ".");
-			extractExercisesFromRTF();
-		}
 		//DOC
-		else if (ending.equals("doc")) {
+		if (ending.equals("doc")) {
 			HashLog.erweitereLogFile("Extract exercises DOC: Filelink: " + filelink + ".");
 			extractExercisesFromDOC();
 		}
@@ -653,8 +684,36 @@ public class Sheetdraft extends ContentToImage {
 			4) Store this filelink. Eventually put the sheetdraft-exercise relationship in the DB.
 			*/
 			extractExercisesFromDOCX();
-			WordprocessingMLPackage wMLPac = new WordprocessingMLPackage();
-			//TODO
+
+		}
+		//HTML
+		else if (ending.equals("html") || ending.equals("htm")) {
+			HashLog.erweitereLogFile("Extract exercises (x)HTML: Filelink: " + filelink + ".");
+			extractExercisesFromHTML();
+		}
+		//ODT (OpenDocumentFormat Text)
+		else if (ending.equals("odt")) {
+			HashLog.erweitereLogFile("Extract exercises ODT: Filelink: " + filelink + ".");
+			//extractExercisesFromODT();
+			//extractExercisesFromODT_ODFToolkit();
+			extractExercisesFromODT_ODFToolkitSimpleAPI();
+			
+			
+		}
+		//PDF
+		else if (ending.equals("pdf")) {
+			HashLog.erweitereLogFile("Extract exercises PDF: Filelink: " + filelink + ".");
+			//1) Extract text.
+			//2) Same as text files.
+			//OR
+			//1) Convert to xHTML/tex.
+			//2) Extract exercises like in tex/html.
+			extractExercisesFromPDF();
+		}
+		//RTF
+		else if (ending.equals("rtf")) {
+			HashLog.erweitereLogFile("Extract exercises RTF: Filelink: " + filelink + ".");
+			extractExercisesFromRTF();
 		}
 		//TEX
 		else if (ending.equals("tex")) {
@@ -662,6 +721,11 @@ public class Sheetdraft extends ContentToImage {
 			//At this point a pdf file has to be generated again? TODO
 			//Similar to the plain text version, but look for begin and end tags.
 			this.setExercises(LatexCutter.cutExercises(this));
+			//Method 1) Generate PDFs out of the exercises. Then create image from these PDFs.
+			//TODO
+			//Method 2) Create an image out of the chunk of LaTex using e.g. JLatexMath/SnuggleTex,JEuclid
+			LatexCutter.createImagesForExercises(this);
+
 		}
 		//TXT
 		else if (ending.equals("txt")) {
@@ -689,15 +753,743 @@ public class Sheetdraft extends ContentToImage {
 //			//3) Now treat it like the txt-File.
 //			this.setExercisesMap(extractExercisesFromPlainText(txt_only));
 //		}
-		else if (ending.equals("html") || ending.equals("htm")) {
-			HashLog.erweitereLogFile("Extract exercises (x)HTML: Filelink: " + filelink + ".");
-			extractExercisesFromHTML();
-		}
+		
 		
 		Global.addMessage("Extracted exercises in raw format from " + filelink + ".", "success");
 	}
 	
 	
+	
+	
+	//======= OPEN OFFICE ==============================================================//
+	public boolean isODTElementStandAloneCapable(Element e) {
+		return e.getQualifiedName().equalsIgnoreCase("p")
+				|| e.getQualifiedName().equalsIgnoreCase("p")
+				|| e.isRootElement();//The root element is stand alone capable per definition.
+	}
+	
+	
+	
+	
+	
+	
+	/*For each exercise(declaration) we store the way in the xml tree we took to get to this declaration in the markup.
+	 *Walk up the tree one by one in the waypath of THE LAST exercise to check if this same Element is in the waypath of the others too!
+	 *If this Element is in the waypath of the others, then we have reached the parent Element
+	 *of the exercises, that is the Element that is the highest common/same Element containing
+	 *these two (or in an ideal/well created/structured/formatted document all) exercises.
+	 *Check via .contains(Element) or indexOf(Element).*/
+	/**
+	 * Determines the common parent of all exercises to know where we have to split the document
+	 * to get the exercises completely.
+	 * 
+	 * Also the way up from the element node where the exercise declarations were found is
+	 * revealed up to the deepestCommonParent element. This way is stored!
+	 * This is necessary to provide means to determine the highest still 'non-common' parent element
+	 * of each exercise (declaration). As this element is expected between the deepest common parent
+	 * of the exercise's declarations and the elementWhereDeclarationWasFound to store this
+	 * partial tree only creates no problems and the highest non-common element of one and
+	 * only one exercise declaration.
+	 * 
+	 * @return The deepest common parent element to all exercises (if well structured document,
+	 * else the to two exercises first common (parent) element that occurs from bottom up). 
+	 */
+	int deepestAllExercisesCommonParentElement_index = 0;/*the root element at least it is*/
+	int elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index = 1;
+	 
+	public void/*org.w3c.dom.Node*/ determineAllExercisesDeepestCommonParentElement() {
+		//Exercise lastExercise = this.allExercisesRawFormat.get(allExercisesRawFormat.size() - 1);
+		Exercise lastExercise = this.allExercisesRawFormat.get(
+				Global.replaceEnding(lastExercisePlainText.getFilelink(), this.getFileEnding()));
+		if (lastExercise == null) {
+			System.out.print(Global.addMessage("Last exercise Raw/Native Content is null!", "danger"));
+		}
+
+		//because we travel bottom up and get alerted once the first element is encountered
+		//that is contained in the waypath/divingpath of at least two or all exercise divingpaths.
+		//int lastExercise_elementsTraversed_index = lastExercise.sheetdraftElementsTraversed_index;
+		//int lastExercise_elementsTraversed_index = lastExercise.sheetdraftElementsTraversed.indexOf(lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat);
+//		int lastExercise_elementsTraversed_depth = lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_depth;
+		
+		/*
+		//Travel up the last exercise of the document's waypointelements to the previously found
+		//exercise declaration. USING Element.getParentElement().
+		*/
+		
+		
+		//Get the declaration found element (rather one level below) of the lastExercise
+		//using the determined index. (Can be used because the elementsTraversed paths of the non-last exercises
+		//always are identicallay contained within the last exercise's elements traversed path
+		//because when searching for the exercise declaration we always start at the root element
+		//no matter which exercise.)
+		//Node elementToCheckFor/*MUST BE INITIALIZED HERE TO HAVE THE CHANCE TO SKIP THE FIRST ENTRY!*/
+		lastExercise.deepestAllExercisesCommonParentElement
+		= lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise //the when declaration found index is determined in travelUntilDeclarationFound...
+		= lastExercise.highestParentElementContainingThisExerciseOnly
+		= lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
+		//= lastExercise.sheetdraftElementsTraversed.get(
+		//		lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index);
+		elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index
+		= lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index;
+		
+		//keep track of the route towards the deepestAllExercisesCommonParentElement
+		lastExercise.wayTowardsRoot.add(lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+		
+		//while(--lastExercise_elementsTraversed_depth > -1) {//<--Emerge by one level!
+		//As the element when the declaration was found is too deep in the xml we emerge
+		//by 1 level immediately:
+		while(lastExercise.deepestAllExercisesCommonParentElement != null) {//<--Emerge by one level!
+			
+			//int elementToCheckFor_index = lastExercise.sheetdraftElementsTraversed.indexOf(elementToCheckFor);
+			int elementToCheckFor_index = lastExercise.sheetdraftElementsTraversed.indexOf(lastExercise.deepestAllExercisesCommonParentElement);
+			
+			//Check all other (i.e. non-last) exercises for if this Element has been traversed too!
+			boolean allExercisesTraversedThisElementToCheckFor = true;
+			boolean noOtherExercisesTraversedThisElementToCheckFor = true;
+			//Element elementToCheckFor = lastExercise.sheetdraftElementsTraversed.get(lastExercise_elementsTraversed_index);
+			//org.w3c.dom.Node elementFound = null;
+			int elementFound_index = 0;
+			//Check in all exercises for the deepest common parent element.
+			for (Exercise exerciseRF : allExercisesRawFormat.values()) {
+				//The Last Exercise is the exercise that must be the reference, because here 
+				//the waypath is the longest as many elements come before finding the declaration.
+				//if (exerciseRF.equals(lastExercise)) {
+				if (exerciseRF == lastExercise) {//The last exercise deepest is in the outer loop already!!
+					continue;
+				}
+				//Check in this exercise's waypath if the current Element checked for from the 
+				//last exercise's wayelements has been passed on its way to finding this currently
+				//investigated exercise's declaration.
+
+				//Possibility 1: (it's not obvious that this works fine, because it indexOf seems to use equal instead of exactly same reference!)
+				//int index = exerciseRF.sheetdraftElementsTraversed.indexOf(elementToCheckFor);
+				int index = exerciseRF.sheetdraftElementsTraversed.indexOf(lastExercise.deepestAllExercisesCommonParentElement);
+				//if (index != -1) {
+				//Way 2: (not guaranteeing that the element is found within ONE BRANCH! as many branches have been traversed)
+				//boolean elementExists = exerciseRF.sheetdraftElementsTraversed.get(elementToCheckFor_index) != null;
+				
+				//Final method 3:
+				//Starting element is the one that was reached when this exercise's declaration was found.
+				//org.w3c.dom.Node elementCandidate
+				exerciseRF.deepestAllExercisesCommonParentElement
+				= exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+				= exerciseRF.highestParentElementContainingThisExerciseOnly
+				= exerciseRF.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
+				//keep track of the route towards the deepestAllExercisesCommonParentElement
+				exerciseRF.wayTowardsRoot.add(exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+				//= exerciseRF.sheetdraftElementsTraversed.get(
+				//		exerciseRF.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index
+				//);
+				
+				boolean elementExistsInPathEmergingFromBottomUp = false;
+				//Emerge up from the starting element, ie. from where declaration was found:
+				while ((exerciseRF.deepestAllExercisesCommonParentElement) != null) {
+				//while ((elementCandidate) != null) {//<-now double safe as emerging by 1 @end/else
+									//If we would emerge to the parent element here in the
+									//while descriptor then we skip one entry and MUST HAVE
+									//THE CHILD initialized (see elementCandidate init above).
+					
+					//if (elementCandidate.equals(elementToCheckFor)) {
+					//Has to be the same reference so check this way:
+					//if (elementCandidate == elementToCheckFor) {
+					//if (elementCandidate == lastExercise.deepestAllExercisesCommonParentElement) {
+					if (exerciseRF.deepestAllExercisesCommonParentElement == lastExercise.deepestAllExercisesCommonParentElement) {
+					
+						//Here we have it.
+						elementExistsInPathEmergingFromBottomUp = true;
+						break;//<-- If this is reached, we break/stop the while loop.
+						
+					}
+					else {
+						//Store this element node as a potential child. While we emerge upwards
+						//in the xml we will stop and no longer reach this assignment once
+						//the to all exercises deepest common parent element is found!
+						exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+						= exerciseRF.deepestAllExercisesCommonParentElement;//= elementCandidate;
+						//keep track of the route towards the deepestAllExercisesCommonParentElement
+						exerciseRF.wayTowardsRoot.add(exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+						/*what we are interested in is rather the index as this universally valid i.e. for each exercise not only for one!*/
+						//And this covers the other branch so that we don't have a endless loop:
+						//elementCandidate = elementCandidate.getParentNode();
+						if (exerciseRF.deepestAllExercisesCommonParentElement instanceof Child) {
+							exerciseRF.deepestAllExercisesCommonParentElement = ((Child)exerciseRF.deepestAllExercisesCommonParentElement)
+									.getParent();
+						}
+						else if (exerciseRF.deepestAllExercisesCommonParentElement instanceof JAXBElement) {
+							JAXBElement e = (JAXBElement) exerciseRF.deepestAllExercisesCommonParentElement;
+							if (e.getValue() instanceof Child) {
+								exerciseRF.deepestAllExercisesCommonParentElement = ((Child)e.getValue())
+										.getParent();
+								
+							}
+							else {
+								//debug only
+								System.out.println("ROOT JAXBElement?: " + e.getDeclaredType().getName());
+							}
+							
+						}
+						else if (exerciseRF.deepestAllExercisesCommonParentElement instanceof org.w3c.dom.Node) {
+							exerciseRF.deepestAllExercisesCommonParentElement = ((org.w3c.dom.Node)exerciseRF.deepestAllExercisesCommonParentElement)
+									.getParentNode();
+						}
+						//exerciseRF.deepestAllExercisesCommonParentElement = elementCandidate;//<- just a check because one of those exercise parent is NULL
+					}
+					
+				}
+				
+				//Was this Element from within last exercise's emerging path found in this exercise too?
+				if (elementExistsInPathEmergingFromBottomUp) {
+//					//This element exists in this exercise's traverse path to declaration.
+//					//Thus we have found ONE the last's and this exercise's COMMON PARENT.
+//					//elementFound = elementToCheckFor;
+//					elementFound = exerciseRF.deepestAllExercisesCommonParentElement;
+					elementFound_index = elementToCheckFor_index;//index;
+					noOtherExercisesTraversedThisElementToCheckFor = false;//this is only working for the last exercise!
+					// => so another method is necessary after determineDeepestCommon..: determineHighestParentElementThatContainsOneExerciseOnly.
+					continue; //with next exercise
+				}
+				else {
+					//If only one of the exercises has not traversed this Element,
+					//then we have to travel one level higher in the markup. This
+					//is a sign for a badly, at least not ideally and clean formatted
+					//or structured document. Let's see which software office package
+					//is most vulnerable to that.
+					allExercisesTraversedThisElementToCheckFor = false;
+					//read: Did they also traverse exactly this element (not in the loop
+					//before, but on its way/travel down to finding the exercise declaration)?
+				}
+				
+				
+				
+			}
+			
+			if (noOtherExercisesTraversedThisElementToCheckFor) {
+				//keep track of the route towards the deepestAllExercisesCommonParentElement
+				lastExercise.wayTowardsRoot.add(lastExercise.deepestAllExercisesCommonParentElement);
+				lastExercise.highestParentElementContainingThisExerciseOnly = lastExercise.deepestAllExercisesCommonParentElement;
+			}
+			
+			if (allExercisesTraversedThisElementToCheckFor) {
+			//if (elementFound != null && allExercisesTraversedThisElementToCheckFor) {
+				//the to all exercises deepest common parent element
+				deepestAllExercisesCommonParentElement_index = elementFound_index;
+				//lastExercise.deepestAllExercisesCommonParentElement = elementFound;//<- just a check because one of those exercise parent is NULL
+				//return elementFound;
+				return;
+			}
+			else {
+				//Store this element node as a potential child. While we emerge upwards
+				//in the xml we will stop and no longer reach this assignment once
+				//the to all exercises deepest common parent element is found!
+				lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+				= lastExercise.deepestAllExercisesCommonParentElement;//elementToCheckFor;
+				//In the sheetdraft the index is stored because here we want to keep it object
+				//instance independent. Note: For the exercises, the index is the same, the
+				//object instances may be equal - nevertheless it's too risky as each exercise
+				//has its own and non-equal-reference/non-equal-address Element instances.
+				elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index
+				= lastExercise.sheetdraftElementsTraversed.indexOf(lastExercise.deepestAllExercisesCommonParentElement);
+				
+				//keep track of the route towards the deepestAllExercisesCommonParentElement
+				lastExercise.wayTowardsRoot.add(lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+
+				/*continue with the next higher (i.e. index lower) element traversed */
+				if (lastExercise.deepestAllExercisesCommonParentElement instanceof Child) {
+					lastExercise.deepestAllExercisesCommonParentElement = ((Child)lastExercise.deepestAllExercisesCommonParentElement)
+							.getParent();
+				}
+				else if (lastExercise.deepestAllExercisesCommonParentElement instanceof JAXBElement) {
+					JAXBElement e = (JAXBElement) lastExercise.deepestAllExercisesCommonParentElement;
+					if (e.getValue() instanceof Child) {
+						lastExercise.deepestAllExercisesCommonParentElement = ((Child)e.getValue())
+								.getParent();
+						
+					}
+					else {
+						//debug only
+						System.out.println("ROOT JAXBElement of last exercise?: " + e.getDeclaredType().getName());
+					}
+					
+				}
+				else if (lastExercise.deepestAllExercisesCommonParentElement instanceof org.w3c.dom.Node) {
+					lastExercise.deepestAllExercisesCommonParentElement = ((org.w3c.dom.Node)lastExercise.deepestAllExercisesCommonParentElement)
+							.getParentNode();
+				}
+			}
+
+		}
+		//No highest common element? Then only the root element is left and was not examined.
+		//return null;
+	}
+	
+	
+	
+	
+	/**
+	 * Determines the common parent of all exercises to know where we have to split the document
+	 * to get the exercises completely.
+	 * 
+	 * Also the way up from the element node where the exercise declarations were found is
+	 * revealed up to the deepestCommonParent element. This way is stored!
+	 * This is necessary to provide means to determine the highest still 'non-common' parent element
+	 * of each exercise (declaration). As this element is expected between the deepest common parent
+	 * of the exercise's declarations and the elementWhereDeclarationWasFound to store this
+	 * partial tree only creates no problems and the highest non-common element of one and
+	 * only one exercise declaration.
+	 * 
+	 * @return The deepest common parent element to all exercises (if well structured document,
+	 * else the to two exercises first common (parent) element that occurs from bottom up). 
+	 */
+	public void/*org.w3c.dom.Node*/ determineHighestParentThatContainsOneAndOnlyOneExerciseDeclaration() {
+		int exercise_wayTowardsRoot_index;
+		int e_wayTowardsRoot_index;
+		boolean noOtherExerciseDeclarationContainedBelowCurrentElement;
+		
+		
+		for (Exercise exercise: allExercisesRawFormat.values()) {
+			
+			noOtherExerciseDeclarationContainedBelowCurrentElement = true;
+			//Begin with deepest element (elementWhereExerciseDeclarationWasFound):
+			exercise_wayTowardsRoot_index = exercise.wayTowardsRoot.size();// - 1;
+			if (exercise_wayTowardsRoot_index == 0) {
+				System.out.print(
+						Global.addMessage("The way towards root (at least until"
+								+ " the deepestCommonParentElementOfAllExercises it reached) is empty!"
+								+ " \r\nHas function determineDeepestAllExercisesCommonParent been called?"
+								+ " \r\nThe exercise the wayTowardsRoot belongs to: " + exercise.toString()
+							, "danger")
+				);
+				continue;
+			}
+			
+			//Travel down the way from the deepestAllExercisesCommonParentElement to where the exercise declaration was found.
+			/*
+			 * The first element added is deeper to the leaves than the ones added later. So
+			 * if we start from the top (deepestAllExercisesCommonParentElement), we will probably
+			 * have a shorter way and come to an quicker end as the exercise declaration
+			 * for sure will be surrounded by masses of extra-markup resulting in many more elements
+			 * between where the declaration was found and the highestOnlyOneExerciseDeclarationContainingElement
+			 * than can be expected between the deepest all exercises common parent element and the highest
+			 * element containing one, and only one, exercise declaration.
+			 * => Start from top down.  
+			 */
+			/*
+			 * RUNTIME-ATTENTION: This is a cross product x times x.
+			 * (each exercises with each exercise that is different). 
+			 */
+			Object exerciseWayElementToCheckFor;
+			while (--exercise_wayTowardsRoot_index > 0) {
+				exerciseWayElementToCheckFor = exercise.wayTowardsRoot.get(exercise_wayTowardsRoot_index);
+				/*-------------------------------------------
+				 * 1. assume true for each new (and deeper towards exercise declaration) way element:*/ 
+				noOtherExerciseDeclarationContainedBelowCurrentElement = true;
+				
+				
+				/*-------------------------------------------
+				 * 2. examine all other exercise declaration way elements*/
+				for (Exercise e : allExercisesRawFormat.values()) {
+					/* only for performance: if already one waypointelement has been found
+					   in one exercise e why then look any further in other exercises? */
+					if (!noOtherExerciseDeclarationContainedBelowCurrentElement) {
+						break;
+					}
+					/* only othe exercises */
+					if (e == exercise) {
+						continue;/*skip the exercise e that is the identity of the current exercise
+					because if not we would not come to an end as there always was another
+					exercise declaration (an identical one at same position, the identity!) */
+					}
+					
+					//Begin with deepest element (elementWhereExerciseDeclarationWasFound):
+					e_wayTowardsRoot_index = exercise.wayTowardsRoot.size();// - 1;
+					
+					if (e_wayTowardsRoot_index == 0) {
+						System.out.print(
+								Global.addMessage("[This message can occur multiple times as it's a nested loop!]"
+										+ "\r\nThe way towards root (at least until"
+										+ " the deepestCommonParentElementOfAllExercises it reached) is empty!"
+										+ " \r\nHas function determineDeepestAllExercisesCommonParent been called?"
+										+ " \r\nThe e(xercise) the wayTowardsRoot belongs to: " + exercise.toString()
+										, "danger"
+								)
+						);
+						continue;
+					}
+					
+					//Travel down the way from the deepestAllExercisesCommonParentElement to where the exercise declaration was found.
+					while (--e_wayTowardsRoot_index > 0) {
+						//if (exercise.wayTowardsRoot.get(e_wayTowardsRoot_index) == exerciseWayElementToCheckFor) {
+						if (e.wayTowardsRoot.get(e_wayTowardsRoot_index).equals(exerciseWayElementToCheckFor)) {
+							//=> The element is in this way path towards deepestAllExercisesCommonParentElement too.
+							noOtherExerciseDeclarationContainedBelowCurrentElement = false;
+							System.out.print(Global.addMessage("Element to check for was found within the waypath (elements traversed) towards another exercise declaration! => Two exercise declaration below this level in this branch!"
+									+ "\r\nPerhaps one exercise way element to check for deeper in the tree (more towards where the declaration was found) will contain one and only one exercise declaration.", "info"));
+							break;
+						}
+					}
+					
+					
+				}
+				
+				
+				/*-------------------------------------------
+				 * 3. now check if we already reached the highest only one exercise declaration (namely this!) */
+				if (noOtherExerciseDeclarationContainedBelowCurrentElement) {
+					//the quicker we found the element the better as this nested loop is costly!
+					exercise.highestParentElementContainingThisExerciseOnly = exerciseWayElementToCheckFor;
+					return ;
+				}
+				//else next round or not found
+				else if (exercise_wayTowardsRoot_index == 0) {
+					System.out.print(Global.addMessage("No highest parent element containing one and only one element found for this exercise: " + exercise.toString(), "danger"));
+				}
+			}
+			
+			
+		}
+		
+	}
+	
+	
+	
+
+
+    
+
+    /**
+	 * ODT: Find and store exercises to filesystem. 
+     * @throws Exception 
+	 */
+	private void extractExercisesFromODT_ODFToolkit() throws Exception {
+		
+		
+		//Unzip the openOffice Document
+		OdfPackageDocument odfPkgDocument = OdfPackageDocument.loadDocument(filelink);
+        Assert.assertTrue(odfPkgDocument.getPackage().contains("content.xml"));
+
+		org.w3c.dom.Document odfContent = odfPkgDocument.getFileDom("content.xml");
+		org.w3c.dom.Node rootElement = odfContent.getDocumentElement();
+		//check foreign attribute without namespace
+		org.w3c.dom.Element foreignElement = (org.w3c.dom.Element) rootElement.getChildNodes().item(0);
+		String foreignText = foreignElement.getTextContent();
+		
+		
+		/*FOR THE SHEETDRAFT ITERATE ALL ELEMENTS UNTIL DELCARATION FOUND.*/
+		//1) Therefore search for the declaration in the markup starting from the root.
+		/*METHOD A) SHEETDRAFT TRAVERSE ONLY AND USING INDICES. (as now suddenly the indexOf seems
+		 *to deliver proper results. TODO redesign this approach separately.
+		 *METHOD B) NOW DONE FOR EACH EXERCISE INDIVIDUALLY AS OTHERWISE THE NODES WILL NOT BE
+		 *          VALID AND MIXED IF NO NEW NODES ARE LOADED AND TRAVERSED FOR EACH EXERCISE!
+		 *The reason that iginited method B) was the indexOf initially not working, thus removing
+		 * of nodes proved impossible (output file was same as input file as if nothing was deleted). 
+		for (Exercise exercise : allExercisesRawFormat.values()) {
+
+			exercise.travelDownUntilDeclarationFound(rootElement);
+			
+		}
+		
+		
+		//2) Must be timed after all exercises have been traversed.
+		determineAllExercisesDeepestCommonParentElement();
+		 */
+		
+				
+		//3) From this parent element on
+		//3a) either delete the exercise not required (following references).
+		//3b) or extract the individual exercise's markup, the headers and references.
+		
+		//3a)
+		//Copy complete zip archive odt file for each exercise, delete foreign content, save.
+		for (Exercise exercise : allExercisesRawFormat.values()) {
+			Global.copy(filelink, exercise.filelink);
+			//Unzip the openOffice Document
+			OdfPackageDocument exercise_odfPkgDocument = OdfPackageDocument
+					.loadDocument(exercise.filelink);
+			org.w3c.dom.Document exercise_odfContent = odfPkgDocument.getFileDom("content.xml");
+			Node exercise_rootElement = odfContent.getDocumentElement();
+			
+			/*FOR THE EXERCISE ITERATE ALL ELEMENTS UNTIL DELCARATION FOUND TO FILL THE TRAVERSED LIST.*/
+			//1) Therefore search for the declaration in the markup starting from the root.
+			exercise.travelDownUntilDeclarationFound(exercise_rootElement);
+			
+			//figure out which exercise comes after this current one:
+			Exercise exerciseSucceding = null;
+			//<-- null indicates guess which sibling elements still belong to this exercise's xml 
+			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);
+			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
+				//We start with 1 instead of 0 in the filesystem!
+				String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1)
+						+ ".odt.odt";
+				exerciseSucceding = allExercisesRawFormat.get(//increase by 1 as it's the following exercise
+						exercise_filelink
+				);
+			}
+			
+			//Start at the deepest common parent element and travel down to delete all
+			//the other exercises' xml markup/content and all that is referenced
+			//AND NOT referenced by other parts.
+			//=> first delete xml , then at the end delete reference content that 
+			//is no longer referenced.
+			exercise.deleteAllChildrenOfExceptFor(
+					deepestAllExercisesCommonParentElement_index, exerciseSucceding);
+			
+			//4) Save the exercise in native format: (overwriting the one loaded from) 
+			exercise_odfPkgDocument.save(exercise.filelink);
+			
+			
+		}
+		
+		
+		//4) Store the newly created native filelink exercises in the db:
+		//done in action.upload.jsp because of the index also being updated
+		//inserting this raw/native format exercise data into the db together
+		//with the plain text exercises.
+
+		
+		//5) We have (hopefully) changed nothing in the sheetdraft's file.
+		//not saving - only closing
+		odfPkgDocument.close();
+
+}
+
+
+//Extract each exercise according to found declarations.
+private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
+	
+		TextDocument textDocument = TextDocument.loadDocument(filelink);
+		org.w3c.dom.Node rootElement = textDocument.getContentRoot();
+
+		//0) Copy over the exercises found as plain text.
+		//for (int ei = 0; ei < allExercisesPlainText.size(); ei++) {
+		for (Exercise ePT : allExercisesPlainText.values()) {
+			//create a copy (TODO: Better join allExercises-PlainText and -RawContent?)
+			String eRC_filelink = Global.replaceEnding(ePT.getFilelink(), "odt");
+			ReadWrite.write("", eRC_filelink);
+			Exercise eRC = new Exercise(eRC_filelink, ePT.getDeclaration(), ePT.getHeader());
+			allExercisesRawFormat.put(eRC_filelink, eRC);
+		}
+		
+		
+		
+		/*FOR THE SHEETDRAFT ITERATE ALL ELEMENTS UNTIL DELCARATION FOUND.*/
+		//1) Therefore search for the declaration in the markup starting from the root.
+		/*METHOD A) SHEETDRAFT TRAVERSE ONLY AND USING INDICES. (as now suddenly the indexOf seems
+		 *to deliver proper results. TODO redesign this approach separately.
+		 *METHOD B) NOW DONE FOR EACH EXERCISE INDIVIDUALLY AS OTHERWISE THE NODES WILL NOT BE
+		 *          VALID AND MIXED IF NO NEW NODES ARE LOADED AND TRAVERSED FOR EACH EXERCISE!
+		 *The reason that iginited method B) was the indexOf initially not working, thus removing
+		 * of nodes proved impossible (output file was same as input file as if nothing was deleted). 
+		//1) Therefore search for the declaration in the markup starting from the root.
+		for (Exercise exercise : allExercisesRawFormat.values()) {
+
+			exercise.travelDownUntilDeclarationFound(rootElement);
+			
+		}
+		
+		
+		//2) Must be timed after all exercises have been traversed. (all exercises retrieve their deepestCommonParentElement_sChildElementContainingTheExercise)
+		determineAllExercisesDeepestCommonParentElement();
+		 */
+		
+		//3) From this parent element on
+		//3a) either delete the exercise not required (following references).
+		//3b) or extract the individual exercise's markup, the headers and references.
+		
+		//3a)
+		textDocument.close();
+		//Copy complete zip archive odt file for each exercise, delete foreign content, save.
+		for (Exercise exercise : allExercisesRawFormat.values()) {
+
+			//3a.1) copy native file
+			//Global.copy(filelink, exercise.filelink);
+			
+			//3a.2) reload the sheetdraft's xml - now for each exercise it will be saved separately
+			//this is required as the nodes currently known are from the sheetdraft's xml only!
+			//and indices are not necessarily determined correctly because of indexOf(Node) not working here somehow.
+			TextDocument exercise_textDocument = TextDocument.loadDocument(filelink);
+			org.w3c.dom.Node exercise_rootElement = exercise_textDocument.getContentRoot();
+
+			
+			//3a.3) retraverse it
+			//1) Therefore search for the declaration in the markup starting from the root.
+			for (Exercise exer : allExercisesRawFormat.values()) {
+				exer.clearTraversedAndTextBuffer();//to prevent still having the old data in there
+				exer.travelDownUntilDeclarationFound(exercise_rootElement);
+			}/*After this loop the exercises have traversed this exercise dom's nodes!*/
+			/*=> So now if we determine the deepest common parent element we get the deepest 
+			 * in this current exercise containing only elements from within this DOM.*/
+			determineAllExercisesDeepestCommonParentElement();
+			determineHighestParentThatContainsOneAndOnlyOneExerciseDeclaration();//determineHighestParentElementThatContainsOneExerciseOnly();
+			
+			//exercise_rootElement.removeChild(exercise.sheetdraftElementsTraversed.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index));
+			
+			//IMPORTANT: copy over the deepest common parent element
+			/*the indices are not determined correctly due to matching in indexOf(Node)
+			exercise.deepestAllExercisesCommonParentElement = exercise.sheetdraftElementsTraversed
+					.get(deepestAllExercisesCommonParentElement_index);
+			exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise = exercise.sheetdraftElementsTraversed
+					.get(deepestAllExercisesCommonParentElement_sChild_index);
+			*/
+			
+			//3a.4)figure out which exercise comes after this current one:
+			Exercise exerciseSucceding = null;
+			//<-- null indicates guess which sibling elements still belong to this exercise's xml 
+			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);
+			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
+				//We start with 1 instead of 0 in the filesystem!
+				String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1)
+						+ ".odt.odt";
+				exerciseSucceding = allExercisesRawFormat.get(//increase by 1 as it's the following exercise
+						exercise_filelink
+				);
+			}
+			
+			//3a.5) remove unused xml.
+			//Start at the deepest common parent element and travel down to delete all
+			//the other exercises' xml markup/content and all that is referenced
+			//AND NOT referenced by other parts.
+			//=> first delete xml , then at the end delete reference content that 
+			//is no longer referenced.
+//			exercise.deleteAllChildrenOfExceptFor(
+//					exercise.deepestAllExercisesCommonParentElement_index, exerciseSucceding);
+			
+			exercise.removeAllSiblingsOf(
+					(org.w3c.dom.Node)exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+					, exerciseSucceding
+			);
+			// exercise_rootElement = exercise_textDocument.getContentRoot();
+			
+			//3a.6) save the exercise native file
+			//exercise_textDocument.getContentDom().replaceChild(exercise_rootElement, exercise.deepestAllExercisesCommonParentElement);
+			//exercise_textDocument.getPackage().insert(exercise_textDocument.getFileDom("content.xml"), "content.xml", "text/xml");
+			exercise_textDocument.getPackage().save(exercise.filelink);
+			exercise_textDocument.close();
+			//exercise_textDocument.getPackage().save(exercise.filelink);
+			
+			
+			//3a7) Extract plain text for each exercise.
+			exercise.extractPlainText();
+			
+			//3a8) Create images native format.
+			exercise.generateImage();
+			
+			
+		}
+		
+		
+		//4) Store the newly created native filelink exercises in the db:
+		//done in action.upload.jsp because of the index also being updated
+		//inserting this raw/native format exercise data into the db together
+		//with the plain text exercises.
+		
+
+	
+	}
+
+
+//	private void extractExercisesFromODT() throws Exception {
+//		
+//		
+//		//Unzip the openOffice Document
+//		ZipFile zipFile = new ZipFile(filelink);
+//		Enumeration<? extends ZipEntry> entries = zipFile.entries();
+//		ZipEntry entry;
+//		//Find the content.xml.
+//		while (entries.hasMoreElements()) {
+//			entry = (ZipEntry) entries.nextElement();
+//			if (entry.getName().equals("content.xml")) {
+//				SAXBuilder sax = new SAXBuilder();
+//				Document doc = sax.build(zipFile.getInputStream(entry));
+//				//Divided through 2 because of start and eng tag.
+//				int elementsCountEstimation = doc.getContent().toString().split("<").length / 2;
+//				/*for lists this is no longer necessary, just out of interest how good such estimates prove to be*/
+//				//elementsTraversed = new Element[elementsCountEstimation];
+//				Element rootElement = doc.getRootElement();
+//				//Extract each exercise according to found declarations.
+//
+//				
+//				//0) Copy over the exercises found as plain text.
+//				//for (int ei = 0; ei < allExercisesPlainText.size(); ei++) {
+//				for (Exercise ePT : allExercisesPlainText.values()) {
+//					//create a copy (TODO: Better join allExercises-PlainText and -RawContent?)
+//					String eRC_filelink = ePT.getFilelink().replaceAll("[.]txt$", ".odt");
+//					ReadWrite.write("", eRC_filelink);
+//					Exercise eRC = new Exercise(eRC_filelink, ePT.getDeclaration(), ePT.getHeader()); 
+//					allExercisesRawFormat.put(eRC_filelink, eRC);
+//				}
+//				
+//				
+//				//1) Therefore search for the declaration in the markup starting from the root.
+//				for (Exercise exercise : allExercisesRawFormat.values()) {
+//
+//					exercise.travelDownUntilDeclarationFound(rootElement);
+//					
+//				}
+//				
+//				
+//				//2) Must be timed after all exercises have been traversed.
+//				org.w3c.dom.Node deepestToAllExercisesCommonParent
+//				= determineAllExercisesDeepestCommonParentElement();
+//				
+//				
+//				//3) From this parent element on
+//				//3a) either delete the exercise not required (following references).
+//				//3b) or extract the individual exercise's markup, the headers and references.
+//				
+//				//3a)
+//				//Copy complete zip archive odt file for each exercise.
+//				for (Exercise exercise : allExercisesRawFormat.values()) {
+//					//3a.1) copy native file
+//					Global.copy(filelink, exercise.filelink);
+//					
+//					//3a.2) reload it, now for each exercise
+//					Document exercise_doc = new SAXBuilder().build(Global.getInputStream(filelink, "content.xml"));
+//					
+//					//3a.3) retraverse it
+//					exercise.travelDownUntilDeclarationFound(doc.getRootElement());
+//					
+//					//3a.4)figure out which exercise comes after this current one:
+//					Exercise exerciseSucceding = null;
+//					//<-- null indicates guess which sibling elements still belong to this exercise's xml 
+//					int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);
+//					if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
+//						//We start with 1 instead of 0 in the filesystem!
+//						String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1)
+//								+ ".odt.odt";
+//						exerciseSucceding = allExercisesRawFormat.get(//increase by 1 as it's the following exercise
+//								exercise_filelink
+//						);
+//					}
+//					
+//					//3a.5) remove unused xml.
+//					//Start at the deepest common parent element and travel down to delete all
+//					//the other exercises' xml markup/content and all that is referenced
+//					//AND NOT referenced by other parts.
+//					//=> first delete xml , then at the end delete reference content that 
+//					//is no longer referenced.
+//					exercise.deleteAllChildrenOfExceptFor(
+//							deepestAllExercisesCommonParentElement_index, exerciseSucceding);
+//					
+//					
+//					//3a.6) save the exercise native file
+////					new SAXOutputter().output(doc);
+//				}
+//				
+//				
+//				//4) Store the newly created native filelink exercises in the db:
+//				//done in action.upload.jsp because of the index also being updated
+//				//inserting this raw/native format exercise data into the db together
+//				//with the plain text exercises.
+//				
+//				
+//				break;
+//			}
+//		}
+//		
+//		
+//	
+//	}
+    	
 	
 
 	/**
@@ -732,9 +1524,238 @@ public class Sheetdraft extends ContentToImage {
 	
 	/**
 	 * DOCX: Find and store exercises to filesystem. 
+	 * @throws Exception 
 	 */
-	private void extractExercisesFromDOCX() {
+	private void extractExercisesFromDOCX() throws Exception {
 		
+
+//		WordprocessingMLPackage wMLPac = Docx4J.load(new File(filelink));
+//		MainDocumentPart mainDocumentPart = wMLPac.getMainDocumentPart();
+//		org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document)mainDocumentPart.getJaxbElement();
+//
+//		HeaderFooterRemove.removeHFFromFile(new File(filelink));
+//		Body body = wmlDocumentEl.getBody();
+		
+//		for (Object o : wmlDocumentEl.getContent()) {
+//			if (o instanceof Element) {
+//				//((Element)o).;
+//			}
+//		}
+		//TODO follow relationships (see facade as a possible reference?)
+		//wMLPac.relationships.
+		//Docx4J.
+		
+		
+		//Extract each exercise according to found declarations.
+		//0) Copy over the exercises found as plain text.
+		//for (int ei = 0; ei < allExercisesPlainText.size(); ei++) {
+		for (Exercise ePT : allExercisesPlainText.values()) {
+			//create a copy (TODO: Better join allExercises-PlainText and -RawContent?)
+			String eRC_filelink = Global.replaceEnding(ePT.getFilelink(), "docx");
+			ReadWrite.write("", eRC_filelink);
+			Exercise eRC = new Exercise(eRC_filelink, ePT.getDeclaration(), ePT.getHeader());
+			allExercisesRawFormat.put(eRC_filelink, eRC);
+		}
+		
+		
+		
+		/*FOR THE SHEETDRAFT ITERATE ALL ELEMENTS UNTIL DELCARATION FOUND.*/
+		//1) Therefore search for the declaration in the markup starting from the root.
+		/*METHOD A) SHEETDRAFT TRAVERSE ONLY AND USING INDICES. (as now suddenly the indexOf seems
+		 *to deliver proper results. TODO redesign this approach separately.
+		 *METHOD B) NOW DONE FOR EACH EXERCISE INDIVIDUALLY AS OTHERWISE THE NODES WILL NOT BE
+		 *          VALID AND MIXED IF NO NEW NODES ARE LOADED AND TRAVERSED FOR EACH EXERCISE!
+		 *The reason that iginited method B) was the indexOf initially not working, thus removing
+		 * of nodes proved impossible (output file was same as input file as if nothing was deleted). 
+		//1) Therefore search for the declaration in the markup starting from the root.
+		for (Exercise exercise : allExercisesRawFormat.values()) {
+
+			exercise.travelDownUntilDeclarationFound(rootElement);
+			
+		}
+		
+		
+		//2) Must be timed after all exercises have been traversed. (all exercises retrieve their deepestCommonParentElement_sChildElementContainingTheExercise)
+		determineAllExercisesDeepestCommonParentElement();
+		 */
+		
+		//3) From this parent element on
+		//3a) either delete the exercise not required (following references).
+		//3b) or extract the individual exercise's markup, the headers and references.
+		
+		//3a)
+		//textDocument.close();
+		//Copy complete zip archive odt file for each exercise, delete foreign content, save.
+		for (Exercise exercise : allExercisesRawFormat.values()) {
+			
+			//3a.1) copy native file
+			//Global.copy(filelink, exercise.filelink);
+			
+			//3a.2) reload the sheetdraft's xml - now for each exercise it will be saved separately
+			//this is required as the nodes currently known are from the sheetdraft's xml only!
+			//and indices are not necessarily determined correctly because of indexOf(Node) not working here somehow.
+			WordprocessingMLPackage wMLPac = Docx4J.load(new File(filelink));
+			MainDocumentPart mainDocumentPart = wMLPac.getMainDocumentPart();
+			org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document)mainDocumentPart.getJaxbElement();
+
+			Body rootElement = wmlDocumentEl.getBody();
+			
+			exercise.clearTraversedAndTextBuffer();//to prevent still having the old data in there
+			//exer.travelDownUntilDeclarationFound(exercise_rootElement);
+			Exercise.Docx4JTravelCallback exercise_traveller = exercise.new Docx4JTravelCallback();
+			exercise_traveller.setDeclaration(exercise.getDeclaration());
+			new TraversalUtil(rootElement, exercise_traveller);
+			
+			//3a.3) retraverse it
+			//because for each exercise that is being examined all other exercises have to be considered on exactly the same node tree!
+			//1) Therefore search for the declaration in the markup starting from the root.
+			for (Exercise exer : allExercisesRawFormat.values()) {
+				if (exer.equals(exercise)) {
+					continue;
+				}
+				exer.clearTraversedAndTextBuffer();//to prevent still having the old data in there
+				//exer.travelDownUntilDeclarationFound(exercise_rootElement);
+				Exercise.Docx4JTravelCallback finder = exer.new Docx4JTravelCallback();
+				finder.setDeclaration(exer.getDeclaration());
+			    new TraversalUtil(rootElement, finder);
+			}/*After this loop the exercises have traversed this exercise dom's nodes!*/
+			/*=> So now if we determine the deepest common parent element we get the deepest 
+			 * in this current exercise containing only elements from within this DOM.*/
+			determineAllExercisesDeepestCommonParentElement();
+			//exercise_rootElement.removeChild(exercise.sheetdraftElementsTraversed.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index));
+			
+			//IMPORTANT: copy over the deepest common parent element
+			/*the indices are not determined correctly due to matching in indexOf(Node)
+			exercise.deepestAllExercisesCommonParentElement = exercise.sheetdraftElementsTraversed
+					.get(deepestAllExercisesCommonParentElement_index);
+			exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise = exercise.sheetdraftElementsTraversed
+					.get(deepestAllExercisesCommonParentElement_sChild_index);
+			*/
+			
+			//3a.4)figure out which exercise comes after this current one:
+			Exercise exerciseSucceding = null;
+			//<-- null indicates guess which sibling elements still belong to this exercise's xml 
+			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);
+			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
+				//We start with 1 instead of 0 in the filesystem!
+				String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1)
+						+ ".docx.docx";
+				exerciseSucceding = allExercisesRawFormat.get(//increase by 1 as it's the following exercise
+						exercise_filelink
+				);
+			}
+			
+			//3a.5) remove unused xml.
+			//Start at the deepest common parent element and travel down to delete all
+			//the other exercises' xml markup/content and all that is referenced
+			//AND NOT referenced by other parts.
+			//=> first delete xml , then at the end delete reference content that 
+			//is no longer referenced.
+//			exercise.deleteAllChildrenOfExceptFor(
+//					exercise.deepestAllExercisesCommonParentElement_index, exerciseSucceding);
+			
+			
+			//TODO debug! commit to mercurial for versioning prior to deleting the old approach!
+			//1 Start with this exercise's highestOnlyOneExerciseDeclarationContainingWayToWhereDeclarationFoundElement
+			//  as the current element.
+			Object elementNotToRemove = exercise.highestParentElementContainingThisExerciseOnly;
+			
+			while (elementNotToRemove != null
+					/* The optional condition for keeping the common contents like general info,
+					   sheet heading, et alia: */
+					&& !elementNotToRemove.equals(exercise.deepestAllExercisesCommonParentElement)) {
+				
+				//2  Remove all siblings of mentioned current element.
+				for (Object child : getChildren(elementNotToRemove.getParent())) {
+					if (child.equals(elementNotToRemove)) {
+						continue;
+					}
+					//Remove:
+					getChildren(elementNotToRemove.getParent()).remove(child);
+				}
+				
+				//3 Switch to the parent element of the current element as the new current element.
+				//  Go to 2 (Optional condition: only if current element is not equal to the deepestCommonElement).
+				elementNotToRemove = elementNotToRemove.getParent();
+				
+			}
+			
+			//4 Terminate. All non-this-exercise-related contents is removed
+			//  (besides the to all exercise common content :only if Optional condition). 
+			//return;
+			
+			
+//			try {
+			System.out.println("CLASS: " 
+					+ exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise.getClass());
+				exercise_traveller.removeAllSiblingsOf(
+						exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+						, exerciseSucceding
+				);
+//			} catch (Exception e) {
+//				System.out.print("Exercise traveller removeAllSiblingsOf node"
+//						+ " deepestAllExercisesCommonParentElement_sChildContainingThisExercise encountered a problem.");
+//				e.printStackTrace();
+//			}
+			// exercise_rootElement = exercise_textDocument.getContentRoot();
+			
+			//3a.6) save the exercise native file
+			//exercise_textDocument.getContentDom().replaceChild(exercise_rootElement, exercise.deepestAllExercisesCommonParentElement);
+			//exercise_textDocument.getPackage().insert(exercise_textDocument.getFileDom("content.xml"), "content.xml", "text/xml");
+			Docx4J.save(wMLPac, new File(exercise.filelink), Docx4J.FLAG_NONE);
+			//exercise_textDocument.close();
+			//exercise_textDocument.getPackage().save(exercise.filelink);
+			HeaderFooterRemove.removeHFFromFile(new File(filelink));
+			
+			
+			//3a7) Extract plain text for each exercise.
+			exercise.extractPlainText();
+			
+			//3a8) Create images native format.
+			exercise.generateImage();
+			
+			
+		}
+		
+		
+		//4) Store the newly created native filelink exercises in the db:
+		//done in action.upload.jsp because of the index also being updated
+		//inserting this raw/native format exercise data into the db together
+		//with the plain text exercises.
+		
+
+	
+
+//		Using XPath	
+//			LoadFromZipNG z = new LoadFromZipNG();
+//	         WordprocessingMLPackage wordMLPackage = (WordprocessingMLPackage) z.get(new FileInputStream(new java.io.File("C:/Users/toss/Desktop/Doc1.docx")));
+//	         
+//	         MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
+//	         
+//	         String xpath = "//w:r[w:t[contains(text(),'" + "indicator" + "')]]";
+//	         
+//	         List<Object> list = documentPart.getJAXBNodesViaXPath(xpath, false);
+//	         
+//	         for (int i = 0; i < list.size(); i++)
+//	         {
+//	            org.docx4j.wml.R r = (org.docx4j.wml.R) list.get(i);
+//	            
+//	            org.docx4j.wml.P parent = (org.docx4j.wml.P) r.getParent();
+//	            
+//	            parent.getContent().remove(r);
+//	         }
+//	         
+//	         ByteArrayOutputStream fos = new ByteArrayOutputStream();
+//	         SaveToZipFile saver = new SaveToZipFile(wordMLPackage);
+//	         saver.save(fos);
+//	         
+//	      }
+//	      catch(Exception e)
+//	      {
+//	         e.printStackTrace();
+//	      }
+//	      
+//	      XmlUtils.marshaltoString(parent, true, true);
 		
 		
 	}
@@ -778,7 +1799,7 @@ public class Sheetdraft extends ContentToImage {
 		for (; ex_count_and_pos < declarationSet.declarations.size() - 1; ex_count_and_pos++) {
 			// Neues String[] mit der groesse des Zeilenabstands zwischen zwei aufeinanderfolgenden Deklarationen
 			int ex_row_count_according_declarations
-			= (declarationSet.declarations.get(ex_count_and_pos + 1).getLine() - declarationSet.declarations.get(ex_count_and_pos).getLine());
+			= (declarationSet.declarations.get(ex_count_and_pos + 1).getLineNumber() - declarationSet.declarations.get(ex_count_and_pos).getLineNumber());
 			String[] exerciseText = new String[ex_row_count_according_declarations];
 			//TODOString[] exerciseRaw = new String[exercise_count_according_declarations];
 //					String lineBeforeNewExerciseDeclaration;
@@ -787,7 +1808,7 @@ public class Sheetdraft extends ContentToImage {
 //					}
 			// von der Zeile der Declaration an wir ins neue String[] ruebergeschrieben
 			for (int j = 0; j < ex_row_count_according_declarations; j++) {
-				int nextLine = j + declarationSet.declarations.get(ex_count_and_pos).getLine();
+				int nextLine = j + declarationSet.declarations.get(ex_count_and_pos).getLineNumber();
 				exerciseText[j] = plainText[nextLine];
 				//TODOexerciseRaw[j] = this.getRawContent()[nextLine];
 				/*ATTENTION: The first (or last) exercise-raw-content-lines
@@ -822,13 +1843,13 @@ public class Sheetdraft extends ContentToImage {
 		
 		//Letzte Declaration bis zum Ende:
 		Declaration lastDec = declarationSet.declarations.get(declarationSet.declarations.size() - 1);
-		int exercise_count_according_declarations = this.getPlainText().length - lastDec.getLine();
+		int exercise_count_according_declarations = this.getPlainText().length - lastDec.getLineNumber();
 		String[] exerciseText = new String[exercise_count_according_declarations];
 		//String[] exerciseRaw = new String[exercise_count_according_declarations];
 		//String[] exerciseRawPlusExtraNextLine = new String[exerciseRaw.length + 1];
 		//TODO probably overflow here:System.arraycopy(exerciseRaw, 0, exerciseRawPlusExtraNextLine, 0, exerciseRaw.length);
 		for (int j = 0; j < exerciseText.length; j++) {
-			int nextLine = j + lastDec.getLine();
+			int nextLine = j + lastDec.getLineNumber();
 			exerciseText[j] = this.getPlainText()[nextLine];
 			//exerciseRaw[j] = this.getRawContent()[nextLine];
 			/*ATTENTION: The first (or last) exercise-raw-content-lines
@@ -846,6 +1867,7 @@ public class Sheetdraft extends ContentToImage {
 				//above will not work because the file not yet is written to disk!
 				, header_of_its_sheet
 		); 
+		this.lastExercisePlainText = loopExercise;
 		allExercisesPlainText.put(ex_filelink, loopExercise);
 		
 		//Write to filesystem.
@@ -1045,7 +2067,7 @@ public class Sheetdraft extends ContentToImage {
 		if (splitterDeclaration != null) {
 			if (splitterDeclaration.getMatchedPattern() != null) {
 				if (splitterDeclaration.getFirstWord().equals("")//TODO evtlly store as attribute.
-						&& splitterDeclaration.getLine() < 1) {
+						&& splitterDeclaration.getLineNumber() < 1) {
 					/*It's a custom splitter to a very high percentage (not 100% because the line was chosen as 0 for this case and theoretically
 					it's still possible to have a successful splitbyDeclaration in the first line of document 
 					and still have no further FirstWord.*/

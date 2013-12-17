@@ -4,14 +4,21 @@
 package HauptProgramm;
 
 /**
- * Enum, die die unterstützten Dateiendungen auflistet.
+ * Enum, die die unterstuetzten Dateiendungen auflistet.
  * 
  * 
- * @author Schweiner
+ * @author Schweiner, Artiom, J. R.I.B.-Wein
  *
  */
 public enum DocType {
-	RTF(".rtf"), PDF(".pdf"), TEX(".tex"), DOC(".doc"), DOCX(".docx"), TXT(".txt");
+	DOC(".doc")
+	, DOCX(".docx")
+//	, HTML(".html")
+	, ODT(".odt")
+	, PDF(".pdf")
+	, RTF(".rtf")
+	, TEX(".tex")
+	, TXT(".txt");
 	
 	 private String ending;
 

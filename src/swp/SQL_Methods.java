@@ -87,10 +87,12 @@ public class SQL_Methods{
 	 * @throws SQLException 
 	 * @param table FROM in abfrage
 	 * @param columns_to_select was in SELECT abfrage steht
-	 * @param column_value WHERE Teil
+	 * @param map_column_value_pairs WHERE Teil
 	 * @return true or false
+	 * @throws IOException 
 	 */
-	public boolean exist(String table,String columns_to_select,HashMap<String,String> column_value) throws SQLException {
+	public boolean exist(String tables,String columns_to_select,HashMap<String,String> column_value)
+			throws SQLException, IOException {
         String where = "";
         int count = 0;
         for (String key : column_value.keySet()) {
@@ -103,26 +105,30 @@ public class SQL_Methods{
         }
         
         //call overloaded method with generated where statement
-        return exist(table, columns_to_select, where);
+        return exist(tables, columns_to_select, where);
 	}
-    public boolean exist(String table, String columns_to_select, String where) throws SQLException {
-    	// Anfrage-Statement erzeugen.
+    public boolean exist(String tables, String columns_to_select, String where)
+    		throws SQLException, IOException {
+    	//for ajax compatibility create a separate connection (instead of using Global.java)
     	Statement query;
-    	query = conn.createStatement();
+    	//query = conn.createStatement();
 
-		String sql = "SELECT " + columns_to_select + " FROM " + table + " WHERE " + where + ";";
-		System.out.print(sql);
-        ResultSet result = query.executeQuery(sql);
-        result.last();
-        int zeilen_anzahl = result.getRow();
+		String sql = "SELECT " + columns_to_select + " FROM " + tables + " WHERE " + where + ";";
+		System.out.print("Exist: " + sql);
+        ResultSet res = Global.query/*.executeQuery*/(sql);
+        //determine length
+	   	int resL = 0;
+	   	if (res.last() /*&& res.getType() == res.TYPE_SCROLL_SENSITIVE*/) {
+	        resL = res.getRow();
+	   	    res.beforeFirst();/*because afterwards follows a next()*/
+	   	}        
 
+        //conn.close();//as we don't need the result anymore
         
-        if(zeilen_anzahl == 0) {
-        	return false;
-        }
-        else {
+        if(resL > 0) {
         	return true;
         }
+        return false;
 	}
 	
     /**
@@ -138,7 +144,6 @@ public class SQL_Methods{
 			st.executeUpdate(query);
 			st.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 			
@@ -154,7 +159,6 @@ public class SQL_Methods{
 			st.execute(query);
 			st.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 			
@@ -177,60 +181,111 @@ public class SQL_Methods{
             }
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return str;
 	}
 	
-	public String getId(String table,String WHERE_column,String WHERE_value) {
-		String id = "";
+	/**
+	 * Fetches the id of a database table where column equals value.  
+	 * @param table
+	 * @param WHERE_column
+	 * @param WHERE_value
+	 * @return
+	 */
+	public int getId(String table, String WHERE_column, String WHERE_value) {
+		int id = -1;
 		Statement st = null;
-		String query = "SELECT DISTINCT id FROM " + table + " WHERE " + WHERE_column + "='" + WHERE_value + "';" ;
+
+        String apostrophe_or_not = "'";
+        //MYSQL Integer or String required? -- parseInt can't parse if it's a string only!!
+    	if (WHERE_value.matches("[0-9]+")/*val.equals(Integer.valueOf(val) + "")*/
+    			&& WHERE_value.equals(Integer.parseInt(WHERE_value) + "")) {//needs regex match first
+    		//it's potentially a integer => no apostrophes in the query
+    		apostrophe_or_not = "";
+    	}
+        
+    	//assemble
+		String query = "SELECT DISTINCT id"
+				+ " FROM " + table
+				+ " WHERE " + WHERE_column + "=" + apostrophe_or_not + WHERE_value + apostrophe_or_not + ";";
 		try {
 			st = conn.createStatement();
-			ResultSet rs = st.executeQuery(query);
-			rs.next();
-			id = rs.getString("id");
+			ResultSet res = st.executeQuery(query);
+			if (res.next()) {
+				id = res.getInt("id");
+			}
 			st.close();
 
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		return id;
 	}
 	
-	public String getIds(String table,HashMap<String,String> column_value) {
+	/**
+	 * Fetches the id of a database table where all given (multiple) columns equal values.  
+	 * @param table
+	 * @param map_column_value_pairs -- WHERE_column <= WHERE_column_value
+	 * @return
+	 */
+	public int getId(String table, HashMap<String,String> map_column_value_pairs) {
 		Statement query =null;
-		String id = "";
+		int id = -1;
         
         String where = "";
         String and = "";
         
         try {
-        	 int count = 1;
+        	int count = 1;
         	query = conn.createStatement();
-            for (String key : column_value.keySet()) {
+            for (String key : map_column_value_pairs.keySet()) {
+            	
+            	String val = map_column_value_pairs.get(key);
+            	
+            	String apostrophe_or_not = "'";
+            	//MYSQL Integer or String required? -- parseInt can't parse String only!!
+            	if (val.matches("[0-9]+") && val.equals(Integer.parseInt(val) + "")) {
+            		//it's potentially a integer => no apostrophes in the query
+            		apostrophe_or_not = "";
+            	}
+            	
                 //System.out.println("Key: " + key + ", Value: " + column_value.get(key));
-            	if(count < column_value.size()){
+            	if(count < map_column_value_pairs.size()){
             		and = " AND ";
             	}
-                where += key + "='" + column_value.get(key) + "' " + and;
+            	
+            	//assemble
+                where += key + "=" + apostrophe_or_not + val + apostrophe_or_not + " " + and;
+                
+                //not to forget
                 and = "";
             	count++;
             }
 
+            if (where == null || where.isEmpty()) {
+            	where = "1";//alternatively use TRUE
+            }
+            
+            //assemble the sql query
     		String sql = "SELECT id" + " FROM " + table + " WHERE " + where + ";";
             ResultSet result = query.executeQuery(sql);
-            result.next();
-
-    		id = result.getString("id");
+            if (result.next()) {
+            	
+            	id = result.getInt("id");
+            	
+            }
+            else {
+            	Global.addMessage("Empty query in getIds(): " + sql, "warning");
+            }
+            
         	
+    		
         } catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			
 		}
         
         
@@ -763,14 +818,14 @@ public class SQL_Methods{
 				//-------------------Veranstaltung ---------------
 	           	if (res2L == 0) {
 	           		out.print(//"empty");
-	           		"<li><span>" + res1.getString(varname_chosen) + "</span> (no lecture found)<ul><li><span>no semester found</span><ul><li><a href=\"#\" id=\"\" onmouseover=\"\">no sheet type found</a><ul><li><a href=\"#\" id=\"\" onmouseover=\"\">no filelink found</a></li></ul></li></ul></li></ul></li>");
+	           		"<li><span>" + Global.decodeUmlauts(res1.getString(varname_chosen)) + "</span> (no lecture found)<ul><li><span>no semester found</span><ul><li><a href=\"#\" id=\"\" onmouseover=\"\">no sheet type found</a><ul><li><a href=\"#\" id=\"\" onmouseover=\"\">no filelink found</a></li></ul></li></ul></li></ul></li>");
 					//out.print("<li><ul><li><ul><li><ul><li><ul><li></li></ul></li></ul></li></ul></li></ul></li>");
 				} else
 				{
 				out.print("<li>");
 	
 				
-				out.print("<span>" + res1.getString(varname_chosen) + "</span> (" + res2L + (res2L == 1 ? " item" : " items") + ")");
+				out.print("<span>" + Global.decodeUmlauts(res1.getString(varname_chosen)) + "</span> (" + res2L + (res2L == 1 ? " item" : " items") + ")");
 				out.print("<ul>");
 				while (res2.next()) {
 					
@@ -781,7 +836,7 @@ public class SQL_Methods{
 					//save it for dynamic use (to determine the value to one special key at all times)
 					varvaluesMap.put(varname2, varvalue2);
 					
-					out.print("<span>" + varvalue2 + "</span>");
+					out.print("<span>" + Global.decodeUmlauts(varvalue2) + "</span>");
 					out.print("<ul>");
 					
 					String query3 = " SELECT DISTINCT " + varname3
@@ -820,7 +875,7 @@ public class SQL_Methods{
 						//save it for dynamic use (to determine the value to one special key at all times)
 						varvaluesMap.put(varname3, varvalue3);
 						
-						out.print("<span>" + varvalue3 +"</span>");
+						out.print("<span>" + Global.decodeUmlauts(varvalue3) +"</span>");
 						out.print("<ul>");
 						
 						String str_query4 = "SELECT DISTINCT " + varname4
@@ -912,6 +967,7 @@ public class SQL_Methods{
 										/* + varvalue1 + "','" + varvalue2 + "','" + varvalue3 + "','" + varvalue4 + "','" + varvalue5
 										 */
 									    + ", '" + j +"')\">"
+									    + "<i class='icon-eye-open'></i> "
 										+ varvalue5_sheetdraft_filelink + "</a>");
 								lastUL += ("</li>");
 								j++;
@@ -927,7 +983,7 @@ public class SQL_Methods{
 									+ ",'" + varvalue2 + "','" + varvalue3 + "','" + varvalue4
 									+ "','" + i +"');"
 									+ "/*event-propagation to treeview to unfold it too:*/this.previousSibling.click();\">"
-									+ varvalue4
+									+ Global.decodeUmlauts(Global.display(varvalue4))/*--- -> /*/
 									 + "</a>"
 									 
 									+ "<script type='text/javascript'>//<!--"

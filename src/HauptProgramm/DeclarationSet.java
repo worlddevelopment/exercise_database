@@ -179,9 +179,9 @@ public class DeclarationSet {
 				
 				
 				int size = workingDeclarations.size();
-				// Wieviele Variablen laufen = wieviele Elemente werden in diesem Durchgang gel�scht
+				// Wieviele Variablen laufen = wieviele Elemente werden in diesem Durchgang geloescht
 				for (int i = 1; i <= size - 1; i++) {  
-					// merkt sich, welche Aufgaben in diesem durchgang gel�scht werden sollen
+					// merkt sich, welche Aufgaben in diesem durchgang geloescht werden sollen
 					int[] removedDeclarations = new int[i];
 					// Mit welchem Wert wird das erste Feld des int[] initialisiert
 					for (int l = 0; l <= (size - i); l++) {
@@ -190,11 +190,11 @@ public class DeclarationSet {
 							removedDeclarations[j] = j;
 						}
 					}
-					// Die hinterste Variable = h�chste Stelle anfangen hochzuz�hlen
+					// Die hinterste Variable = hoechste Stelle anfangen hochzuzaehlen
 					for (int k = removedDeclarations.length - 1; k >= 0; k--) {
 						// undescribable evil witch hexing
 						while(removedDeclarations[k] <=(size - 1) - ((removedDeclarations.length - 1) - k)) {
-							// L�sche die im int[] gesetzten Declarations
+							// Loesche die im int[] gesetzten Declarations
 //							for (int m : removedDeclarations) {
 							for (int m = removedDeclarations.length; i >= 0; i--) {
 								workingDeclarations.remove(removedDeclarations[m]);
@@ -263,10 +263,26 @@ public class DeclarationSet {
 			declarationcountweight = 1;
 		}
 		
-		// Blo�e Anzahl der Deklarationen wird gewichtet
+		// Anzahl der Deklarationen wird gewichtet
 		score = score + numberOfDeclarations * declarationcountweight;
 		
 		this.score = score;
 		return score;
 	}
+	
+	
+	
+	
+	
+	@Override
+	public String toString() {
+		//dependencies
+		if (score == 0.0) {
+			calculateScore();
+		}
+		//the representation of that gives an overview of this DeclarationSet object.
+		return "DeclarationSet { Pattern: " + pattern + ";\t Score: " + score + ";\t NumberOfHits: " + numberOfHits + "; }";
+	}
+	
+	
 }

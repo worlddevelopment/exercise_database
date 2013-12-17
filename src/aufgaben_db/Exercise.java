@@ -5,7 +5,30 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.xml.bind.JAXBElement;
+
+import org.docx4j.XmlUtils;
+import org.docx4j.TraversalUtil.CallbackImpl;
+import org.docx4j.wml.Br;
+import org.docx4j.wml.CommentRangeEnd;
+import org.docx4j.wml.CommentRangeStart;
+import org.docx4j.wml.ContentAccessor;
+import org.docx4j.wml.Drawing;
+import org.docx4j.wml.Hdr;
+import org.docx4j.wml.SdtBlock;
+import org.docx4j.wml.R.CommentReference;
+import org.docx4j.wml.R.Tab;
+import org.jdom2.Content;
+import org.jdom2.Element;
+import org.jvnet.jaxb2_commons.ppp.Child;
+import org.w3c.dom.NodeList;
+
+import docx4j_library.DocxUtils;
 
 
 import HauptProgramm.Declaration;
@@ -51,7 +74,523 @@ public class Exercise extends ContentToImage {
 	
 
 	
+	public StringBuffer textBuffer = new StringBuffer();
+	public void clearTraversedAndTextBuffer() {
+		textBuffer = new StringBuffer();
+		isDeclarationFound = false;
+		sheetdraftElementsTraversed = new ArrayList<Object>();
+		sheetdraftElementsTraversed_index = -1;//<-- not 0 because it is incremented prior to use!
+	}
+	//1st dimension: depth; 2nd: elements within this depth!
+	public List<Object> sheetdraftElementsTraversed = new ArrayList<Object>();
+	/*BUG?: If levelDepth is set first to 0 (until now all fine), then to 1 via recursion OutOfBounds!?
+	List<List<Element>> sheetdraftElementsTraversedLevelsWithBranches = new ArrayList<List<Element>>();
+	//Create a List for this element and its siblings (they are this depth's leaves).
+	if (sheetdraftElementsTraversedLevelsWithBranches.isEmpty()
+			|| (levelDepth >= sheetdraftElementsTraversedLevelsWithBranches.size()
+			&& sheetdraftElementsTraversedLevelsWithBranches.get(levelDepth) != null) 
+			|| sheetdraftElementsTraversedLevelsWithBranches.get(levelDepth) == null) {
+		sheetdraftElementsTraversedLevelsWithBranches.add(levelDepth, new ArrayList<Element>());
+	}
+	sheetdraftElementsTraversedLevelsWithBranches.get(levelDepth).add(sheetdraftElementsTraversed_index, e);
+	*/
+	//Map<Element, Integer> sheetdraftElementsTraversed_depth = new HashMap<Element, Integer>();
+	public List<Integer> sheetdraftElementsTraversed_depth = new ArrayList<Integer>();
 	
+	//When we emerge from our search, this points to the elementReachedWhenDeclarationFoundInNativeFormat.
+	int sheetdraftElementsTraversed_depth_max = -1;
+	int sheetdraftElementsTraversed_index = -1;
+	Object sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
+	int sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index; 
+	
+	Object deepestAllExercisesCommonParentElement;
+	//Element deepestAllExercisesCommonParentElement; /* the below can be used to find this one too */
+	Object deepestAllExercisesCommonParentElement_sChildContainingThisExercise;/*set while emerging*/
+	//int elementsTraversed_deepestCommonParentElement_index;
+	//int elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index;
+	
+	//required for being able to dive deeper to remove exercises that share a branch (i.e. deepestParentElement_sChild)
+	// because several exercises could be spread across different tables and lists within a document.
+	List<Object> wayTowardsRoot = new ArrayList<Object>();//ArrayList for having an array underneath to get reliable and quick (constant time) index access. 
+	
+	Object highestParentElementContainingThisExerciseOnly;
+	
+	/**
+	 * Determines element reached when declaration finally was found in the xml.
+	 * 
+	 * Could be used on the exercise's xml too but currently is only used on the sheetdraft's
+	 * markup. That's why the sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
+	 * has the preceding 'sheetdraft'. 
+	 * 
+	 * @param o
+	 */
+	public void travelDownUntilDeclarationFound(org.w3c.dom.Node  o) {
+		travelDownUntilDeclarationFound(o, this.getDeclaration());
+	}
+	public void travelDownUntilDeclarationFound(org.w3c.dom.Node  o, Declaration declaration) {
+		travelDownUntilDeclarationFound(o, declaration, 0);
+	}
+	boolean isDeclarationFound = false;
+	public void travelDownUntilDeclarationFound(org.w3c.dom.Node o, Declaration declaration, int levelDepth) {
+		//Store extra information:
+		if (sheetdraftElementsTraversed_depth_max < levelDepth) {
+        	sheetdraftElementsTraversed_depth_max = levelDepth;
+        }
+		
+		
+		//Store the Element as traversed. (Only elements are stored as Text has no children!)
+    	sheetdraftElementsTraversed.add(++sheetdraftElementsTraversed_index, o);
+    	sheetdraftElementsTraversed_depth.add(sheetdraftElementsTraversed_index, levelDepth);
+    	
+	
+    	//Declaration not yet identified! Then we have to add more plain text Elements.
+        if (o instanceof org.w3c.dom.Element) {
+        	//Element elementChildProcessedAfterThisEmergingFrom;
+        	org.w3c.dom.Element e = (org.w3c.dom.Element) o;
+        	String elementName = e.getNodeName();//getQualifiedName();
+        	elementName = e.getTagName();
+        	
+            //To find the declaration the text tags have to be evaluated.
+        	//add additional formatting
+        	//standalone elements
+        	if (elementName.equals("text:tab")) { // add tab for text:tab
+        	//if (o instanceof org.w3c.dom.Element) {	
+                textBuffer.append("\t");
+                //return;
+            }
+            else if (elementName.equals("text:line-break")) {
+            	textBuffer.append(System.getProperty("line.separator"));
+            	//return;
+            }
+            else if (elementName.equals("text:s")) { // add space for text:s
+                textBuffer.append(" ");
+                //return;
+            }
+
+        	//non-standalone nodes
+        	if (elementName.equals("text:p") || elementName.equals("text:h")
+        			|| elementName.equals("text:list")
+        			/*|| elementName.equals("text:list-item")*/
+        			) {
+        		/*formerly simply \n without rewind \r*/
+        		textBuffer.append(System.getProperty("line.separator"));
+        	}
+        	else if (elementName.equals("text:note-citation")) {
+                textBuffer.append(" (");
+            }
+        	else if (elementName.equals("text:span")) {
+        		//textBuffer.append(" ");<-- this creates a mess as it liberately adds spaces!
+        		//it's assumed spaces are where they are required already.
+            }
+        	
+        	
+        	
+        	
+        	
+        	/*Text only nodes or better said its text-only contents will be added here:*/
+            //List<Content> children = e.getContent();
+        	org.w3c.dom.NodeList children = e.getChildNodes();
+            //Iterator<?> iterator = children.iterator();
+        	//while (iterator.hasNext()) {
+	        //	Object child = iterator.next();
+        	for (int i = 0; i < children.getLength(); i++) {
+
+        		if (isDeclarationFound) {
+        			return ;//otherwise the last child will always be the found one eventhough 
+        			//it may already have been found in the first child (text) node (because
+        			//the loop otherwise continues if we emerge from the child where the declaration finally was found! 
+        		}
+        		// Recursively process the child element
+        		travelDownUntilDeclarationFound(children.item(i), declaration, levelDepth + 1);
+        		
+            }
+        	
+            
+            //Another line break to be inserted?
+            if (elementName.equals("text:p") || elementName.equals("text:h")
+        			|| elementName.equals("text:list")
+        			|| elementName.equals("text:list-item")
+        			) {
+        		/*formerly simply \n without rewind \r*/
+        		textBuffer.append(System.getProperty("line.separator"));
+        	}
+        	else if (elementName.equals("text:note-citation")) {
+                textBuffer.append(") ");
+            }
+        	else if (elementName.equals("text:span")) {
+                //textBuffer.append(" ");<-- this creates a mess as it liberately adds spaces!
+        		//it's assumed spaces are where they are required already.
+            }
+            
+        }
+        //TEXT
+        else if (o instanceof org.w3c.dom.Text) {
+    		//If object is a Text Node, then append the text.
+            org.w3c.dom.Text t = (org.w3c.dom.Text) o;
+            textBuffer.append(t.getTextContent());
+            //textBuffer.append(System.getProperty("line.separator"));
+            
+          //After processing each element we check for the termination or cancel condition:
+        	String dec_plain_text = declaration.getFirstWord() + " " + declaration.getSecondWord() + " " + declaration.getThirdWord();
+        	/*Have we found the Declaration in the native format markup again?*/
+        	//don't use match because point (.) could be contained e.g. '1. Exercise' and would
+        	//be interpreted as regex ., allowing to match things that must not match.
+        	if (textBuffer.toString().replaceAll("  ", " ").contains(dec_plain_text)) {
+        		/*This is redundant because as we stop here the sheetdraftElementsTraversed_index
+        		 *is not incremented and points to exactly the following element: */
+        		this.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat	= o;//.getParentNode();
+        		//= sheetdraftElementsTraversed.get(sheetdraftElementsTraversed_index);//the root
+        		this.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index =
+        				sheetdraftElementsTraversed_index;
+//        		this.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_depth =	levelDepth;
+        		isDeclarationFound = true;
+        		return ;
+        	}
+        }
+//        else if (o instanceof Drawing) {
+//        	
+//        }
+        
+    	
+        /*object not instance of Element*/
+        //=> We reached the end, no more elements and still the termination condition did
+        //not grip!! => No such element we looked for was found!
+        return ;
+    }
+	
+	
+//	public org.w3c.dom.Node getDeepestAllExercisesCommonParentElement() {
+//		return (deepestAllExercisesCommonParentElement_sChildContainingThisExercise)
+//				.getParentNode();
+//		if (elementsTraversed_deepestCommonParentElement_index < 1) {
+//			System.out.print(
+//				Global.addMessage("No deepest to all exercises common parent element has been looked for." 
+//						+ "The index in all traversed elements currently is: " + elementsTraversed_deepestCommonParentElement_index, "danger")
+//			);
+//			return null;
+//		}
+//		return sheetdraftElementsTraversed.get(elementsTraversed_deepestCommonParentElement_index);
+//	}
+	
+	
+	/**
+	 * Deletes non-exercise related xml content and the then no longer referenced refs.
+	 * 
+	 * Called from Sheetdraft.java.
+	 * 
+	 * @param sheetdraftDeepestCommonParentElement_index
+	 * @param exception <-- The deepest common parent element's child containing this exercise('s declaration).
+	 * @throws Exception 
+	 */
+	public void deleteAllChildrenOfExceptFor(int sheetdraftDeepestCommonParentElement_index)
+			throws Exception {
+		deleteAllChildrenOfExceptFor(sheetdraftDeepestCommonParentElement_index, null);
+	}
+	public void deleteAllChildrenOfExceptFor(int sheetdraftDeepestCommonParentElement_index
+			, Exercise exerciseSucceding)
+			throws Exception {
+		//As the elementsTraversed are equal for the exercise and the sheetdraft the following
+		//is correct so that we can get to the deepest common parent element despite aiming
+		//at this exercise's xml:
+		org.w3c.dom.Node candidate = (org.w3c.dom.Node)sheetdraftElementsTraversed.get(sheetdraftDeepestCommonParentElement_index);
+		if (candidate != ((org.w3c.dom.Node)deepestAllExercisesCommonParentElement_sChildContainingThisExercise).getParentNode()) {
+			System.out.print(
+				Global.addMessage("DeleteAllChildrenNodesOfExceptFor discovered a discrepancy: Redebug this method!",
+						"danger")
+			);
+		}
+		deleteAllChildrenOfExceptFor(
+				candidate,
+				//For all exercises individually determined while emerging up while looking
+				//for the deepest to all exercises common parent.(safer than decrementing index)
+				(org.w3c.dom.Node) deepestAllExercisesCommonParentElement_sChildContainingThisExercise//<-- for each exercise determined while emerging up while looking for the deepest to all exercises common parent element.
+				/* nolongerTODO For not cleanly formatted documents check if this element still
+				 * available in any other exercise's traversed elements list. */
+				//, sheetdraftElementsTraversed.get(sheetdraftDeepestCommonParentElement_index + 1)
+				, exerciseSucceding
+		);
+	}
+	public void removeAllSiblingsOf(org.w3c.dom.Node deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+			, Exercise exerciseAfterThis) throws Exception {
+		deleteAllChildrenOfExceptFor(deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+				.getParentNode()
+				, deepestAllExercisesCommonParentElement_sChildContainingThisExercise, exerciseAfterThis);
+	}
+	public void deleteAllChildrenOfExceptFor(org.w3c.dom.Node deepestCommonParentElement
+			, org.w3c.dom.Node exception, Exercise exerciseAfterThis)
+			throws Exception {
+		
+		if (deepestCommonParentElement == null) {
+			System.out.print("delete all children of except for resulted in the parent being null!");
+			return ;
+		}
+		
+		
+		//Travel down to find the deepest element that o n l y contains this exercise and no other exercises anymore!
+		// because the deepestAllExercisesCommonParentElement containing all exercises
+		// does not imply that the child nodes only contain one exercise each!
+		boolean isElementContainingOneExerciseOnly;
+		isElementContainingOneExerciseOnly = false;
+		int wayTowardsRoot_index;
+		wayTowardsRoot_index = wayTowardsRoot.size();// - 1;
+		while (!isElementContainingOneExerciseOnly && --wayTowardsRoot_index > 0) {//way _index equals zero once the element when the exercise declaration was found is reached. TODO at least that should be the case?
+			org.w3c.dom.Node parentElement;
+			if (wayTowardsRoot.get(wayTowardsRoot_index) instanceof org.w3c.dom.Node) {
+				parentElement = (org.w3c.dom.Node) wayTowardsRoot.get(wayTowardsRoot_index);
+			}
+			//assumption that only one exercise is contained (so this node is safe to be removed)
+			isElementContainingOneExerciseOnly = true;
+			//for (org.w3c.dom.Node sibling : parentElement/*.getParentNode()*/.getChildNodes().) {
+			for (Exercise exercise : sheetdraft.allExercisesRawContent.values()) {
+				//if (sibling.equals(siblingToSpare)) {
+				//	continue;
+				//}
+				if (exercise.equals(this)) {
+					continue;
+				}
+				if (exercise.wayTowardsRoot.contains(parentElement)) {
+					isElementContainingOneExerciseOnly = false;
+					break;
+				}
+				//TODO save this first element where only exercise within
+			}
+			
+		}
+		org.w3c.dom.Node siblingToSpare;
+		if (wayTowardsRoot.get(wayTowardsRoot_index - 1) instanceof org.w3c.dom.Node) {
+			siblingToSpare = (org.w3c.dom.Node) wayTowardsRoot.get(wayTowardsRoot_index - 1);
+		}
+		
+		
+		
+		//LOAD THE XML
+		/*
+		SAXBuilder sax = new SAXBuilder();
+		Document doc = sax.build(Global.getInputStream(filelink, "content.xml"));
+		TextDocument exercise_textDocument = TextDocument.loadDocument(filelink);
+		org.w3c.dom.Node exercise_rootElement = exercise_textDocument.getContentRoot();
+		 */
+		
+		
+		//Divided through 2 because of start and eng tag.
+		//int elementsCountEstimation = doc.getContent().toString().split("<").length / 2;
+		/*for lists this is no longer necessary, just out of interest how good such estimates prove to be*/
+		//elementsTraversed = new Element[elementsCountEstimation];
+
+		
+		
+		/*First get the elements in the markup of this exercise filesystem representation.*/
+		
+		//start with root Element and find deepest common parent element again in this file
+		//getDeepestAllExercisesCommonParentElement();
+		//= findDeepestCommonParentElementEquivalentRecursively(doc.getRootElement(), sheetdraftDeepestCommonParentElement);
+		
+
+		
+		if (exerciseAfterThis == null) {
+			//SOMEWHAT GUESS WHAT STILL BELONGS TO THE EXERCISE IF NOT ALL CONTENT
+			//OF THIS EXERCISE IS CONTAINED WITHIN ONE XML-TAG!
+			
+			//remove all below/deeper than the deepest common parent element
+			//but not the exercise xml markup:
+			boolean keep_next_element_because_the_before_was_a_heading = false;
+			//for (Element child : sheetdraftDeepestCommonParentElement.getChildren()) {
+			NodeList childNodes = deepestCommonParentElement.getChildNodes();
+			for (int i = 0; i < childNodes.getLength(); i++) {
+				org.w3c.dom.Node child = childNodes.item(i); 
+				//spare the exception, that is the exercise that shall remain
+				if (!child.equals(exception)) {
+					
+					/*IF deletion of references that are no longer referenced is NOT possible
+					 *after having removed these main content xml nodes,
+					 *THEN REFERENCES MUST BE FOLLOWED! */
+					
+					//Declaring sequence content of the odt?? Why not dynamically, OpenDocumentFormat?
+					if (child.getNodeName().equals("text:sequence-decls")) {
+						continue;
+					}
+					
+					//stand alone elements
+					if (child.getNodeName().equals("text:s")) {
+						continue;
+					}
+					else if (child.getNodeName().equals("text:tab")) {
+						continue;
+					}
+					else if (child.getNodeName().equals("text:line-break")) {
+						continue;
+					}
+					
+					//Does this to a high probability belong the the exercise declaration? 
+					if (keep_next_element_because_the_before_was_a_heading) {
+						//This time it was not a heading neither one of the standalone
+						//elements above? -> No longer keep the next few elements.
+						if (!child.getNodeName().equals("text:h")) {
+							keep_next_element_because_the_before_was_a_heading = false;
+						}
+						continue;
+					}
+					//child.getParentNode().removeChild(child);
+					//this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise.getParentNode()
+					org.w3c.dom.Node deletedNode = deepestCommonParentElement.removeChild(child);
+					if (deletedNode.equals(child)) {
+						--i;//the deleted node will be replaced by the following childNodes, this
+							//shift has to be accounted for, ie. taken into account. 
+					}
+
+//					if (child instanceof org.odftoolkit.odfdom.dom.element.text.TextAElement) {
+//						this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+//								.getParentNode().removeChild((TextAElement)child);
+//					}
+//					else if (child instanceof org.odftoolkit.odfdom.dom.element.text.TextHElement) {
+//						((OfficeTextElement)(this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+//								.getParentNode())).removeChild((TextHElement)child);
+//					}
+//					else if (child instanceof org.odftoolkit.odfdom.dom.element.text.TextPElement) {
+//						this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+//								.getParentNode().removeChild((TextPElement)child);
+//					}
+					/*For following references a recursive approach would be better suited:
+					 *Otherwise references in children will be ignored as they are deleted
+					 *at once.*/ 
+					//deleteElementRecursively(child);
+				}
+				//Is this a heading? Then better keep the next p(aragraph) too as an exercise
+				//will not exist in a heading alone!? 
+				else {//child.getNodeName().equals("text:h")) {
+					keep_next_element_because_the_before_was_a_heading = true;
+				}
+				
+			}
+			
+		}
+
+		//No follow up exercise given or this is the last one?
+		else {
+			//USE THE GIVEN THIS EXERCISE FOLLOWING EXERCISE FOR ACCESS TO ITS DECLARATION ELEMENT. 
+			boolean reachedThisExerciseDeclarationElement = false;
+			boolean reachedNextExerciseDeclarationElement = false;
+			//for (Element child : sheetdraftDeepestCommonParentElement.getChildren()) {
+			if (deepestCommonParentElement.getChildNodes() == null) {
+				System.out.print("no child nodes: " + deepestCommonParentElement.toString());
+				return ;
+			}
+			NodeList childNodes = deepestCommonParentElement.getChildNodes();
+			for (int i = 0; i < childNodes.getLength(); i++) {
+				org.w3c.dom.Node child = childNodes.item(i);
+				
+				if (reachedThisExerciseDeclarationElement) {
+					if (child.equals(exerciseAfterThis.deepestAllExercisesCommonParentElement_sChildContainingThisExercise)) {
+						reachedNextExerciseDeclarationElement = true;
+					}
+				}
+				//spare the exception, that is the exercise that shall remain
+				if (!child.equals(exception)/*Because once we reached the follow up exercise we can remove again.*/
+						&& (!reachedThisExerciseDeclarationElement || reachedNextExerciseDeclarationElement)) {
+					
+					/*IF deletion of references that are no longer referenced is NOT possible
+					 *after having removed these main content xml nodes,
+					 *THEN REFERENCES MUST BE FOLLOWED! */
+					
+					//Declaring sequence content of the odt?? Why not dynamically, OpenDocumentFormat?
+					if (child.getNodeName().equals("text:sequence-decls")) {
+						continue;
+					}
+					
+					//stand alone elements better stay with the document for now:
+					if (child.getNodeName().equals("text:s")) {
+						continue;
+					}
+					else if (child.getNodeName().equals("text:tab")) {
+						continue;
+					}
+					else if (child.getNodeName().equals("text:line-break")) {
+						continue;
+					}
+					
+					//else
+					//child.getParentNode().removeChild(child);
+					org.w3c.dom.Node deletedNode = deepestCommonParentElement.removeChild(child);//attention: this shifts all the childNodes!
+					if (deletedNode.equals(child)) {
+						--i;
+					}
+					/*For following references a recursive approach would be better suited:
+					 *Otherwise references in children will be ignored as they are deleted
+					 *at once.*/ 
+					//deleteElementRecursively(child);
+				}
+				else {
+					reachedThisExerciseDeclarationElement = true;
+				}
+				
+			}
+			
+		}
+		
+		
+		//SAVE THE XML BACK TO THE FILESYSTEM
+		/*
+		new SAXOutputter().output(doc);
+		ReadWrite.write(doc.toString(), filelink + "content.xml");
+		Global.addFileToZip(filelink, filelink + "content.xml", "content.xml");
+		*/
+		/*
+		
+		exercise_textDocument.save(filelink);
+		 */
+		
+		    	
+    }
+	
+	/**
+	 * THIS IS OBSOLETE AS IT'S NOW DONE BY ONLY STORING THE INDEX INSTEAD OF THE OBJECT -
+	 * THEN THERE IS NO EQUIVALENT OBJECT TO BE FOUND ANY MORE!
+	 * 
+	 * IT'S NOW A HELPER FUNCTION ONLY.
+	 * 
+	 * The goal is to find the equivalent to the deepest to all exercises common
+	 * parent xml content element that is equivalent to the sheetdraft one
+	 * as initially the exercise's and sheetdraft's xml content is equal/the same.
+	 * 
+	 * This is needed to delete or remove content from this exercise filesystem native format
+	 * representation (e.g. Exercise_1__splitby_INTDOT.odt.odt <--note the last extension!).
+	 * 
+	 * @param element <-- Starting with the root element, diving further down recursively.
+	 * @param sheetdraftElementToFindTheEqualOne <-- The equivalent to find in this ex's xml.
+	 * @return The element equivalent to sheetdraftElementToFindTheEqualOneTo or null.
+	 */
+	public static Element findEquivalentElementRecursively(
+			Element element, Element sheetdraftElementToFindTheEqualOne) {
+		
+		//After processing each element we check for the termination or cancel condition:
+    	/*Have we found the equivalent to the sheetdraft's markup deepestCommonParentElement?*/
+    	if (element.equals(sheetdraftElementToFindTheEqualOne)) {
+    		return element;
+    	}
+    	
+        //continue examining this elements children
+        List<Content> children = element.getContent();
+        Iterator<?> iterator = children.iterator();
+        while (iterator.hasNext()) {
+        	Object child = iterator.next();
+        	if (child instanceof Element) {
+        		Element childElement = (Element)child;
+        		// Recursively process the child element.
+	        	Element candidate = findEquivalentElementRecursively(childElement, sheetdraftElementToFindTheEqualOne);
+	    		if (candidate != null) {
+	    			// It's only not null if the termination/cancel condition has gripped.
+	    			// Then we immediately return to the next higher level. Finally emerging. 
+	    			return candidate;
+	    		}
+        	}
+        }
+        
+        //=> We reached the end, no more elements and still the termination condition did
+        //not grip!! => No such element we looked for was found!
+		return null; 
+		
+		
+	}
 	
 	
 	/*======= CONSTRUCTOR ==================================================*/
@@ -185,6 +724,8 @@ public class Exercise extends ContentToImage {
 				Global.root + this.getPDFLink()
 		);
 	    
+	    Global.renameAllDerivativesOfFilelink(filelink, newFilelink);
+	    
 		System.out.println((Global.message += "Exercise moved - *Done*."));
 		System.out.println("-----------------------------------------------");
 		
@@ -288,6 +829,697 @@ public class Exercise extends ContentToImage {
 		return header;
 	}
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//======= DOCX =====================================================================//
+	public class Docx4JTravelCallback extends CallbackImpl {
+
+		
+		/**That's where the non-error correction general processing action happens.
+		 * @param o The parent object to walk/travel along - deeper and deeper into the XML tree.
+		 */
+		@Override
+		public List<Object> apply(Object o) {
+
+			
+			
+			return null;
+		}
+		
+		Declaration declaration;
+		int levelDepth;
+		public void setDeclaration(Declaration declaration) {
+			this.declaration = declaration;
+		}
+		
+
+	    @Override // to setParent //<-- now done in default handler too.
+	    public void walkJAXBElements(Object o) {
+		//public void DOCX_travelDownUntilDeclarationFound(Object o, Declaration declaration, int levelDepth) {
+
+	    	//Store extra information:
+			if (sheetdraftElementsTraversed_depth_max < levelDepth) {
+	        	sheetdraftElementsTraversed_depth_max = levelDepth;
+	        }
+			
+			
+			//Store the Element as traversed. (Only elements are stored as Text has no children!)
+	    	sheetdraftElementsTraversed.add(++sheetdraftElementsTraversed_index, o);
+	    	sheetdraftElementsTraversed_depth.add(sheetdraftElementsTraversed_index, levelDepth);
+	    	
+	    	boolean wasTextAddedInThisLevelDepth = false;
+	    	List<Object> children = null;
+	    	
+	        //=======1a)
+	    	//TEXT
+	    	//To find the declaration the text tags have to be evaluated.
+	        if (o instanceof org.docx4j.wml.Text) {
+	    		//If object is a Text Node, then append the text.
+	        	org.docx4j.wml.Text t = (org.docx4j.wml.Text) o;
+	            textBuffer.append(t.getValue());
+	            //textBuffer.append(System.getProperty("line.separator"));//TODO former line.separator
+	            wasTextAddedInThisLevelDepth = true;
+	        }
+	        //TEXT VIA JAXBElement.
+	        else if (o instanceof JAXBElement) {
+	        	JAXBElement e = (JAXBElement) o;
+	        	String tagname = e.getName().getLocalPart();//getQualifiedName();
+	        	System.out.println(tagname);
+        		//Child unwrapped = (Child)XmlUtils.unwrap(o);
+	        	
+	        
+	        	//TEXT
+	        	//if (tagname.equals("t")) {
+	        	if (e.getValue() instanceof org.docx4j.wml.Text) {
+	        		textBuffer.append(
+	        				((org.docx4j.wml.Text) e.getValue()).getValue()
+    				);
+	        		wasTextAddedInThisLevelDepth = true;
+	        	}
+	        	//}
+	        	
+	        	
+	        	
+	        	//Get childnodes wrapped into JAXBElement.
+	        	//General approach:
+	        	else if (e.getValue() instanceof ContentAccessor) {
+	        		children = ((org.docx4j.wml.ContentAccessor) e.getValue()).getContent();
+	        	}
+	        	
+	        	//Specific approach (TODO use if tables have to be dealt with more closely)
+        		//TABLE
+        		//if (tagname.equals("tbl")) {
+	        	else if (e.getValue() instanceof org.docx4j.wml.Tbl) {
+    				children = ((org.docx4j.wml.Tbl) e.getValue()).getContent();//getChildren(e.getValue());
+    			}
+        		//}
+	        	//if (tagname.equals("tr")) {
+	        	else if (e.getValue() instanceof org.docx4j.wml.Tr) {
+    				children = ((org.docx4j.wml.Tr) e.getValue()).getContent();//getChildren(e.getValue());
+    			}
+        		//}
+	        }
+	        
+	        
+	        //======= 1b) If text has been added, this examines the cancel/termination condition. 
+	        if (wasTextAddedInThisLevelDepth) {
+		        //After processing each element we check for the termination or cancel condition:
+		    	String dec_plain_text = declaration.getFirstWord();
+		    	//alternative to the following if statements: dec_plain_text.replaceAll(" $", "");
+		    	if (declaration.getSecondWord() != null && !declaration.getSecondWord().isEmpty()) {
+		    		dec_plain_text = dec_plain_text + " " + declaration.getSecondWord();
+		    	}//don't use elseif here because it would prevent the third declaration word from being added!
+		    	if (declaration.getThirdWord() != null && !declaration.getThirdWord().isEmpty()) {
+		    		dec_plain_text = dec_plain_text + " " + declaration.getThirdWord();
+		    	}
+
+		    	/*Have we found the Declaration in the native format markup again?*/
+		    	//don't use match because point (.) could be contained e.g. '1. Exercise' and would
+		    	//be interpreted as regex ., allowing to match things that must not match.
+		    	//TODO make possible to match things like 'Ue bung' oder special characters encoded.
+		    	if (textBuffer.toString().replaceAll("  ", " ").contains(dec_plain_text)) {
+		    		/*This is redundant because as we stop here the sheetdraftElementsTraversed_index
+		    		 *is not incremented and points to exactly the following element: */
+		    		sheetdraftElementReachedWhenDeclarationFoundInNativeFormat	= o;//.getParentNode();
+		    		//= sheetdraftElementsTraversed.get(sheetdraftElementsTraversed_index);//the root
+		    		sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index =
+		    				sheetdraftElementsTraversed_index;
+		//        		this.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_depth =	levelDepth;
+		    		isDeclarationFound = true;
+		    		return ;
+		    	}
+	        }
+	        
+	        
+	        
+	        
+	        
+	        //=======2)
+        	//No pure text to add. Then we have to add some styling elemens (standalone et alia).
+        	//Add additional formatting:
+        	
+	        //-------standalone elements --------------------------------------------------
+	        if (o instanceof Br) {
+            	textBuffer.append(System.getProperty("line.separator"));
+            	//return;
+            }
+        	else if (o instanceof Drawing) {
+	        	
+	        }
+	        else if (o instanceof org.docx4j.wml.R.Separator) {//TODO clarify
+            	textBuffer.append(System.getProperty(" "));
+            	//return;
+            }
+	        else if (o instanceof Tab
+	        		|| o instanceof org.docx4j.wml.R.Ptab) {
+	        	textBuffer.append(System.getProperty("\t"));
+	        	//return;
+	        }
+	        
+	        
+	        
+	        //-------non-standalone elements-----------------------------------------------
+	        //Paragraph, Header or Table only
+	        else if (o instanceof org.docx4j.wml.P
+	        		|| o instanceof org.docx4j.wml.Hdr
+	        		|| o instanceof org.docx4j.wml.Tbl) {
+            	textBuffer.append(System.getProperty("line.separator"));
+            	//return;
+            }
+	        //P only
+	        if (o instanceof org.docx4j.wml.P) {
+				org.docx4j.wml.P p = (org.docx4j.wml.P) o;
+				
+//				if (p.getPPr() != null && p.getPPr().getPStyle() != null) {
+//				}
+		
+//				if (p.getPPr() != null && p.getPPr().getRPr() != null) {
+//				}
+				//getRunContent( p.getContent(p), parent, pdfParagraph);
+				
+//				if (parent instanceof Document) {				
+//					((Document)parent).add(pdfParagraph);
+//				} else if (parent instanceof PdfPTable) {
+//					
+//					((PdfPTable)parent).addCell(
+//							new PdfPCell(pdfParagraph)
+//					);
+//				} else {
+//					log.error("Trying to add paragraph to " + parent.getClass().getName() );
+//				}
+//		
+				
+			//LIST TODO - the following identifies a list, list seems to be a paragraph?
+				//http://stackoverflow.com/questions/7799585/how-to-append-new-list-item-to-a-list
+		        //public List<Object> apply(Object obj) {
+	            //if (obj instanceof org.docx4j.wml.P) {
+	            	Object deepCopy = null;
+	
+//	                if (p.getPPr() != null) {
+//	                    if (p.getPPr().getPStyle() != null) {
+//	                        if ((p.getPPr().getPStyle().getVal().equals("Akapitzlist")) && (akapListCounter < 10)) {
+//	
+//	                            if ((p.getPPr().getPStyle() != null) {
+//	                                if (((p.getPPr().getPStyle().getVal().equals("Akapitzlist"))) {
+//	                                    deepCopy = XmlUtils.deepCopy(o);
+//	                                    akapListCounter++;
+//	                                    int indexOf = wmlDocumentEl.getBody().getContent().indexOf(obj);
+//	
+//	
+//	                                    List<Object> content = ((org.docx4j.wml.P) deepCopy).getContent();
+//	                                    for (Object el : content) {
+//	                                        System.out.println("class1:" + el.getClass().toString());
+//	                                        if (el instanceof org.docx4j.wml.R) {
+//	                                            List<Object> subc = ((org.docx4j.wml.R) el).getContent();
+//	                                            for (Object r : subc) {
+//	                                                ((javax.xml.bind.JAXBElement) r).setValue("tetetete");
+//	                                            }
+//	                                        }
+//	
+//	                                    }// end for
+//	
+//	
+//	                                    wmlDocumentEl.getBody().getContent().add(indexOf + 1, deepCopy);
+//	
+//	
+//	                                }
+//	                            }//end get style
+//	
+//	                        }
+//	                    } 
+//	                } else {}
+	
+	
+	            //}
+		        //    return null;
+		        //}
+
+				
+				
+	        }
+	        //else if (elementName.equals("text:note-citation")) {
+	        else if (o instanceof org.docx4j.wml.CTFootnotes) {
+	            textBuffer.append(" (");
+	        }
+	        //else if (elementName.equals("text:span")) {
+	        else if (o instanceof org.docx4j.wml.R) {
+	        	textBuffer.append("");//if we append something here (e.g. a space)
+	        	//then we get into serious trouble if we want to find e.g. Uebung, but it's
+	        	//then Ue bung what is possible as a R(un)/SPAN tag allows styling of individual
+	        	//characters.
+	        }
+	        else if (o instanceof org.docx4j.wml.SdtBlock) {
+				org.docx4j.wml.SdtBlock sdt = (org.docx4j.wml.SdtBlock) o;				
+				// Don't bother looking in SdtPr				
+//				traverseBlockLevelContent(sdt.getSdtContent().getContent(),
+//						parent);
+	//		} else if (o instanceof org.docx4j.wml.SdtContentBlock) {
+	//
+	//			org.docx4j.wml.SdtBlock sdt = (org.docx4j.wml.SdtBlock) o;
+	//			
+	//			// Don't bother looking in SdtPr
+	//			
+	//			traverseMainDocumentRecursive(sdt.getSdtContent().getEGContentBlockContent(),
+	//					fontsDiscovered, stylesInUse);
+				
+			}
+	        else if (o instanceof org.docx4j.wml.Tbl) {
+	    		//If object is a Table Node, then dive deeper to rows and along the columns.
+	        	org.docx4j.wml.Tbl table = (org.docx4j.wml.Tbl) o;
+//	        	List<Object> children = getChildren(table);
+	        }
+	        else if (o instanceof org.w3c.dom.Node) {
+				// If Xerces is on the path, this will be a org.apache.xerces.dom.NodeImpl;
+				// otherwise, it will be com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
+
+	        	// Ignore these, eg w:bookmarkStart
+				//log.debug("not traversing into unhandled Node: " + ((org.w3c.dom.Node)o).getNodeName() );
+	        }	
+			else if (o instanceof JAXBElement) {
+				//log.debug( "Encountered " + ((JAXBElement) o).getDeclaredType().getName() );
+//					if (o instanceof javax.xml.bind.JAXBElement
+//	                && (((JAXBElement)o).getName().getLocalPart().equals("commentReference")
+//	                		|| ((JAXBElement)o).getName().getLocalPart().equals("commentRangeStart")
+//	                		|| ((JAXBElement)o).getName().getLocalPart().equals("commentRangeEnd")	                            		
+//	                		)) {
+        		System.out.println("JAXBElement: " + ((JAXBElement)o).getName().getLocalPart());
+        		//Child unwrapped = (Child)XmlUtils.unwrap(o);
+        		//TEXT
+//	        		if (((JAXBElement)o).getName().getLocalPart().equals("t")) {
+//	        			textBuffer.append(((JAXBElement)((JAXBElement) o).getValue()).getValue());
+//	        		}
+                //sheetdraftElementsTraversed.add( (Child)XmlUtils.unwrap(o) );
+        		
+        		//			if (((JAXBElement) o).getDeclaredType().getName().equals(
+        		//					"org.docx4j.wml.P")) {
+        		//				org.docx4j.wml.P p = (org.docx4j.wml.P) ((JAXBElement) o)
+        		//						.getValue();
+        		
+            }
+			else if (o instanceof CommentReference ||  o instanceof CommentRangeStart
+					|| o instanceof CommentRangeEnd) {
+	    		System.out.println(o.getClass().getName());
+	            //sheetdraftElementsTraversed.add((Child)o);
+	        }
+			else {
+				System.out.println( "UNEXPECTED: " + o.getClass().getName() );
+			}
+	        
+	        
+	        	
+	        /*Text only nodes of deeper level/depth or better said its text-only contents will be added here:*/
+	        //Had the children been created via the JAXBElement way?
+	        if (children == null) {
+        	/*List<Object>*/ children = getChildren(o);//checks for ContentAccessor.getContent, other
+	        }
+        	if (children != null) {				   //elements' XML content and if Text then null!
+	            //Iterator<?> iterator = children.iterator();
+	        	//while (iterator.hasNext()) {
+		        //	Object child = iterator.next();
+	        	for (int i = 0; i < children.size(); i++) {
+	
+	        		
+	        		
+	        		Object child = children.get(i); 
+	        		
+	        		
+	        		// if its wrapped in javax.xml.bind.JAXBElement, get its
+	    			// value; this is ok, provided the results of the Callback
+	    			// won't be marshalled -- THEY WILL BE MARSHALLED FOR SAVING THE DOCUMENT!
+	        		// SO AT LEAST IT IS REQUIRED TO unmarschalString again. Anyway, we use
+	        		// remove function that handles this temporary(?) unwrap.
+	    			//child = XmlUtils.unwrap(child);//<-- not marshalled means it will not be saved (e.g. if copying this node)
+
+	        		
+	    			// workaround for broken getParent (since 3.0.0)
+	    			if (child instanceof Child) {
+	    				if (o instanceof SdtBlock) {
+	    					((Child)child).setParent( ((SdtBlock)o).getSdtContent() );
+	    						/*
+	    						 * getParent on eg a P in a SdtBlock should return SdtContentBlock, as
+	    						 * illustrated by the following code:
+	    						 * 
+	    								SdtBlock sdtBloc = Context.getWmlObjectFactory().createSdtBlock();
+	    								SdtContentBlock sdtContentBloc = Context.getWmlObjectFactory().createSdtContentBlock();
+	    								sdtBloc.setSdtContent(sdtContentBloc);
+	    								P p = Context.getWmlObjectFactory().createP();
+	    								sdtContentBloc.getContent().add(p);
+	    								String result = XmlUtils.marshaltoString(sdtBloc, true);
+	    								System.out.println(result);
+	    								SdtBlock rtp = (SdtBlock)XmlUtils.unmarshalString(result, Context.jc, SdtBlock.class);
+	    								P rtr = (P)rtp.getSdtContent().getContent().get(0);
+	    								System.out.println(rtr.getParent().getClass().getName() );
+	    						 * 
+	    						 * Similarly, P is the parent of R; the p.getContent() list is not the parent
+	    						 * 
+	    								P p = Context.getWmlObjectFactory().createP();
+	    								R r = Context.getWmlObjectFactory().createR();
+	    								p.getContent().add(r);
+	    								String result = XmlUtils.marshaltoString(p, true);
+	    								P rtp = (P)XmlUtils.unmarshalString(result);
+	    								R rtr = (R)rtp.getContent().get(0);
+	    								System.out.println(rtr.getParent().getClass().getName() );
+	    						 */
+	    				// TODO: other corrections
+	    				} else {
+	    					((Child)child).setParent(o);
+	    				}
+	    			}
+	    			else if (child instanceof javax.xml.bind.JAXBElement
+//		                    && (((JAXBElement)child).getName().getLocalPart().equals("commentReference")
+//		                    		|| ((JAXBElement)child).getName().getLocalPart().equals("commentRangeStart")
+//		                    		|| ((JAXBElement)child).getName().getLocalPart().equals("commentRangeEnd"))	                            		
+		                    		) {
+		            	((Child)((JAXBElement)child).getValue()).setParent(/*XmlUtils.unwrap(*/ o /*)*/
+            			);//o := parent here
+		            }
+
+	    			
+	    			
+	    			//Termination condition met?
+	    			if (isDeclarationFound) {
+	        			return ;//otherwise the last child will always be the found one eventhough 
+	        			//it may already have been found in the first child (text) node (because
+	        			//the loop otherwise continues if we emerge from the child where the declaration finally was found! 
+	        		}
+	        		
+	        		
+	        		// Recursively process the child element
+	        		//DOCX_travelDownUntilDeclarationFound(children.get(i), declaration, levelDepth + 1);
+	        		++levelDepth;
+	        		if (shouldTraverse(child)) {//true by default
+	        			walkJAXBElements(child);
+	        		}
+	        		--levelDepth;
+	        		
+
+	        	}
+		        	
+	            
+        	}/*if children != null -END*/
+        	
+        	
+        	
+        	
+        	
+        	
+        	//-------non-standalone elements ----------------------------------------------
+        	//Another line break to be inserted?
+	        if (o instanceof org.docx4j.wml.P
+	        		|| o instanceof org.docx4j.wml.Hdr
+	        		|| o instanceof org.docx4j.wml.Tbl) {
+            	textBuffer.append(System.getProperty("line.separator"));
+            	//return;
+            }
+	        //else if (elementName.equals("text:note-citation")) {
+	        else if (o instanceof org.docx4j.wml.CTFootnotes) {
+	            textBuffer.append(") ");
+	        }
+	        //else if (elementName.equals("text:span")) {
+	        else if (o instanceof org.docx4j.wml.R) {
+	        	textBuffer.append("");//same as above at the opening R tag is true here too!
+	        						  //Better don't append anything here!
+	        }
+	        	
+	        	
+	        
+	        
+	        
+	        //=> We reached the end, no more elements and still the termination condition did
+	        //not grip!! => No such element we looked for was found in this branch!
+	        return ;
+	    }
+		
+		
+		
+		
+		
+		/**
+		 * Deletes non-exercise related xml content and the then no longer referenced refs.
+		 * 
+		 * Called from Sheetdraft.java.
+		 * 
+		 * @param sheetdraftDeepestCommonParentElement_index
+		 * @param exception <-- The deepest common parent element's child containing this exercise('s declaration).
+		 * @throws Exception 
+		 */
+		public void deleteAllChildrenOfExceptFor(int sheetdraftDeepestCommonParentElement_index)
+				throws Exception {
+			deleteAllChildrenOfExceptFor(sheetdraftDeepestCommonParentElement_index, null);
+		}
+		public void deleteAllChildrenOfExceptFor(int sheetdraftDeepestCommonParentElement_index
+				, Exercise exerciseSucceding)
+				throws Exception {
+			//As the elementsTraversed are equal for the exercise and the sheetdraft the following
+			//is correct so that we can get to the deepest common parent element despite aiming
+			//at this exercise's xml:
+			Child candidate = (Child) sheetdraftElementsTraversed.get(sheetdraftDeepestCommonParentElement_index);
+			if (candidate != ((Child)deepestAllExercisesCommonParentElement_sChildContainingThisExercise).getParent()) {
+				System.out.print(
+					Global.addMessage("DeleteAllChildrenNodesOfExceptFor discovered a discrepancy: Redebug this method!",
+							"danger")
+				);
+			}
+			deleteAllChildrenOfExceptFor(
+					candidate,
+					//For all exercises individually determined while emerging up while looking
+					//for the deepest to all exercises common parent.(safer than decrementing index)
+					deepestAllExercisesCommonParentElement_sChildContainingThisExercise//<-- for each exercise determined while emerging up while looking for the deepest to all exercises common parent element.
+					/* nolongerTODO For not cleanly formatted documents check if this element still
+					 * available in any other exercise's traversed elements list. */
+					//, sheetdraftElementsTraversed.get(sheetdraftDeepestCommonParentElement_index + 1)
+					, exerciseSucceding
+			);
+		}
+		public void removeAllSiblingsOf(Object deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+				, Exercise exerciseAfterThis) throws Exception {
+			if (deepestAllExercisesCommonParentElement_sChildContainingThisExercise instanceof Child) {
+				deleteAllChildrenOfExceptFor(
+						((Child)deepestAllExercisesCommonParentElement_sChildContainingThisExercise)
+						.getParent()
+						, deepestAllExercisesCommonParentElement_sChildContainingThisExercise, exerciseAfterThis
+				);
+			}
+			else if (deepestAllExercisesCommonParentElement_sChildContainingThisExercise instanceof JAXBElement) {
+				JAXBElement e = (JAXBElement)deepestAllExercisesCommonParentElement_sChildContainingThisExercise;
+				deleteAllChildrenOfExceptFor(
+						((Child)e.getValue()).getParent()
+						, deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+						, exerciseAfterThis
+				);
+			}
+			//org.w3c.dom.Node
+			else if (deepestAllExercisesCommonParentElement_sChildContainingThisExercise instanceof org.w3c.dom.Node) {
+			}
+		}
+		public void deleteAllChildrenOfExceptFor(Object deepestCommonParentElement
+				, Object exception, Exercise exerciseAfterThis)
+				throws Exception {
+			
+			if (deepestCommonParentElement == null) {
+				System.out.print("delete all children of except for resulted in the parent being null!");
+				return ;
+			}
+			
+			/*First get the elements in the markup of this exercise filesystem representation.*/
+			
+			//start with root Element and find deepest common parent element again in this file
+			//getDeepestAllExercisesCommonParentElement();
+			//= findDeepestCommonParentElementEquivalentRecursively(doc.getRootElement(), sheetdraftDeepestCommonParentElement);
+			
+	
+			
+			if (exerciseAfterThis == null) {
+				//SOMEWHAT GUESS WHAT STILL BELONGS TO THE EXERCISE IF NOT ALL CONTENT
+				//OF THIS EXERCISE IS CONTAINED WITHIN ONE XML-TAG!
+				
+				//remove all below/deeper than the deepest common parent element
+				//but not the exercise xml markup:
+				boolean keep_next_element_because_the_before_was_a_heading = false;
+				//for (Element child : sheetdraftDeepestCommonParentElement.getChildren()) {
+				List<Object> childNodes = getChildren(deepestCommonParentElement);
+				for (int i = 0; i < childNodes.size(); i++) {
+					Object o = childNodes.get(i);
+					Child child = null;
+					if (o instanceof Child/*org.w3c.dom.Node*/) {
+						child = (Child) o;
+					}
+					else if (o instanceof JAXBElement) {
+						//Alternatively more detailed deletion of nodes is possible if 
+						//o.getValue() instanceof Tbl and a reaction to it is used. Below works for both:
+						if ( ((JAXBElement) o).getValue() instanceof Child/*org.w3c.dom.Node*/) {
+							child = (Child) ((JAXBElement) o).getValue();   //alternative: unwrap(); cases.
+						}
+						else {
+							continue;
+						}
+					}
+					else {
+						continue;/*no child node available*/
+					}
+					//spare the exception, that is the exercise that shall remain
+					if ( !child.equals(XmlUtils.unwrap(exception)) ) {
+						
+						/*IF deletion of references that are no longer referenced is NOT possible
+						 *after having removed these main content xml nodes,
+						 *THEN REFERENCES MUST BE FOLLOWED! */
+						
+						
+						//stand alone elements better stay with the document for now:
+						if (child instanceof org.docx4j.wml.R.Separator) {
+							continue;
+						}
+						else if (child instanceof org.docx4j.wml.R.Tab) {
+							continue;
+						}
+						else if (child instanceof org.docx4j.wml.Br) {
+							continue;
+						}
+						
+						//Does this to a high probability belong the the exercise declaration? 
+						if (keep_next_element_because_the_before_was_a_heading) {
+							//This time it was not a heading neither one of the standalone
+							//elements above? -> No longer keep the next few elements.
+							if (!(child instanceof Hdr)) {
+							//if (!child.getNodeName().equals("text:h")) {
+								keep_next_element_because_the_before_was_a_heading = false;
+							}
+							continue;
+						}
+						//child.getParentNode().removeChild(child);
+						//this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise.getParentNode()
+						boolean deletedNode = DocxUtils.remove(/*((ContentAccessor)deepestCommonParentElement).getContent()*/childNodes, child);
+						if (deletedNode) {
+							--i;//the deleted node will be replaced by the following childNodes, this
+								//shift has to be accounted for, ie. taken into account. 
+						}
+	
+	//					if (child instanceof org.odftoolkit.odfdom.dom.element.text.TextAElement) {
+	//						this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+	//								.getParentNode().removeChild((TextAElement)child);
+	//					}
+	//					else if (child instanceof org.odftoolkit.odfdom.dom.element.text.TextHElement) {
+	//						((OfficeTextElement)(this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+	//								.getParentNode())).removeChild((TextHElement)child);
+	//					}
+	//					else if (child instanceof org.odftoolkit.odfdom.dom.element.text.TextPElement) {
+	//						this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+	//								.getParentNode().removeChild((TextPElement)child);
+	//					}
+						/*For following references a recursive approach would be better suited:
+						 *Otherwise references in children will be ignored as they are deleted
+						 *at once.*/ 
+						//deleteElementRecursively(child);
+					}
+					//Is this a heading? Then better keep the next p(aragraph) too as an exercise
+					//will not exist in a heading alone!? 
+					else {//child.getNodeName().equals("text:h")) {
+						keep_next_element_because_the_before_was_a_heading = true;
+					}
+					
+				}
+				
+			}
+	
+			//No follow up exercise given or this is the last one?
+			else {
+				//USE THE GIVEN THIS EXERCISE FOLLOWING EXERCISE FOR ACCESS TO ITS DECLARATION ELEMENT. 
+				boolean reachedThisExerciseDeclarationElement = false;
+				boolean reachedNextExerciseDeclarationElement = false;
+				//for (Element child : sheetdraftDeepestCommonParentElement.getChildren()) {
+				List<Object> childNodes = getChildren(deepestCommonParentElement);
+				if (childNodes == null) {
+					System.out.print("has no child nodes: " + deepestCommonParentElement.toString());
+					return ;
+				}
+				for (int i = 0; i < childNodes.size(); i++) {
+					Object o = childNodes.get(i);
+					Child child = null;
+					if (o instanceof Child/*org.w3c.dom.Node*/) {
+						child = (Child) o;
+					}
+					else if (o instanceof JAXBElement) {
+						//Alternatively more detailed deletion of nodes is possible if 
+						//o.getValue() instanceof Tbl and a reaction to it is used.
+						if ( ((JAXBElement) o).getValue() instanceof Child/*org.w3c.dom.Node*/) {
+							child = (Child) ((JAXBElement) o).getValue();
+						}
+						else {
+							continue;
+						}
+					}
+					else {
+						continue;
+					}
+					
+					if (reachedThisExerciseDeclarationElement) {
+						if (child.equals(XmlUtils.unwrap(exerciseAfterThis.deepestAllExercisesCommonParentElement_sChildContainingThisExercise)) ) {
+							reachedNextExerciseDeclarationElement = true;
+						}
+					}
+					//spare the exception, that is the exercise that shall remain
+					if (!child.equals(XmlUtils.unwrap(exception))/*Because once we reached the follow up exercise we can remove again.*/
+							&& (!reachedThisExerciseDeclarationElement || reachedNextExerciseDeclarationElement)) {
+						
+						/*IF deletion of references that are no longer referenced is NOT possible
+						 *after having removed these main content xml nodes,
+						 *THEN REFERENCES MUST BE FOLLOWED! */
+						
+						//stand alone elements better stay with the document for now:
+						if (child instanceof org.docx4j.wml.R.Separator) {
+							continue;
+						}
+						else if (child instanceof org.docx4j.wml.R.Tab) {
+							continue;
+						}
+						else if (child instanceof org.docx4j.wml.Br) {
+							continue;
+						}
+						
+						//else
+						//child.getParentNode().removeChild(child); //IT'S A LIVE LIST (by reference)! ALL CHANGES TAKE EFFECT.
+						boolean deletedNode = DocxUtils.remove(/*((ContentAccessor)deepestCommonParentElement).getContent()*/childNodes, child);
+						//attention: removing a node shifts all the childNodes! TODO is this true for docx dom too?
+						if (deletedNode) {
+							--i;
+						}
+						/*For following references a recursive approach would be better suited:
+						 *Otherwise references in children will be ignored as they are deleted
+						 *at once.*/ 
+						//deleteElementRecursively(child);
+					}
+					else {
+						reachedThisExerciseDeclarationElement = true;
+					}
+					
+				}
+				
+				
+			} 
+			
+			
+			/*
+			
+			exercise_textDocument.save(filelink);
+			 */
+			
+			    	
+	    }
+	
+	
+	
+	
+	
+	
+	
+	}
 	
 	
 	

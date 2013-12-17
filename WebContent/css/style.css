@@ -13,6 +13,15 @@
 
 /*======= GENERAL ========================================================*/
 /* affects tags */
+input[type="radio"],
+input[type="checkbox"] {
+	margin: 7px;
+    box-shadow: 0px 0px 10px blue;
+}
+a.btn,
+a.btn:link {
+	color: rgb(255, 255, 255) !important;
+}
 button{
     font-size : 16px;
 }
@@ -56,7 +65,7 @@ body {
     background-color:#FFFFFF;
     font-family:Arial,Helvetica, sans-serif;
 }   
-div.gestaltung {
+.gestaltung {
     padding:0.5em;
     margin-top:8px;
     max-width: 1480px;
@@ -183,7 +192,8 @@ button.menue {
 
 
 .ajax-loaded-content {
-	float: left;
+    /*float: left;*/
+    background-color: white;
 	margin-left: 50px;
 	border: 1px solid black;
 	width: 90%;
@@ -282,4 +292,99 @@ div.globalMessage div:before {
 .start_list {
 	clear: both;
 }
-}
+
+/*from my fairyclasses*/
+.add {
+   min-width: 21px;
+   min-height: 21px;
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_addYellow.png") no-repeat center 0px;
+ }
+ .add:hover {
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_addYellow.png") no-repeat center -31px;
+ }
+ .edit {
+   min-width: 21px;
+   min-height: 21px;
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_editYellow.png") no-repeat center 0px;
+ }
+ .edit:hover {
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_editYellow.png") no-repeat center -31px;
+ }
+ .delete {
+   min-width: 21px;
+   min-height: 21px;
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_deleteCoral.png") no-repeat center 0px;
+ }
+ .delete:hover {
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_deleteCoral.png") no-repeat center -31px;
+ }
+ .submit {
+   min-width: 21px;
+   min-height: 21px;
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_submitGreen.png") no-repeat center 0px;
+ }
+ .submit:hover {
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_submitGreen.png") no-repeat center -31px;
+ }
+ .write {
+   min-width: 21px;
+   min-height: 21px;
+   cursor: pointer;
+   background: transparent url("./img/css/2in1_write.png") no-repeat center top;
+ }
+ .write:hover {
+   background: transparent url("./img/css/2in1_write.png") no-repeat center -31px;
+ }
+ .close {
+   cursor: pointer;
+   min-width: 21px;
+   min-height: 21px;
+   background: transparent url("./img/css/2in1_deleteCoral.png") no-repeat center 2px;
+ }
+ .close:hover {
+   background: transparent url("./img/css/2in1_deleteCoral.png") no-repeat center -29px;/*(-31+2)px*/
+ }
+ 
+ .ava {
+   margin-right: 4px;
+   cursor: pointer;
+   color: #555555;
+   text-align: center;
+   height: 85px;
+   width: 100px;
+   overflow: hidden;
+   border: solid 2px royalblue;
+ }
+ .anno {
+   color: #999999;
+   font-style:oblique;
+   font-size: 0.80em;
+ }
+ .lAnno {
+   color: #999999;
+   font-style:oblique;
+   font-size: 0.65em;
+ }
+ .note {
+   color: #777799;
+   font-style:oblique;
+   font-size: 0.7em;
+ }
+ .botWelcomeT {
+   color:cornflowerblue;
+   font-weight:bold;
+ }
+ 
+ .icon {
+   height: 25px;
+ }
+ 
+ 

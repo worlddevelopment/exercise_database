@@ -20,7 +20,7 @@ if (Global.session == null) {
 ResultSet res = Global.query("SELECT * FROM sheetdraft, lecturer"
 	    + " WHERE"
 	    + " (author = '" + Global.session.getAttribute("user") + "'"
-	        + " OR (lecturer_id = lecturer.id AND lecturer.lecturer = '" + Global.session.getAttribute("user") + "')"
+	        + " OR (lecturer.lecturer = '" + Global.session.getAttribute("user") + "' AND lecturer_id = lecturer.id)"
 	    + " )"
 	    + " AND (is_draft = 1 OR is_draft = '1');"
 );
@@ -44,7 +44,9 @@ while (res.next()) {
 		    <div id='draft_img'>
 		        <img src="<% out.print(Global.convertToImageLink(draft_filelink)); %>" />
 	        </div>
-	        <button name="q" value="draft_delete" class="delete" title="l&ouml;schen"></button>
+	        <button name="q" value="delete_draft" class="delete btn btn-danger" title="l&ouml;schen">
+	           <i class="icon-trash icon-white"></i>
+	        </button>
         </div>
 
 
@@ -68,7 +70,9 @@ while (res.next()) {
 	            <div id='draft_exercise_img'>
 	                <img src="<% out.print(Global.convertToImageLink(draft_exercise_filelink)); %>" />
 	            </div>
-	            <button name="q" value="draft_exercise_delete" class="delete" title="l&ouml;schen"></button>
+	            <button name="q" value="delete_draft_exercise" class="delete btn btn-danger" title="l&ouml;schen">
+	               <i class="icon-trash icon-white"></i>
+	            </button>
 	        </div>
 	        <%
 	    }

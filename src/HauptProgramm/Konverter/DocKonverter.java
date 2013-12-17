@@ -3,6 +3,7 @@ package HauptProgramm.Konverter;
 import java.io.*;
 
 import org.apache.poi.hwpf.*;
+import org.apache.poi.hwpf.converter.WordToTextConverter;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -76,6 +77,7 @@ public class DocKonverter {
 			System.out.println("Anderer Fehler!");
 		}
 		
+		
 		return textInLines;
 	}
 
@@ -105,6 +107,7 @@ public static String[] erstelleTextausDocX(String filelink)throws FileNotFoundEx
 			FileInputStream fis = new FileInputStream(file.getAbsolutePath());
 			System.out.println("FileStream generiert");
 			doc = new XWPFDocument(fis);
+			
 			System.out.println("XWPFDoc generiert");
 			XWPFWordExtractor ex = new XWPFWordExtractor(doc);
 			System.out.println("WordExtractor generiert");

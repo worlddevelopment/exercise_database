@@ -95,7 +95,7 @@ public class ConvertOutPDF extends AbstractSample {
      * @throws Exception 
      */
     public static void process() throws Exception {
-    	process(inputfilepath);
+    	process(inputfilepath, inputfilepath + ".pdf");
     }
     /**
      * Here the inputfilepath is obligatory. This also enforces that we don't have to check
@@ -108,7 +108,7 @@ public class ConvertOutPDF extends AbstractSample {
      * @param inputfilepath
      * @throws Exception
      */
-    public static void process(String inputfilepath) throws Exception {
+    public static void process(String inputfilepath, String outputfilepath) throws Exception {
     	AbstractSample.inputfilepath = inputfilepath;
 		// Font regex (optional)
 		// Set regex if you want to restrict to some defined subset of fonts
@@ -125,7 +125,7 @@ public class ConvertOutPDF extends AbstractSample {
 
 		// Document loading (required)
 		WordprocessingMLPackage wordMLPackage;
-		if (inputfilepath==null) {
+		if (inputfilepath == null) {
 			// Create a docx
 			System.out.println("No input path passed, creating dummy document");
 			 wordMLPackage = WordprocessingMLPackage.createPackage();
@@ -162,7 +162,6 @@ public class ConvertOutPDF extends AbstractSample {
 		
 		
 		// exporter writes to an OutputStream.		
-		outputfilepath = inputfilepath + ".pdf";
 		OutputStream os = new java.io.FileOutputStream(outputfilepath);
     	
 
@@ -173,7 +172,7 @@ public class ConvertOutPDF extends AbstractSample {
 		//Prefer the exporter, that doesn't use a xsl transformation (= uses a visitor)
 		//Docx4J.toFO(foSettings, os, Docx4J.FLAG_EXPORT_PREFER_NONXSL);
     	
-		System.out.println("Saved: " + outputfilepath);
+		System.out.println("Saved to: " + outputfilepath);
     }
     
     

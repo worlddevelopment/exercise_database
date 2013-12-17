@@ -6,6 +6,7 @@ package HauptProgramm;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
+import aufgaben_db.Global;
 import aufgaben_db.Muster;
 
 
@@ -29,14 +30,14 @@ public class Declaration {
 	private String secondWord = "";	/*of/after declaration!*/
 	private String thirdWord = ""; 	/*of/after declaration!*/
 	// Alternatively/Additionally for also covering "Lösung zu 1)" for example?
-	private String lineContent = "";/*firstWord here != declaration.firstWord*/
+	private String lineContent = "";/*firstWord here not necessarily == declaration.firstWord*/
 	
 	// Speichert die Ersten Worte der der Deklaration folgenden Aufgabe.
-	private ArrayList<String> head = new ArrayList<String>();
+	private String[] head;
 	private boolean hasHead = false;
 	
 	// Zeile, in der die Deklaration gefunden wurde.
-	private int line;
+	private int lineNumber;
 	
 	// Index, dem diese Deklaration zugeordnet werden kann
 	private IndexNumber index;
@@ -44,19 +45,69 @@ public class Declaration {
 	
 	
 	/*====== CONSTRUCTORS ========================================================*/
-	public Declaration(Muster m, String firstWord, int line) {
-		this(m.getPattern(), firstWord, line);
+	//lineContent is optional and currently used for debugging (validation of declaration) purposes only.
+	public Declaration(Muster m, String firstWord, int lineNumber) {
+		this(m.getPattern(), firstWord, lineNumber, "");
 	}
-	
-	public Declaration(Pattern pattern, String firstWord, int line) {
+	public Declaration(Muster m, String firstWord, int lineNumber, String lineContent) {
+		this(m.getPattern(), firstWord, lineNumber, lineContent);
+	}
+	public Declaration(Pattern pattern, String firstWord, int lineNumber) {
+		this(pattern, firstWord, lineNumber, "");
+	}
+	public Declaration(Pattern pattern, String firstWord, int lineNumber, String lineContent) {
 		this.setMatchedPattern(pattern);
 		this.setFirstWord(firstWord);
-		this.setLine(line);
+		this.setLineNumber(lineNumber);
 	}
 
 
 	
 	/*====== METHODS =============================================================*/
+	@Override
+	public boolean equals(Object o) {
+		return o == this
+				||
+				
+				(o instanceof Declaration)
+				//&& ((Declaration) o).getIndex().equals(this.getIndex())
+				&& ((Declaration) o).toString().equals(this.toString())
+				&& 
+				(
+						!((Declaration) o).hasHead() && !this.hasHead()
+						||
+						((Declaration) o).hasHead() && this.hasHead()
+						&& ((Declaration) o).getHead().length == this.getHead().length
+						&& Global.arrayToString(((Declaration) o).getHead())
+						.equals( Global.arrayToString(this.getHead()) )
+				)
+		;
+	}
+	/**
+	 * @return Null if no word contains a potential exercise numbering.
+	 */
+	public String getWordContainingNumbering() {
+		//First check if it can be parsed to integer, then check if this parsed value is greater than
+		//the next exercise's numbering:
+		if (Global.containsInt(firstWord)) {
+			return firstWord;
+		}
+		if (Global.containsInt(secondWord)) {
+			return secondWord;
+		}
+		if (Global.containsInt(thirdWord)) {
+			return thirdWord;
+		}
+		
+		return null;
+			
+	}
+	
+	
+	
+	
+	
+	
 	/**
 	 * @return the matchedPattern
 	 */
@@ -112,19 +163,27 @@ public class Declaration {
 	public void setThirdWord(String thirdWord) {
 		this.thirdWord = thirdWord;
 	}
-
+	
+	/**
+	 * Convenience method, without it it's still possible to access the same via plaintext[lineNumber].
+	 * @return The complete line of the found declaration.
+	 */
+	public String getLineContent() {
+		return lineContent;
+	}
+	
 	/**
 	 * @return the line
 	 */
-	public int getLine() {
-		return line;
+	public int getLineNumber() {
+		return lineNumber;
 	}
 
 	/**
 	 * @param line the line to set
 	 */
-	public void setLine(int line) {
-		this.line = line;
+	public void setLineNumber(int lineNumber) {
+		this.lineNumber = lineNumber;
 	}
 
 	/**
@@ -168,30 +227,30 @@ public class Declaration {
 	}
 	
 	/**
-	 * Gibt eine String-Repräsentation der Deklaration zurück.
+	 * Gibt eine String-Repraesentation der Deklaration zurueck.
 	 */
-	public String toString() {
-		String output = "Gefunden mit Muster: " + this.matchedPattern + " \n" +
-	"Erstes Wort " + this.firstWord + " \n Zweites Wort: " + this.secondWord + "\n Drittes Wort: " + this.thirdWord;
-	if (this.hasIndex()) {
-		output = output + " \n IndexNummer: " + this.index.toString();
-	} else {
-		output = output + " \n Indexnummer: Ohne Index ";
-	}
+	public String toString() {//hi wie geht es dir? wie einer GeWolke, es regnet den ganzen Tag.
+		String output = "Deklaration {gefunden mit Muster: " + this.matchedPattern + "; \t" +
+		" First Word: " + this.firstWord + "; \tSecond Wort: " + this.secondWord + ";\t Third Wort: " + this.thirdWord;
+		if (this.hasIndex()) {
+			output = output + " \t IndexNR.: " + this.index.toString();
+		} else {
+			output = output + " \t IndexNR.: None";
+		}
 		return output;
 	}
-
+	
 	/**
 	 * @return the head
 	 */
-	public ArrayList<String> getHead() {
+	public String[] getHead() {
 		return head;
 	}
 
 	/**
 	 * @param head the head to set
 	 */
-	public void setHead(ArrayList<String> head) {
+	public void setHead(String[] head) {//ArrayList<String> head) {
 		this.head = head;
 		this.hasHead = true;
 	}
@@ -203,6 +262,7 @@ public class Declaration {
 	public boolean hasHead() {
 		return hasHead;
 	}
+	
 	
 	
 	

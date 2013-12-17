@@ -22,6 +22,7 @@ public class DeclarationFinder {
 	/**
 	 * Untersucht das uebergebene Sheetdraft mit regulaeren Ausdruecken (siehe Muster.java) auf 
 	 * Aufgabendeklarationen und gibt den passendsten Satz an Aufgabendeklarationen aus.
+	 * Prerequisite: Requires the sheetdraft's plain text to be extracted at this point!
 	 * 
 	 * @param sheet	zu untersuchendes Sheetdraft
 	 * @return DeclarationSet, fall eine passender Satz an Deklarationen gefunden wurde <br>
@@ -34,6 +35,9 @@ public class DeclarationFinder {
 		
 		// Es wird nach allen bekannten Deklarationsmustern gesucht und abgelegt
 		for (Muster m : Muster.values()) {
+			if (Global.debug) {
+				System.out.println(m.toString());
+			}
 			foundDeclarationSets.add(regExFinder.sucheMuster(sheet.getPlainText(), m));
 		}
 		
@@ -56,22 +60,24 @@ public class DeclarationFinder {
 				removeEmptyDeclarations[i] = true;
 			}
 		}
+		// Because in a list the indices are shifted if an element is removed the operation is split across several loops.
 		for (int i = foundDeclarationSets.size() - 1; i >= 0; i--) {
 			if (removeEmptyDeclarations[i] == true) {
 				foundDeclarationSets.remove(i);
 			}
 		}
 		
-		System.out.println("Es wurden " + foundDeclarationSets.size() + " moegliche DeklarationsSets gefunden");
+		System.out.println("Es wurden " + foundDeclarationSets.size() + " moegliche DeklarationsSets gefunden.");
 		
 		for (DeclarationSet set : foundDeclarationSets) {
+			System.out.println("\r\nDeclarations within Set: " + set.toString());
 			for (Declaration dec : set.declarations) {
 				System.out.println(dec.toString());
 			}
 		}
 		
-		// Bei allen Sets, die als erstes Wort einen Wort-Match haben, wird �berpr�ft, ob Sie auch von 
-		// einem Index gefolgt werden, wie es sich f�r brave Aufgaben geh�rt.
+		// Bei allen Sets, die als erstes Wort einen Wort-Match haben, wird ueberprueft, ob Sie auch von 
+		// einem Index gefolgt werden, wie es sich fuer brave Aufgaben gehoert.
 		// (Also so etwas wie Aufgabe 1, Aufgabe 2 oder Aufgabe 3.5 etc....)
 //		for (DeclarationSet set: foundDeclarationSets) {
 //			set.clearWordedDeclarationsWithoutIndices();
@@ -153,7 +159,7 @@ public class DeclarationFinder {
 //		HashMapVerwaltung.erweitereHashmapMuster(HashMapVerwaltung.keyDeklaration, muster);
 		for (int i = 0; i < anzahl; i++) {
 			String key = "Aufgabe" + (i + 1);
-			int zeile = setWithHighestScore.declarations.get(i).getLine();
+			int zeile = setWithHighestScore.declarations.get(i).getLineNumber();
 			String schluesselWort = setWithHighestScore.declarations.get(i).getFirstWord();
 			String aufgabenBezeichnung = setWithHighestScore.declarations.get(i).getSecondWord();
 			HashMapVerwaltung.erweitereHashmap(key, schluesselWort,	aufgabenBezeichnung, zeile);
@@ -167,12 +173,12 @@ public class DeclarationFinder {
 
 	
 	/**
-	 * Filtert das �bergebene String-Array, sodass nur noch Zahlen in dem Array enthalten bleiben.
+	 * Filtert das uebergebene String-Array, sodass nur noch Zahlen in dem Array enthalten bleiben.
 	 * Entfernt alle nicht zu Integer parsebaren Zeichen aus dem String-Array
 	 * 
 	 * 
 	 * @param string String[]
-	 * @return int[], welches alles zu Integers parsebaren Zeichen aus dem String[] enth�lt 
+	 * @return int[], welches alles zu Integers parsebaren Zeichen aus dem String[] enthaelt 
 	 */
 	public static int[] extrahiereZahlen(String[] string) {
 		
@@ -207,8 +213,8 @@ public class DeclarationFinder {
 	}
 	
 	/**
-	 * Ueberprueft, ob das �bergebene int-array Zahlen einer fortlaufenden, unmittelbar aufsteigenden Reihenfolge (z.B. 4, 5, 6, 7 )
-	 * enth�lt
+	 * Ueberprueft, ob das uebergebene int-array Zahlen einer fortlaufenden, unmittelbar aufsteigenden Reihenfolge (z.B. 4, 5, 6, 7 )
+	 * enthuelt
 	 * 
 	 * @param zahlen int-Array
 	 * @return true, falls eine Fortlaufende Reihenfolge exisitert
@@ -232,7 +238,7 @@ public class DeclarationFinder {
 	}
 	
 	/**
-	 * Ueberprueft, ob der �bergeben String g�ltig zu einem Integer geparsed werden kann.
+	 * Ueberprueft, ob der uebergeben String gueltig zu einem Integer geparsed werden kann.
 	 * 
 	 * @param i Zu ueberpruefender String
 	 * @return true, falls er geparsed werden kann, false, falls nicht
@@ -251,7 +257,7 @@ public class DeclarationFinder {
 	
 //	/**
 //	 * Bestimmt die erste Im String enthaltene Zahl (auch mehrere Ziffern) und gibt diese aus.
-//	 * Gibt null aus, falls der String keine Zahl enth�lt.
+//	 * Gibt null aus, falls der String keine Zahl enthaelt.
 //	 * 
 //	 * @param string zu ueberpruefender String
 //	 * @return die erste gefundene Zahl

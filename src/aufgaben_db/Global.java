@@ -13,6 +13,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 
@@ -22,9 +25,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.PageContext;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.text.StrBuilder;
+import org.apache.lucene.index.IndexReader;
+
+import HauptProgramm.DocType;
+
 
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Map;
@@ -60,10 +70,19 @@ public class Global {
 	
 	//======= GLOBALS - ATTRIBUTES ===============================================//
 	//GLOBALS - DECLARE
-	public static enum SUPPORTED_FILETYPES { pdf, tex, docx, doc, txt };
+	public static String version = "v30.93";
+	public static enum SheetTypes { EXERCISE_SHEET, SOLUTION, EXAM, EXAM_SOLUTION };
+	public static enum SUPPORTED_FILETYPES { DOCX, DOC, /*HTML,*/ ODT, PDF, RTF, TEX, TXT };
 	public static String imageTypeToGenerate = "png";
+	public static final int charactersPerLine = 80; //used for image generation out of native, plain text.
+	public static int ImageMagick_qualityScale = 1;
+	public static int ImageMagick_density = 150;//144 
+	public static String[] indexedFields = { "content", "type", "course", "semester"
+			, "lecturer", "author", "filelink" };
+	public static String[] semterm = { "SS", "WS" };
 	public static boolean debug = true;
-	public static boolean angemeldet = false;
+	public static boolean cropImages = false;//TODO deactivate if image or formula encountered.
+											 //because plain text line count not takes it into account.
 	public static String anzeige = "start";
 	public static String id = "start";	//former aktion replacement
 	
@@ -74,7 +93,9 @@ public class Global {
 	public static String root; //root - to be written once at startup
 	public static String uploadTarget = "uploads/";
 	public static HttpSession session;
+	public static IndexReader indexReader;
 	public static Calendar now = new GregorianCalendar();
+	
 	
 	//MySQL attributes
 	public static MysqlHelper msqh = new MysqlHelper();
@@ -85,12 +106,62 @@ public class Global {
 	//public static HttpServletResponse request;
 	public static HttpServletResponse response;
 	
+	//SETTINGS - DEFAULTS
+	public static Language LANGUAGE = Language.getByName("German");//non-final as it can be changed
+	
 
 	
 	
-	//======= GLOBALS - FUNCTIONS ===============================================// 
+	//======= GLOBALS - FUNCTIONS ===============================================//
+	public static String toFairy(String english) {
+		return display(english);
+	}
+	public static String display(String english) {
+		String translated = translate(english);
+		if (translated == null) {
+			System.out.println(
+					Global.addMessage("Found no translation for " + english + " .", "danger")
+			);//prevents the server of a null pointer exception and prevents showing emtpy fields.
+			return english.substring(0, 1).toUpperCase() + english.substring(1).replace("_", " ");
+		}
+		return translated.substring(0, 1).toUpperCase() + translated.substring(1).replace("_", " ");
+	}
+	public static String translate(String english) {
+		return Global.LANGUAGE.getTranslation(english);
+		//return Language.translations[Global.LANGUAGE.ordinal()].get(english);
+	}
+	public static boolean isLoggedIn(HttpSession session) {
+		return session.getAttribute("user") != null;
+	}
+	public static String getUser(HttpSession session) {
+		return session.getAttribute("user").toString();
+	}
+	public static String getUserURLEncoded(HttpSession session)
+			throws UnsupportedEncodingException {
+		return URLEncoder.encode(session.getAttribute("user").toString(), "utf-8");
+	}
 	/*menueItem, page to be re-defined/overwritten/adapted somewhere
 	     previously (mostly immediately before include of this scriptlet)*/
+	//protected seems to be the default visibility
+	public static String getSupportedFiletypesAsString() {
+		int i = 0;
+        String docTypesSupported = "";
+		for (DocType docType : DocType.values()) {
+			if (i > 0) {
+				docTypesSupported += ", ";
+			}
+			docTypesSupported += docType.name();//.toString();<-- will have .<ending>
+			i++;
+		}
+		return docTypesSupported;
+	}
+	//Index reader (especially for multiple interrupts/threads to have it volatile is important).
+	public static void setIndexReader(IndexReader indexReader) {
+		Global.indexReader = indexReader;
+	}
+	public static IndexReader getIndexReader() {
+		return Global.indexReader;
+	}
 	
 	/**
 	 * BUILD PATH TO filelink -- a convention
@@ -254,6 +325,16 @@ public class Global {
 	 * @return The result (set) of the database query.
 	 * @throws IOException 
 	 */
+	public static ResultSet query(String query) throws IOException {
+		
+		return query(query, null, null);
+		
+	}
+	public static ResultSet query(String query, String information_where_this_method_was_called) throws IOException {
+		
+		return query(query, null, null, information_where_this_method_was_called);
+		
+	}
 	public static ResultSet query(String query, HttpServletRequest request, PageContext pageContext)
 			throws IOException {
 		return query(query, request, pageContext, "no_callee_information_given");
@@ -263,7 +344,7 @@ public class Global {
 			throws IOException {
 		try {
 //			String str_query = "SELECT *, MATCH (inhalt) AGAINST ('\"" + search_string + "\"') AS score FROM blatt WHERE MATCH (inhalt) AGAINST ('\"" + search_string + "\"' in boolean mode);";
-//			//OHNR BOOLEAN MODE : ES WEREDN KEINE ERGEBNISSE ANGEZEIGT WENN SCORE KLEINER ALS 0.5 IST
+//			//OHNE BOOLEAN MODE : ES WEREDN KEINE ERGEBNISSE ANGEZEIGT WENN SCORE KLEINER ALS 0.5 IST
 			if (conn == null) {
 				addMessage("conn in query was null -> new instance created ","warning", request, pageContext);
 				conn = msqh.establishConnection(null);
@@ -278,18 +359,36 @@ public class Global {
 			//execute
 			ResultSet res = null;
 			boolean updateInsertDeleteHappened = false;
-			if (query.contains("DELETE ") || query.contains("INSERT ") || query.contains("UPDATE ")) {
-
+			//DELETE INSERT UPDATE?
+			boolean insert = false;
+			boolean update = false;
+			if (query.contains("DELETE ") || (insert = query.contains("INSERT ")) || (update = query.contains("UPDATE "))) {
+				String operation = "Deleted ";
+				if (insert) {
+					operation = "Inserted ";
+				}
+				else if (update) {
+					operation = "Updated ";
+				}
 				updateInsertDeleteHappened = true;
+				//execute
 				int rowCountOrNothingToReturn = statement.executeUpdate(query);
 				if (rowCountOrNothingToReturn == 0) {
 					addMessage("No result to show for query:\r\n<br/>"
 							+ query,"nosuccess", request, pageContext);
 //					System.out.print(message);
 				}
+				else {
+					System.out.print(
+							addMessage(operation + rowCountOrNothingToReturn + " rows.\r\n<br/>"
+									+ query,"success", request, pageContext)
+					);
+				}
 				
 			}
+			//SELECT
 			else {
+				//execute
 				res = statement.executeQuery(query);
 				if (res == null) {
 					addMessage("Result set is null.\r\n","nosuccess", request, pageContext);
@@ -301,9 +400,12 @@ public class Global {
 			    			+ query + " #Global.java__LINE__243#" + information_where_this_method_was_called, "nosuccess", request, pageContext);
 			    	System.out.print(message);
 			    }
+				res.beforeFirst();//Because above we already increase by one!!
 			}
-		 
+			
+			
 		    //finally
+			//statement.close(); => This would render the ResultSet useless.
 		    return res;
 		  
 		} catch (SQLException e) {
@@ -315,21 +417,7 @@ public class Global {
 		return null;
 		
 	}
-	/**
-	 * 
-	 * @param query
-	 * @throws IOException 
-	 */
-	public static ResultSet query(String query) throws IOException {
 
-		return query(query, null, null);
-	
-	}
-	public static ResultSet query(String query, String information_where_this_method_was_called) throws IOException {
-
-		return query(query, null, null, information_where_this_method_was_called);
-	
-	}
 	
 	
 	
@@ -410,7 +498,7 @@ public class Global {
 	    	//
 	    	String loggedInAddition = "";
 	    	String loggedInPath = "";
-            if (Global.angemeldet) {
+            if (Global.isLoggedIn(session)) {
             	//nach dem login inkludiere start.in.jsp anstatt start.jsp;
             	//ID-Attribut wird im login.jsp gesetzt(Session)
             	//loggedInAddition = ".in";
@@ -418,7 +506,7 @@ public class Global {
         	}
 	        //add error to request for auto display in the index.jsp!
 	        session.setAttribute("errors", fileType + " '" + filename + "' not found!");
-	        Global.addMessage("An error occurred: " + fileType + " '" + filename + "' not found!"
+	        Global.addMessage("An error occurred: " + fileType + " '" + filename + "' not found! "
 	        		+ loggedInPath + filename + loggedInAddition , "nosuccess");
 	        
 	        return "";
@@ -531,7 +619,8 @@ public class Global {
 			return "ENDING WAS NULL";
 		}
 		String filelink_ending = parts[parts.length - 1];
-		String imagelink = filelink.replaceAll(filelink_ending + "$", ending);
+		//String imagelink = filelink.replaceAll(filelink_ending + "$", ending);
+		String imagelink = filelink + "." + ending;
 		//TODO - optional:
 		//Test if file exists here.
 		return imagelink;
@@ -557,7 +646,7 @@ public class Global {
 
 	//======= GLOBALS - ARTIOMS IMPORTANT Global =============================//
     public static void createImageFromText(String[] text, int width, String path,
-    		String filename, String ext_desired) throws IOException {
+    		String filename, String ext_desired_to_be_added) throws IOException {
 		
 		File file = new File(path);
 		//IF A DIRECTORY
@@ -569,12 +658,14 @@ public class Global {
     		file.getParentFile().mkdirs();
     	}
 		
-		createImageFromText(text, width, path + filename + "." + ext_desired);
+		createImageFromText(text, width, path + filename + "." + ext_desired_to_be_added);
 		
     }
-    public static void createImageFromText(String[] text, int width, String imagelink) throws IOException {
+    public static void createImageFromText(String[] text, int width, String imagelink)
+    		throws IOException {
 		
-    	String pathTo = imagelink.replaceAll(extractFilename(imagelink) + "$", "");
+    	//String pathTo = imagelink.replaceAll(filelink_ending + "$", ending);
+    	String pathTo = Global.extractPathTo(imagelink);
     	File filePath = new File(pathTo);
     	//IF A DIRECTORY
     	if (filePath.isDirectory() && !filePath.exists()) {
@@ -589,6 +680,10 @@ public class Global {
 		
 		int height = text.length * (font.getSize() + 10) ;
 		//abhaengig von der schriftgroesse,anzahl der zeilen und abstand zwischen zeilen 10 un
+		//@since 03. November 2013:
+		if (text.length == 1) {
+			height = Global.arrayToString(text).length() * (font.getSize() + 10) / Global.charactersPerLine;
+		}
 		
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = img.createGraphics();
@@ -602,7 +697,7 @@ public class Global {
         int y = 20;
         
         for (int i = 0; i < text.length; i++) {
-        	g2.drawString(text[i], x, y += 20);
+        	g2.drawString(System.getProperty("line.separator") + text[i], x, y += 20);
 
 		}
         
@@ -611,6 +706,37 @@ public class Global {
         ImageIO.write(img, ext_and_format, outputfile);
 	}
 	
+    
+    /**
+     * Deals with special characters and encodes those. 
+     * @param request
+     * @param param_key
+     * @return The parameter value or null or better an empty string ("")?
+     */
+    public static String getParameterEncoded(HttpServletRequest request
+    		, String param_key) {
+    	return getParameterEncodedOrEmpty(request, param_key, null);
+    }
+    public static String getParameterEncodedOrEmpty(HttpServletRequest request
+    		, String param_key, String param_key_alternative) {
+    	String encoded = request.getParameter(param_key);
+        // is null?
+        if (encoded == null && param_key_alternative != null) {
+            encoded = request.getParameter(param_key_alternative);
+        }
+        // still null?
+        if (encoded == null) {
+        	return null;//"";
+        }
+        //deal with special character (new as of v30.91) to fix that the search did not work
+        try {
+			encoded = new String(encoded.getBytes("ISO-8859-1"), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+        encoded = Global.encodeUmlauts(encoded);
+        return encoded;
+    }
 	
 	
 	public static String encodeUmlauts(String str) {
@@ -675,37 +801,185 @@ public class Global {
 			str = str.replaceAll("Oe", "Ö");
 		}
 		if(str.contains("---")){
-			str = str.replaceAll("/", "---");
+			str = str.replaceAll("---", "/");
 		}
-		if(str.contains(" ")){
-			str = str.replaceAll(" ", "_");
+		if(str.contains("_")){
+			str = str.replaceAll("_", " ");
 		}
 
 		return str;
+	}
+	
+	public static boolean renameAllDerivativesOfFilelink(String filelink, String destination) {
+		
+		//Are the preconditions met? (Source and destination exist?) 
+		File sourceFile = new File(Global.root + filelink);
+		if (!sourceFile.exists()) {
+			System.out.print(
+				Global.addMessage("Source not exists: renameAllDerivativesOfFilelink."
+					+ " Filelink = source = " + filelink + "\r\n<br />Operation aborted!"
+					, "danger")
+			);
+			return false;
+		}
+		File destinationFile = new File(Global.root + destination);
+		if (!destinationFile.exists()) {
+			destinationFile = new File(Global.root + Global.extractPathTo(destination));
+			if (!destinationFile.exists()) {
+				System.out.print(
+					Global.addMessage("Destination not exists: renameAllDerivativesOfFilelink."
+						+ " Destination = target directory or file = " + destination + "\r\n<br />Operation aborted!"
+						, "danger")
+				);
+				return false;
+			}
+		}
+		
+		String destination_directory_absolute = destinationFile.getAbsolutePath();
+		if (!destinationFile.isDirectory()) {
+			System.out.print("Destination given was a file, extracted parent directory of it. destination: "
+					+ destinationFile.getAbsolutePath());
+			destination_directory_absolute = destinationFile.getParentFile().getAbsolutePath();
+		}
+		
+		//Try to delete all possible file derivations. Double endings ensure that
+		//no other sheetdraft in the same directory is being deleted accidentially.
+		String filelink_derivative;
+		boolean all_derivatives_been_renamed = true;
+		boolean all_images_been_renamed = true;
+		for (DocType docType : DocType.values()) {
+		
+			//build hypothetical filelink of derivative
+			filelink_derivative = filelink.replaceAll(
+					"[.]" + Global.extractEnding(filelink) + "$"
+					, /*"." +*/ docType.toString()
+			);
+			//build destination for derivative
+			String destination_for_derivative = destination_directory_absolute
+					+ System.getProperty("line.separator")
+					+ Global.extractFilename(filelink_derivative)
+					+ "." + Global.extractEnding(filelink_derivative);
+			
+			//RENAME DERIVATIVE
+            if (Global.renameFile(Global.root + filelink_derivative, destination_for_derivative)) {
+                System.out.print(
+            		Global.addMessage("<p>Die Datei: <strong>" + Global.extractFilename(filelink_derivative)
+            			     + " Flavour: ." + Global.extractEnding(filelink_derivative) + "</strong> wurde gelöscht.</p>"
+            			     , "success")
+           		);
+            }
+            else {
+            	all_derivatives_been_renamed = false;
+                System.out.print(
+            		Global.addMessage("<p>Die Datei: <strong>" + Global.extractFilename(filelink_derivative)
+            			    + "." + Global.extractEnding(filelink_derivative) +  "</strong> existiert nicht.</p>"
+            			    , "nosuccess")
+                );
+            }
+            
+            //build destination for derivative's image
+			String destination_for_derivative_s_image = destination_directory_absolute
+					+ System.getProperty("line.separator")
+					+ Global.extractFilename(Global.convertToImageLink(filelink_derivative))
+					//+ "." + Global.extractEnding(Global.convertToImageLink(filelink_derivative));
+					+ "." + Global.imageTypeToGenerate;
+            
+            //RENAME images to each derivative
+            if (Global.renameFile(Global.root + Global.convertToImageLink(filelink_derivative), destination_for_derivative_s_image)) {
+                System.out.print(
+            		Global.addMessage("<p>Die Datei: <strong>" + Global.extractFilename(filelink_derivative)
+            			     + " Flavour: ." + Global.imageTypeToGenerate + "</strong> wurde gelöscht.</p>"
+            			     , "success")
+           		);
+            }
+            else {
+            	all_images_been_renamed = false;
+                System.out.print(
+            		Global.addMessage("<p>Die Datei: <strong>" + Global.extractFilename(filelink_derivative)
+            			    + ".png </strong> existiert nicht.</p>"
+            			    , "nosuccess")
+                );
+            }
+            
+		}
+		
+		return all_derivatives_been_renamed && all_images_been_renamed;
+		
+	}
+	
+	
+	public static boolean deleteAllDerivativesOfFilelink(String filelink) {
+		
+		//Try to delete all possible file derivations. Double endings ensure that
+		//no other sheetdraft in the same directory is being deleted accidentially.
+		String filelink_derivative;
+		boolean all_derivatives_been_deleted = true;
+		boolean all_images_been_deleted = true;
+		for (DocType docType : DocType.values()) {
+		
+			filelink_derivative = filelink.replaceAll(
+					"[.]" + Global.extractEnding(filelink) + "$"
+					, /*"." +*/ docType.toString()
+			);
+			//derivative
+            if (Global.deleteFile(new File(Global.root + filelink_derivative))) {
+                System.out.print(
+            		Global.addMessage("<p>Die Datei: <strong>" + Global.extractFilename(filelink_derivative)
+            			     + " Flavour: ." + Global.extractEnding(filelink_derivative) + "</strong> wurde gelöscht.</p>"
+            			     , "success")
+           		);
+            }
+            else {
+            	all_derivatives_been_deleted = false;
+                System.out.print(
+            		Global.addMessage("<p>Die Datei: <strong>" + Global.extractFilename(filelink_derivative)
+            			    + "." + Global.extractEnding(filelink_derivative) +  "</strong> existiert nicht.</p>"
+            			    , "nosuccess")
+                );
+            }
+            
+            //images to each derivative
+            if (Global.deleteFile(new File(Global.root + Global.convertToImageLink(filelink_derivative)))) {
+                System.out.print(
+            		Global.addMessage("<p>Die Datei: <strong>" + Global.extractFilename(filelink_derivative)
+            			     + " Flavour: .png</strong> wurde gelöscht.</p>"
+            			     , "success")
+           		);
+            }
+            else {
+            	all_images_been_deleted = false;
+                System.out.print(
+            		Global.addMessage("<p>Die Datei: <strong>" + Global.extractFilename(filelink_derivative)
+            			    + ".png </strong> existiert nicht.</p>"
+            			    , "nosuccess")
+                );
+            }
+            
+		}
+		
+		return all_derivatives_been_deleted && all_images_been_deleted;
+		
 	}
 	
 	
 	public static boolean deleteDir(File dir) {
 	    if (dir.isDirectory()) {
 	        String[] children = dir.list();
-	        for (int i=0; i<children.length; i++) {
-	            boolean success = deleteDir(new File(dir, children[i]));
-	            if (!success) {
+	        for (int i = 0; i < children.length; i++) {
+	            if (!deleteDir(new File(dir, children[i]))) {
 	                return false;
 	            }
 	        }
 	    }
-
 	    // The directory is now empty so delete it
 	    return dir.delete();
 	}
 	public static boolean deleteFile(File file) {
-		boolean success = false;
 		if(file.exists() && file.isFile()){
 			file.delete();
-			success = true;
-			}
-			return success;
+			return true;
+		}
+		return false;
 	}
 	
 	public static void createDirs (String dir) {
@@ -719,7 +993,7 @@ public class Global {
 	 * @return true falls verschoben,anderfalls false
 	 * @throws IOException 
 	 */
-	public static boolean moveDir(String toBeMoved,String target_dir, String new_filename) throws IOException {
+	public static boolean moveDir(String toBeMoved, String target_dir, String child_dir_or_filename) throws IOException {
 		// File (or directory) to be moved
 		File file = new File(toBeMoved);
 
@@ -727,7 +1001,7 @@ public class Global {
 		File dir = new File(target_dir);
 
 		// Move file to new directory
-		boolean success = file.renameTo(new File(dir, new_filename));
+		boolean success = file.renameTo(new File(dir, child_dir_or_filename));
 		if (!success) {
 		    return false;
 		}
@@ -737,18 +1011,27 @@ public class Global {
 	}
 	
 	//RENAME FILE
-	public static void renameFile(String old,String new_) {
+	public static boolean renameFile(String old, String new_) {
+		return renameFile(old, new_, true);//Overwrite existing by default!
+	}
+	public static boolean renameFile(String old, String new_, boolean overwrite) {
 		File oldFile = new File(old);
 		if (!oldFile.exists()) {
-			System.out.println("In Global.renameFile: Old file "
-				    + old + " not exists!");
+			System.out.println(
+				Global.addMessage("In Global.renameFile: Old file "
+						+ old + " not exists!", "danger")
+		    );
+			return false;
 		}
 		File newFile = new File(new_);
-//		if (!newFile.exists()) {
-//			System.out.println("In Global.renameFile: The new file " +
-//		        new_ + " not exists!");
-//		}
-		oldFile.renameTo(newFile);
+		if (newFile.exists()) {
+			System.out.println("In Global.renameFile: The new file destination " +
+					new_ + " already exists and will" + (overwrite ? "" : " NOT") + " get overwritten!");
+			if (!overwrite) {
+				return false;
+			}
+		}
+		return oldFile.renameTo(newFile);
 	}
 
 	//CONVERT TO IMAGELINK
@@ -756,14 +1039,44 @@ public class Global {
 		return convertToImageLink(filelink, Global.imageTypeToGenerate);
 	}
 	public static String convertToImageLink(String filelink, String ending) {
-		return filelink.replaceAll("[.][a-zA-Z]+$", "." + ending);
+		//return filelink.replaceAll("[.][a-zA-Z]+$", "." + ending);
+		return filelink + "." + ending;/*Changed with Update v30.83 !!
+		because we need images to each flavour to see the differences!*/
 	}
+	
+	//EXTRACT FILENAME + FILEENDING
+	public static String extractFilenameAndEnding(String filelink) {
+		String[] parts = filelink.split("/");
+		String candidate = parts[parts.length - 1];
+		return candidate;
+	}
+	
 	//EXTRACT FILENAME
 	public static String extractFilename(String filelink) {
 		String[] parts = filelink.split("/");
 		String candidate = parts[parts.length - 1];
-		return candidate.replaceAll("[.][a-zA-Z]+$", "");
+		return candidate.replaceAll("[.][a-zA-Z]+$", "");//replaces only the last ending!
 	}
+	
+	//EXTRACT FILENAME WITHOUT ANY EXTENSION - the first approach using reversing, no bad idea, Artiom created it.
+	public String extractFilenameWithoutAnyExtension(String filelink) {
+    	//Build name of pdf file.
+        StrBuilder str_b = new StrBuilder(filelink);
+        String rev_str = str_b.reverse().toString();
+        int firstOccurrenceOfPoint = rev_str.indexOf("."); 
+        String without_ext_rev = rev_str.substring(firstOccurrenceOfPoint + 1);
+        
+        String inFileEndingRev = rev_str.substring(0, firstOccurrenceOfPoint);
+        String ending = new StrBuilder(inFileEndingRev).reverse().toString();
+        
+        String filePathWithoutEnding = new StrBuilder(without_ext_rev).reverse().toString();
+    	//this.filePathWithoutEndingAndNotMarkedAsOriginal = this.filePathWithoutEnding.replaceAll("/[.]original(e)?$/i", "");
+        return filePathWithoutEnding;
+        
+    }
+	
+	
+	
 	//EXTRACT PARENT PATH / PATH TO
 	public static String extractPathTo(String filelink) {
 		return filelink.replaceAll(
@@ -783,7 +1096,7 @@ public class Global {
 		for (int i = 0; i < parts.length - 2; i++) {
 			result += parts[i];	// The rest is concatenated.
 		}
-		if (!new File(result).exists()) {
+		if (!new File(Global.root + result).exists()) {
 			System.out.println(
 					Global.addMessage("The sheetdraft the exercise originates from could not"
 							+ " be found in the filesystem."
@@ -810,12 +1123,33 @@ public class Global {
 		//      2) __splitby_<splitter>.<native_ending>.<derived_ending>
 		//=> So these two have to get concatenated!
 		for (int i = parts.length - 2; i < parts.length; i++) {
+			if (i > parts.length - 2) {
+				result += "__";//what been destroyed be rebuilt.
+			}
 			result += parts[i];	// The rest is concatenated.
 		}
 		//No existance check required here as the exercise in the filesystem includes
 		//the parent filelink at the beginning, the exercise only part is only a suffix
 		//to the filelink of the originsheetdraft.
 		return result;
+	}
+	
+	//EXTRACT ENDING DOUBLE
+	public static String extractEndingDouble(String filelink) {
+		String[] parts = filelink.split("[.]");
+		//Has one ending?
+		if (parts.length < 2) {
+			addMessage("Filelink has not even one ending, after split it was null"
+					+ " instead! (extractEndingDouble)<br />filelink = " + filelink, "danger");
+			return "ENDING WAS NULL";
+		}
+		//Has a double ending?
+		if (parts.length < 3) {
+			addMessage("Filelink has no double ending, after split it was null"
+					+ " instead! (extractEndingDouble)<br />filelink = " + filelink, "danger");
+			return "ENDING WAS NULL";
+		}
+		return parts[parts.length - 2] + "." + parts[parts.length - 1];
 	}
 	
 	//EXTRACT ENDING
@@ -837,8 +1171,126 @@ public class Global {
 	}
 	//REPLACE ENDING
 	public static String replaceEnding(String filelink, String newext) {
-		return filelink.replaceAll("[.]" + extractEnding(filelink) + "$i", newext);
+		if (!newext.startsWith(".")) {
+			newext = "." + newext;
+		}
+		return filelink.replaceAll("[.]" + extractEnding(filelink) + "$", newext);
 	}
+	
+	
+	//EXTRACT EXERCISE NUMBER FROM FILELINK
+	public static int extractExerciseNumberFromFilelink(String filelink) {
+		
+		filelink = Global.extractExercisePartOnlyFromExerciseFilelink(filelink); 
+		
+		//split in exercise_<number> and splitby_<splitter>:
+		String[] parts = filelink.split("[_][_]");
+		int candidate;
+		if (parts != null) {
+			candidate = Global.getInt(parts[0]);
+			if (candidate != Integer.MAX_VALUE) {
+				return candidate;
+			}
+			else {
+				parts = parts[0].split("_");
+				if (Global.isInt(parts[1])) {
+					return Integer.parseInt(parts[0]);
+				}
+			}
+			
+		}
+		
+		
+		
+		
+		//To be extracted:
+		String exerciseNumber = "";
+		//
+		String substring_beginning = "Exercise_";
+		int splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = "__exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = "-Exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = "-exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		/* hopefully we have success before those emergency solutions: */
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = ".Exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = ".exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = "_Exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = "_exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = "Exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		if (splitter_start_filelink_index == -1) {
+			substring_beginning = "exercise_";
+			splitter_start_filelink_index = filelink.indexOf(substring_beginning);
+		}
+		/*success?*/
+		int index_start = splitter_start_filelink_index;
+		if (index_start == -1) {
+			addMessage("No exercise number could be extracted! filelink: " + filelink, "blackwhite");
+			return -1;
+		}
+		int index = index_start;
+		int substring_beginning_index = 0;
+		int substring_beginning_L = substring_beginning.length();
+		String ending_buffer = "";
+		boolean terminatingUnderscoreOccurredOnce = false;
+		while (index < filelink.length()) {
+			char ch = filelink.charAt(index);
+//			if (Character.isLetter(ch)) {
+				//Because this way no index out of bounds error will show:
+				if (substring_beginning_index >= substring_beginning_L
+						|| ch != substring_beginning.charAt(substring_beginning_index)) {
+					//reached the end?
+					if (ch == '_' || ch == '.' || ch == '-') {/*. is 2nd termination criteria*/
+						if (terminatingUnderscoreOccurredOnce || ch == '.' || ch == '-') {
+							//The 2nd time in series an underscore. => STOP.-
+							//terminate this while loop, we have reached the end of the splitter
+							break;
+						}
+						ending_buffer += "_";
+						terminatingUnderscoreOccurredOnce = true;
+					} else {
+						//Last was a single _ and not __, so the ending buffer stands
+						//for a space, so we have to add it to the splitter/split_by.
+						exerciseNumber += ending_buffer;
+						//Clear the ending buffer as it has been an ordinary space!
+						ending_buffer = "";
+						//Finally add the current char, too. Easy to forget that.
+						exerciseNumber += ch;
+					}
+//				}
+			}
+			index++;
+			substring_beginning_index++;
+		}
+		
+		//Finally the part within __splitby_<this part>__ is extracted.
+		return Integer.parseInt(exerciseNumber); 
+	}
+	
+	
 	//EXTRACT SPLITTER
 	public static String extractSplitterFromFilelink(String filelink) {
 		return Global.extractSplitByFromFilelink(filelink);
@@ -995,8 +1447,9 @@ public class Global {
 	}
 	public static int extractLecturerIdFromFilelink(String filelink)
 			throws IOException, SQLException {
-		ResultSet res =	Global.query("SELECT id FROM lecturer WHERE lecturer = '"
-				+ Global.extractLecturerFromFilelink(filelink) + "'");
+		String query = "SELECT id FROM lecturer WHERE lecturer = '"
+				+ Global.extractLecturerFromFilelink(filelink) + "'";
+		ResultSet res =	Global.query(query);
 		
 		int lecturer_id = -1;
 		while (res.next()) {
@@ -1004,8 +1457,7 @@ public class Global {
 		}
 		if (lecturer_id == -1) {
 			lecturer_id = 0; /*because the first entry (id = 0) is N.N. which is to be used if no lecturer is given*/
-			Global.addMessage("Lecturer id was -1. Query: " + "SELECT id FROM lecturer WHERE lecturer = '"
-				+ Global.extractLecturerFromFilelink(filelink) + "'", "warning");
+			Global.addMessage("Using N.N. for now because the lecturer id could not be determined in the database (was -1). This happens when the lecturer is a new one." /*+ "Query: " + query*/, "warning");
 		}
 		
 		return lecturer_id;
@@ -1117,6 +1569,9 @@ public class Global {
 	
 	
 	
+	
+	
+	
 	//ADD FILES TO EXISTING ZIP ARCHIVE
 	//
 	//http://stackoverflow.com/questions/3048669/how-can-i-add-entries-to-an-existing-zip-file-in-java
@@ -1194,23 +1649,52 @@ public class Global {
 	
 	
 	
+	/**
+	 * Adds an arbitrary file to a zip archive file.
+	 * Several flavours are available:
+	 * @param give a zipFilelink and a filelink_to_add;
+	 * @param give a zipFile and a file_to_add;
+	 * @param give a zip output stream and a file.
+	 */
 	//http://jcsnippets.atspace.com/java/input-output/create-zip-file.html
     private static final int BUFFER_SIZE = 4096;
         
-    public static void addFileToZip(ZipOutputStream zos, File file)
+    //2 params
+    public static void addFileToZip(String zipFilelink, String filelink_to_add_to_zip)
+    		throws FileNotFoundException {
+    	addFileToZip(new File(zipFilelink), new File(filelink_to_add_to_zip));
+    }
+    public static void addFileToZip(File zipFile, File file_to_add_to_zip) throws FileNotFoundException {
+    	addFileToZip(new ZipOutputStream(new FileOutputStream(zipFile)), file_to_add_to_zip);
+    }
+    public static void addFileToZip(ZipOutputStream zos, File file_to_add) {
+    	addFileToZip(zos, file_to_add, file_to_add.getName());
+    }
+    //3 params
+    public static void addFileToZip(String zipFilelink, String filelink_to_add_to_zip, String entry_path_filename_within_zip)
+    		throws FileNotFoundException {
+    	addFileToZip(new File(zipFilelink), new File(filelink_to_add_to_zip), entry_path_filename_within_zip);
+    }
+
+    public static void addFileToZip(File zipFile, File file_to_add_to_zip, String entry_path_filename_within_zip)
+    		throws FileNotFoundException {
+    	addFileToZip(new ZipOutputStream(new FileOutputStream(zipFile)), file_to_add_to_zip, entry_path_filename_within_zip);
+    }
+
+    public static void addFileToZip(ZipOutputStream zos, File file_to_add, String entry_path_filename_within_zip)
     {
         byte [] data = new byte[BUFFER_SIZE]; 
         int len; 
         
         FileInputStream fis = null;
+        ZipEntry entry = new ZipEntry(entry_path_filename_within_zip); 
         try
         {
-            ZipEntry entry = new ZipEntry(file.getName()); 
-            entry.setSize(file.length()); 
-            entry.setTime(file.lastModified()); 
+            entry.setSize(file_to_add.length()); 
+            entry.setTime(file_to_add.lastModified()); 
             
             zos.putNextEntry(entry); 
-            fis = new FileInputStream(file); 
+            fis = new FileInputStream(file_to_add); 
             
             CRC32 crc32 = new CRC32(); 
             while ((len = fis.read(data)) > -1)
@@ -1242,70 +1726,88 @@ public class Global {
         }
     }
     
+    
+    /**
+     * Creates a zip file from either a directory string given or an array of files of type File.
+     * @param directory <-- being checked if it is a directory or not.
+     */
     public static void createZipFile(String directory)
     {
         File dir = new File(directory);
-        if (dir.isDirectory())
+        createZipFile(dir);
+    }
+    
+    public static void createZipFile(File dir) {
+    	if (dir.isDirectory())
         {
-            File [] files = dir.listFiles();
-            if (files != null)
-            {
-                File zip = new File(dir.getName() + ".zip");
-                
-                FileOutputStream fos = null;
-                ZipOutputStream  zos = null;
-
-                try
-                {
-                    fos = new FileOutputStream(zip); 
-                    zos = new ZipOutputStream(fos); 
-                    zos.setMethod(ZipOutputStream.DEFLATED); 
-                    
-                    for (int i = 0; i < files.length; i++)
-                    {
-                        if (files[i].isFile())
-                        {
-                            System.out.println("Zipping " + files[i].getName());
-                            addFileToZip(zos, files[i]);
-                        }
-                    }
-                }
-                catch (FileNotFoundException fnfe)
-                {
-                    fnfe.printStackTrace();
-                }
-                finally
-                {
-                    if (zos != null)
-                    {
-                        try
-                        {
-                            zos.close();
-                        }
-                        catch (IOException ioe)
-                        {
-                            ioe.printStackTrace();
-                        }
-                    }
-                    if (fos != null)
-                    {
-                        try
-                        {
-                            fos.close();
-                        }
-                        catch (IOException ioe)
-                        {
-                            ioe.printStackTrace();
-                        }
-                    }
-                }
-            }			
+            File[] files = dir.listFiles();
+        	createZipFile(files, dir.getName());
         }
         else
         {
-            System.out.println(dir.getName() + " is not a directory");
+            System.out.println(dir.getAbsolutePath()
+            		+ " is not a directory. Zipping a single file arhive now instead.");
+            File[] filesToBeZipped = new File[1];
+            filesToBeZipped[0] = dir;
+            createZipFile(filesToBeZipped, dir.getName());
         }
     }
+    
+    public static void createZipFile(File[] files, String zipName) {
+    	if (files != null)
+        {
+            File zip = new File(zipName + ".zip");
+            
+            FileOutputStream fos = null;
+            ZipOutputStream  zos = null;
+
+            try
+            {
+                fos = new FileOutputStream(zip); 
+                zos = new ZipOutputStream(fos); 
+                zos.setMethod(ZipOutputStream.DEFLATED); 
+                
+                for (int i = 0; i < files.length; i++)
+                {
+                    if (files[i].isFile())
+                    {
+                        System.out.println("Zipping " + files[i].getName());
+                        addFileToZip(zos, files[i]);
+                    }
+                }
+            }
+            catch (FileNotFoundException fnfe)
+            {
+                fnfe.printStackTrace();
+            }
+            finally
+            {
+                if (zos != null)
+                {
+                    try
+                    {
+                        zos.close();
+                    }
+                    catch (IOException ioe)
+                    {
+                        ioe.printStackTrace();
+                    }
+                }
+                if (fos != null)
+                {
+                    try
+                    {
+                        fos.close();
+                    }
+                    catch (IOException ioe)
+                    {
+                        ioe.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+    
     
 //    public static void main(String [] args)
 //    {
@@ -1319,6 +1821,9 @@ public class Global {
 //    
 	
 
+    static InputStream getInputStream(String zip, String entry) throws IOException {
+    	return getInputStream(new File(zip), entry);
+    }
 	//http://stackoverflow.com/questions/14603319/getinputstream-for-a-zipentry-from-zipinputstream-with-out-using-zipfile
 	static InputStream getInputStream(File zip, String entry) throws IOException {
 		ZipInputStream zin = new ZipInputStream(new FileInputStream(zip));
@@ -1358,8 +1863,20 @@ public class Global {
 			return getInputStream(new File(filelink), "word/document.xml");
 		}
 		
-		//TODO OPENXML (Libre/OpenOffice)
-		
+		//ODT OpenDocumentFormat:Text OpenXML (Libre/OpenOffice)
+		if (filelink.endsWith(".odt")/*
+				|| filelink.endsWith(".zip")
+				|| filelink.endsWith(".tar")
+				|| filelink.endsWith(".gz")
+				|| filelink.endsWith(".7z")
+				|| filelink.endsWith(".rar")*/) {
+			ZipFile zip = new ZipFile(file);
+//			  IOUtils.copy(docx.getInputStream(entry),);
+//			  ZipEntry docxXML = docx.getEntry(entry);
+			Global.addMessage("ZIP-Contents:\r\n<br />" + renderZipContents(zip), "info");
+			//word/document.xml entry of the zip/archive contains the content
+			return getInputStream(new File(filelink), "content.xml");
+		}
 		
 		
 		//all single source (non-binary) files
@@ -1368,23 +1885,147 @@ public class Global {
 	
 	
 	//RENDER DOCX CONTENTS
-		public static String renderDocXContents(String filelink)
-				throws IOException {
-			return renderZipContents(new ZipFile(filelink));
-		}
-		public static String renderZipContents(ZipFile docx) {
-			String zipContents = "";
-			Enumeration<? extends ZipEntry> entriesIter = docx.entries();
-			while (entriesIter.hasMoreElements()) {
-				ZipEntry zipEntry = entriesIter.nextElement();
-				if (zipEntry.getName().equals("word/document.xml")) {
-					Global.addMessage("renderZipContents: document.xml found!","success");
-				}
-				zipContents += zipEntry.getName() + "\r\n<br />";
+	public static String renderDocXContents(String filelink)
+			throws IOException {
+		return renderZipContents(new ZipFile(filelink), "word/document.xml");
+	}
+	//RENDER DOCX CONTENTS
+	public static String renderODTContents(String filelink)
+			throws IOException {
+		return renderZipContents(new ZipFile(filelink), "content.xml");
+	}
+	//RENDER ZIP CONTENTS
+	public static String renderZipContents(ZipFile zip) {
+		return renderZipContents(zip, "");
+	}
+	public static String renderZipContents(ZipFile zip, String entryToLookFor) {
+		String zipContents = "";
+		Enumeration<? extends ZipEntry> entriesIter = zip.entries();
+		while (entriesIter.hasMoreElements()) {
+			ZipEntry zipEntry = entriesIter.nextElement();
+			if (zipEntry.getName().equals(entryToLookFor)) {
+				Global.addMessage("renderZipContents: " + entryToLookFor + " found!","success");
 			}
-			return zipContents;
+			zipContents += zipEntry.getName() + "\r\n<br />";
 		}
+		return zipContents;
+	}
 
-    
+	
+	/**
+	 * Using Apache native american's wise help. :)
+	 * @throws IOException 
+	 */
+	public static int copyZip(String source_filelink, String target_filelink)
+			throws IOException {
+		
+		ZipInputStream zin = new ZipInputStream(new FileInputStream(source_filelink));
+		ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(target_filelink));
+		return IOUtils.copy(zin, zout);
+		
+	}
+	public static int copy(String source_filelink, String target_filelink)
+			throws IOException {
+		
+		InputStream in = new FileInputStream(source_filelink);
+		OutputStream out = new FileOutputStream(target_filelink);
+		int result = IOUtils.copy(in, out);
+		in.close();
+		out.close();
+		return result;
+		
+	}
+	
+	
+	
+	
+	/**
+	 * Ueberprueft, ob der uebergebene String gueltig zu einem Integer geparsed werden kann.
+	 * 
+	 * @param i Zu ueberpruefender String
+	 * @return true, falls er geparsed werden kann, false, falls nicht
+	 */
+	public static boolean isInt(String string) {
+
+		string = string.replace(".", " ").trim();
+		//The gentle and complicated (under the hood) way:
+		String numPattern = ".*[\\d]+.*";//"[0-9]+";
+		if (string.matches(numPattern)
+				|| Pattern.compile(numPattern).matcher(string).matches()) {
+			return true;
+		}
+		
+		//still null! then the last ressort Artiom already has used below:
+		try {
+			Integer.parseInt(string);
+			return true;
+		}
+		catch (NumberFormatException e) {
+			//no stacktrace printing this time, the exception is really a cruel method
+			//of figuring out if it contains a number
+			return false;
+		}
+	
+		
+	}
+	
+	
+	/**
+	 * Pay attention that only one number is contained, all digits will be chained together!
+	 * @param string -- Furthermore this parameter will loose commata et alia.
+	 * @return the int or Integer.MAX_VALUE;
+	 */
+//	public static int string2int(String string) {<--it's only string2int of a part!
+//		return getInt(string);
+//	}
+	public static int getInt(String string) {
+		int i = 0;
+		String parsable = "";
+		//from left to right
+		while (i < string.length()) {
+			String s = String.valueOf(string.charAt(i));
+			if (Global.isInt(s)) {
+				parsable += s;
+			}
+			i++;
+		}
+		if (!parsable.isEmpty()) {
+			return Integer.parseInt(parsable);
+		}
+		
+		return Integer.MAX_VALUE;
+		
+	}
+
+	/**
+	 * Better use string2int directly
+	 * @param string
+	 * @return
+	 */
+	public static boolean containsInt(String string) {
+		return getInt(string) != Integer.MAX_VALUE;
+	}
+	
+	/*Source: Bill Zhao: http://stackoverflow.com/questions/5585779/how-to-convert-string-to-int-in-java/18731580#18731580 */
+	public static int strToInt( String str ){
+		  int i = 0;
+		  int num = 0;
+		  boolean isNeg = false;
+
+		  if( str.charAt(0) == '-') {
+		    isNeg = true;
+		    i = 1;
+		  }
+
+		  while( i < str.length()) {
+		    num *= 10;
+		    num += str.charAt(i++) - '0';
+		  }
+
+		  if (isNeg)
+		    num = -num;
+		  return num;
+	}
+	
     
 }
