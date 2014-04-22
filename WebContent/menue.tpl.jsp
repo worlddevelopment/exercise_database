@@ -15,7 +15,7 @@
         <a class="btn btn-primary <%= Global.getIfActive(session, "start") %>" href="?id=start">
             <i class="icon-home icon-white"></i>
             <%=Global.display("start")%></a>
-        <a class="btn btn-primary <%= Global.getIfActive(session, "upload_sheet") %>" href="?id=upload_sheet">
+        <a onclick="$('#overlay').show();$('#upload_sheet').show();return false;" class="btn btn-primary <%= Global.getIfActive(session, "upload_sheet") %>" href="?id=upload_sheet">
             <i class="icon-plus icon-white"></i><i class="icon-leaf icon-white"></i>
             <%=Global.display("add a sheet")%></a>
         <a class="btn btn-primary <%= Global.getIfActive(session, "drafts") %>" href="?id=drafts">
@@ -35,9 +35,15 @@
         <%
         }
         %>
-        <!--  <button class="menue" name="id" value="usermanagement">Nutzerverwaltung</button>-->
-        <button class="btn btn-secondary" style="color:rgb(75,150,200);font-size:auto !important;" name="id" value="profile">
-             <%=Global.display("profile")%> <i class="icon-wrench"></i> <!-- <i class="icon-wrench"></i> --></button>
+        <!--  <button class="menue" name="id" value="usermanagement"Verwaltung</button>-->
+        <!--  <button class="btn btn-secondary" style="color:rgb(75,150,200);font-size:auto !important;" name="id" value="settings">
+             <%=Global.display("settings")%> <i class="icon-wrench"></i></button>
+         -->
+        <a class="btn btn-success <%= Global.getIfActive(session, "download") %>" href="?id=download">
+            Download!
+            <i class="icon-arrow-down"></i>
+        </a>
+        
     </form>
 </div>
 <!-- Fuer Firefox 2px,fuer Chrome ohne top margin -->
@@ -45,7 +51,7 @@
 <div style="float: right;">
     <form action="index.jsp" method="get">
     <div>
-        <input id="search_string" type="text" name="search_string" placeholder="<%=Global.display("search") %>" value="" />
+        <input id="search_string" type="text" name="search_string" placeholder="<%=Global.display("search")  %> | Filter" value="" />
         <button id="search_btn" name="id" value="search_result_lucene" style="height: 27px;" >
             <i class="icon-search"></i></button>
         <a href="?id=ext_search" style="margin-top: 10px;"
@@ -54,5 +60,13 @@
     </form>
 </div>
 
+
+<!-- OVERLAY -->
+<div id="overlay" class="overlay" style="background-color:rgba(255,255,255,.7);" onclick="$('#overlay').hide();$('#upload_sheet').hide();"></div>
+<div id="upload_sheet" class="centered fixed"
+ style="border:3px solid rgb(155,155,255); display: none; background-color:rgba(255,255,255, .9);"
+ ondblclick="$('#overlay').hide();$('#upload_sheet').hide();">
+    <jsp:include page="upload_sheet.in.jsp" />
+</div>
 
 <div style="clear: both;"></div><!-- clear both (i.e. clear floating layout in this DOM level) -->

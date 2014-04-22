@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/3653/trunk/lib/LaTeXML/Post
+END
+SVG.pm
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/LaTeXML/!svn/ver/3653/trunk/lib/LaTeXML/Post/SVG.pm
+END
+Graphics.pm
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/LaTeXML/!svn/ver/3397/trunk/lib/LaTeXML/Post/Graphics.pm
+END
+PictureImages.pm
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/LaTeXML/!svn/ver/2915/trunk/lib/LaTeXML/Post/PictureImages.pm
+END
+LaTeXImages.pm
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/LaTeXML/!svn/ver/3200/trunk/lib/LaTeXML/Post/LaTeXImages.pm
+END
+MakeIndex.pm
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/3038/trunk/lib/LaTeXML/Post/MakeIndex.pm
+END
+MakeBibliography.pm
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/LaTeXML/!svn/ver/3262/trunk/lib/LaTeXML/Post/MakeBibliography.pm
+END
+OpenMath.pm
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/LaTeXML/!svn/ver/2909/trunk/lib/LaTeXML/Post/OpenMath.pm
+END
+Writer.pm
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/LaTeXML/!svn/ver/3179/trunk/lib/LaTeXML/Post/Writer.pm
+END
+MathImages.pm
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/LaTeXML/!svn/ver/3181/trunk/lib/LaTeXML/Post/MathImages.pm
+END
+XMath.pm
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/LaTeXML/!svn/ver/2911/trunk/lib/LaTeXML/Post/XMath.pm
+END
+MathML.pm
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/LaTeXML/!svn/ver/3629/trunk/lib/LaTeXML/Post/MathML.pm
+END
+Scan.pm
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/LaTeXML/!svn/ver/3608/trunk/lib/LaTeXML/Post/Scan.pm
+END
+CrossRef.pm
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/LaTeXML/!svn/ver/3538/trunk/lib/LaTeXML/Post/CrossRef.pm
+END
+Collector.pm
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/3037/trunk/lib/LaTeXML/Post/Collector.pm
+END
+XSLT.pm
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/LaTeXML/!svn/ver/3173/trunk/lib/LaTeXML/Post/XSLT.pm
+END
+Split.pm
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/LaTeXML/!svn/ver/3248/trunk/lib/LaTeXML/Post/Split.pm
+END

@@ -2,10 +2,10 @@
 	request.setCharacterEncoding("UTF-8");
 %>
 <%@page import="java.sql.Connection"%>
-<%@page import="swp.*" %>
+<%@page import="db.*" %>
 
 <%
-//ATTENTION: I THINK THIS IS FOR AJAX! - THUS THE GLOBAL DATABASE CONNECTION
+	//ATTENTION: I THINK THIS IS FOR AJAX! - THUS THE GLOBAL DATABASE CONNECTION
 //           CAN'T BE USED!
 
 //DB verbindung herstellen
@@ -44,6 +44,4 @@ if(request.getParameter("change").equals("lecturer")) {
 	query = "SELECT DISTINCT lecturer FROM lecturer WHERE lecturer LIKE '" + q +"%'";
 	out.print(sqlm.printQuery(query, "lecturer"));
 }
-
-
 %>

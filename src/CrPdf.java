@@ -18,7 +18,6 @@ public class CrPdf {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws COSVisitorException, IOException {
-		// TODO Auto-generated method stub
 		try {
 			PDDocument document = new PDDocument();
 			PDPage blankPage = new PDPage();
@@ -40,14 +39,14 @@ public class CrPdf {
 			
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		ImageToPDF im = new ImageToPDF();
 		String[] st = {"WiSe2012_Mathe_Muste_Uebung_.png"} ;
 		ImageToPDF.main(st);
-	
+
+		//TODO: Use that for converting DOCX files that contain images only. i.e. extract the images and start the pdf conversion.
 		im.createPDFFromImage("bla.pdf","WiSe2012_Mathe_Muste_Uebung_.png");
 
 	}

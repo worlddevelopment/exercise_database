@@ -8,15 +8,9 @@
      javax.servlet.ServletContext,
      javax.servlet.http.HttpServlet,
      javax.servlet.http.HttpServletRequest,
-     javax.servlet.http.HttpServletResponse,swp.*"%>
+     javax.servlet.http.HttpServletResponse,db.*"%>
 
-    <%!
-
-
-
-
-
-    public class SQL_Methods{
+    <%!public class SQL_Methods{
     	private Connection conn = null;
     	
     	private String str;
@@ -185,7 +179,7 @@
     			Statement statement3 = null;
     			Statement statement4 = null;
     			Statement statement5 = null;
-    			Connection con = MySQLConnection.getInstance().getConnection();
+    			Connection con = DBConnection.getInstance().getConnection();
 
     			
 
@@ -302,7 +296,7 @@
     	Statement statement3 = null;
     	Statement statement4 = null;
     	Statement statement5 = null;
-    	Connection con = MySQLConnection.getInstance().getConnection();
+    	Connection con = DBConnection.getInstance().getConnection();
 
     	
 
@@ -416,7 +410,7 @@
     	Statement statement3 = null;
     	Statement statement4 = null;
     	Statement statement5 = null;
-    	Connection con = MySQLConnection.getInstance().getConnection();
+    	Connection con = DBConnection.getInstance().getConnection();
 
     	
 
@@ -528,7 +522,7 @@
     	Statement statement3 = null;
     	Statement statement4 = null;
     	Statement statement5 = null;
-    			Connection con = MySQLConnection.getInstance().getConnection();
+    			Connection con = DBConnection.getInstance().getConnection();
     			
     			
     			
@@ -660,37 +654,34 @@
 ////    		System.out.println(temp[1]);
 //    	}
 
-    }
-
+    }%>
     
-    %>
-    
-    <% 
-    MysqlHelper mh = new MysqlHelper();
-    Connection con = mh.establishConnection(response);
-	if(con == null) {
-		out.print("con");
-	}
-	//Initialisierung SQL_Methods
-	SQL_Methods sqlm = new SQL_Methods();
-	
-	//sqlm.setStr("hop");
-	//out.print(sqlm.getStr());
-	sqlm.setConn(con);
-	
-	//out.print("connection established");
-	HashMap<String, String> column_value = new HashMap<String, String>();
-	//------------------Speichere Daten in DB---------------------------------
-	//--------------Semester---------------
-	column_value.put("sem_bez", "bla");
+    <%
+        	MysqlHelper mh = new MysqlHelper();
+                            Connection con = mh.establishConnection(response);
+                        	if(con == null) {
+                        		out.print("con");
+                        	}
+                        	//Initialisierung SQL_Methods
+                        	SQL_Methods sqlm = new SQL_Methods();
+                        	
+                        	//sqlm.setStr("hop");
+                        	//out.print(sqlm.getStr());
+                        	sqlm.setConn(con);
+                        	
+                        	//out.print("connection established");
+                        	HashMap<String, String> column_value = new HashMap<String, String>();
+                        	//------------------Speichere Daten in DB---------------------------------
+                        	//--------------Semester---------------
+                        	column_value.put("sem_bez", "bla");
 
-	//Speichere Daten,fall sie nict dupliziert werden
-	if (!(sqlm.is_duplicate("semester", "sem_bez", column_value,response))) {
-		String query = "INSERT INTO semester (id ,sem_bez)VALUES (NULL ,'"
-				+ "bla" + "');";
+                        	//Speichere Daten,fall sie nict dupliziert werden
+                        	if (!(sqlm.is_duplicate("semester", "sem_bez", column_value,response))) {
+                        		String query = "INSERT INTO semester (id ,sem_bez)VALUES (NULL ,'"
+                        		+ "bla" + "');";
 
-		sqlm.exQuery(query);
-		out.print("hura");
-	}
-	column_value.remove("sem_bez");
-	%>
+                        		sqlm.exQuery(query);
+                        		out.print("hura");
+                        	}
+                        	column_value.remove("sem_bez");
+        %>

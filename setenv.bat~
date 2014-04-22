@@ -1,0 +1,20 @@
+rem set "CURRENT_DIR=%cd%"
+rem if not "%CATALINA_HOME%" == "" goto gotHome
+rem set "CATALINA_HOME=%CURRENT_DIR%"
+rem if exist "%CATALINA_HOME%\bin\catalina.bat" goto okHome
+rem cd ..
+rem set "CATALINA_HOME=%cd%"
+rem cd "%CURRENT_DIR%"
+
+set "JRE_HOME=C:\Program Files\Java\jre7"
+set "CATALINA_HOME=C:\apache-tomcat\"
+if exist "%CATALINA_HOME%\bin\catalina.bat" goto gotHome
+
+set "CATALINA_HOME=C:\apache_tomcat\"
+if exist "%CATALINA_HOME%\bin\catalina.bat" goto gotHome
+echo The CATALINA_HOME environment variable is not defined correctly
+echo This environment variable is needed to run this program
+
+
+:gotHome
+#set CATALINA_OPTS=-XX:PermSize=128m -XX:MaxPermSize=256M -Xms256M -Xmx768m

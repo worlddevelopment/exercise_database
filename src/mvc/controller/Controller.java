@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import aufgaben_db.Global;
 
-import mvc.models.Pages;
 
 public class Controller extends HttpServlet {
 	
@@ -22,6 +21,9 @@ public class Controller extends HttpServlet {
 	 */
 	private static final long serialVersionUID = 1001L; //1001 nights.
 
+	/**
+	 * Steer the ship.
+	 */
 	public void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		
@@ -30,7 +32,7 @@ public class Controller extends HttpServlet {
 		if(new File(Global.root + buttonName).exists()) {
 			pageName = buttonName + ".jsp";
 			
-			new Pages().setPageName(pageName);
+			//new Pages().setPageName(pageName); <--this class only consisted of the setter method.
 			RequestDispatcher view = request.getRequestDispatcher(pageName);
 			view.forward(request, response);
 
@@ -40,9 +42,6 @@ public class Controller extends HttpServlet {
 			System.out.print("Controller-Message: <h1>Error 404</h1>"
 						+"<p>File not found.</p>");
 		}
-//		new Pages().setPageName(pageName);
-//		RequestDispatcher view = request.getRequestDispatcher(pageName);
-//		view.forward(request, response);
 		
 	}
 }

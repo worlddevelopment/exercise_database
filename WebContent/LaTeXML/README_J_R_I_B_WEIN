@@ -1,0 +1,7 @@
+
+Note: that there seems to be a typo in the fileending of the lib/LaTeXML/Version.in - it should rather be Version.pm - otherwise it failed. At least for me changing the ending worked.
+
+If it was not that change my humble self then it was the installation of the package libxml-libxslt-perl.
+
+I undertook both changes simultaneously so I wonder which one resolved it. :)
+

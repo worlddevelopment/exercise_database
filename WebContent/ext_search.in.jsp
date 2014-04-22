@@ -3,7 +3,7 @@ response.setContentType("text/html; charset=UTF-8");
 request.setCharacterEncoding("UTF-8");
 %>
 <%@page import="java.net.URLEncoder, java.sql.ResultSet"%>
-<%@page import="aufgaben_db.Global, HauptProgramm.DocType"%>
+<%@page import="aufgaben_db.Global,aufgaben_db.DocType"%>
 
   <script type="text/javascript">
   
@@ -144,7 +144,10 @@ $(document).ready(function() {
                                 + Global.decodeUmlauts(res.getString(field))
                                 + "</option>");             
                     }
+                    // tackle memory leaks by closing result set and its statement properly:
+                    Global.queryTidyUp(res);
                 }
+                
                 %>
            </select>
            <%
@@ -208,7 +211,7 @@ $(document).ready(function() {
      </div>
      <div style="font-size: 0.7em;border: 1px solid #49AFCD;padding: 0.4em">
          <p></p>
-         <strong>Groﬂ- und Kleinschreibung</strong> werden bei der Suche nicht unterschieden.
+         <strong>Gro&szlig;- und Kleinschreibung</strong> werden bei der Suche nicht unterschieden.
          <p></p>
             <strong>*</strong> ersetzt beliebig viele Zeichen<br />
             <strong>?</strong> ersetzt genau ein Zeichen

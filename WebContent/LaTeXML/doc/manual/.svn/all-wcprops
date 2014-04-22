@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/repos/LaTeXML/!svn/ver/3620/trunk/doc/manual
+END
+genschema
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/2958/trunk/doc/manual/genschema
+END
+manual.tex
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/LaTeXML/!svn/ver/3620/trunk/doc/manual/manual.tex
+END
+genpods
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/LaTeXML/!svn/ver/2048/trunk/doc/manual/genpods
+END

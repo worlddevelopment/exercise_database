@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.xml.bind.JAXBElement;
 
+import org.docx4j.TraversalUtil;
 import org.docx4j.XmlUtils;
 import org.docx4j.TraversalUtil.CallbackImpl;
 import org.docx4j.wml.Br;
@@ -31,7 +32,6 @@ import org.w3c.dom.NodeList;
 import docx4j_library.DocxUtils;
 
 
-import HauptProgramm.Declaration;
 
 
 
@@ -80,6 +80,8 @@ public class Exercise extends ContentToImage {
 		isDeclarationFound = false;
 		sheetdraftElementsTraversed = new ArrayList<Object>();
 		sheetdraftElementsTraversed_index = -1;//<-- not 0 because it is incremented prior to use!
+		
+		wayTowardsRoot = new ArrayList<Object>();
 	}
 	//1st dimension: depth; 2nd: elements within this depth!
 	public List<Object> sheetdraftElementsTraversed = new ArrayList<Object>();
@@ -123,8 +125,9 @@ public class Exercise extends ContentToImage {
 	 * has the preceding 'sheetdraft'. 
 	 * 
 	 * @param o
+	 * @throws Exception 
 	 */
-	public void travelDownUntilDeclarationFound(org.w3c.dom.Node  o) {
+	public void travelDownUntilDeclarationFound(org.w3c.dom.Node  o) throws Exception {
 		travelDownUntilDeclarationFound(o, this.getDeclaration());
 	}
 	public void travelDownUntilDeclarationFound(org.w3c.dom.Node  o, Declaration declaration) {
@@ -231,11 +234,16 @@ public class Exercise extends ContentToImage {
             //textBuffer.append(System.getProperty("line.separator"));
             
           //After processing each element we check for the termination or cancel condition:
-        	String dec_plain_text = declaration.getFirstWord() + " " + declaration.getSecondWord() + " " + declaration.getThirdWord();
+        	String dec_plain_text = declaration.getFirstWord().trim() + " " + declaration.getSecondWord().trim() + " " + declaration.getThirdWord().trim();
         	/*Have we found the Declaration in the native format markup again?*/
         	//don't use match because point (.) could be contained e.g. '1. Exercise' and would
         	//be interpreted as regex ., allowing to match things that must not match.
-        	if (textBuffer.toString().replaceAll("  ", " ").contains(dec_plain_text)) {
+        	if (textBuffer.toString().replaceAll("(\r\n)+|[\r\n]+", " ").replaceAll("[ ][ ]+", " ")
+        			.contains(dec_plain_text)
+        			&& !isThisElementAlreadyTheDeclarationOfAnotherExercise(o)) {/*<-- if a similar declaration occurs twice, and one of those before were 
+        				of this kind, then we have to skip the first occurrence in the exercise textBuffer and match the second (Note: we should even then 
+        				be aware that there might be even more than two similar declarations, so TODO skip a dynamic amount of declarations).
+        				*/
         		/*This is redundant because as we stop here the sheetdraftElementsTraversed_index
         		 *is not incremented and points to exactly the following element: */
         		this.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat	= o;//.getParentNode();
@@ -325,7 +333,8 @@ public class Exercise extends ContentToImage {
 			return ;
 		}
 		
-		
+		/*DEPRECATED, now doing this when travelling down to determine where exercise declaration can be found!
+		 * 
 		//Travel down to find the deepest element that o n l y contains this exercise and no other exercises anymore!
 		// because the deepestAllExercisesCommonParentElement containing all exercises
 		// does not imply that the child nodes only contain one exercise each!
@@ -340,7 +349,8 @@ public class Exercise extends ContentToImage {
 			}
 			//assumption that only one exercise is contained (so this node is safe to be removed)
 			isElementContainingOneExerciseOnly = true;
-			//for (org.w3c.dom.Node sibling : parentElement/*.getParentNode()*/.getChildNodes().) {
+			//for (org.w3c.dom.Node sibling : parentElement*//*.getParentNode()*/
+		/*.getChildNodes().) {
 			for (Exercise exercise : sheetdraft.allExercisesRawContent.values()) {
 				//if (sibling.equals(siblingToSpare)) {
 				//	continue;
@@ -360,6 +370,7 @@ public class Exercise extends ContentToImage {
 		if (wayTowardsRoot.get(wayTowardsRoot_index - 1) instanceof org.w3c.dom.Node) {
 			siblingToSpare = (org.w3c.dom.Node) wayTowardsRoot.get(wayTowardsRoot_index - 1);
 		}
+		*/
 		
 		
 		
@@ -479,10 +490,11 @@ public class Exercise extends ContentToImage {
 			for (int i = 0; i < childNodes.getLength(); i++) {
 				org.w3c.dom.Node child = childNodes.item(i);
 				
-				if (reachedThisExerciseDeclarationElement) {
-					if (child.equals(exerciseAfterThis.deepestAllExercisesCommonParentElement_sChildContainingThisExercise)) {
-						reachedNextExerciseDeclarationElement = true;
-					}
+				if (reachedThisExerciseDeclarationElement /*&& !reachedNextExerciseDeclarationElement*/) {
+//ALREADY PERFORMED IN FOLLOWING CHECK					if (child.equals(exerciseAfterThis.deepestAllExercisesCommonParentElement_sChildContainingThisExercise)) {
+						reachedNextExerciseDeclarationElement //= true;
+						= checkIfNextExerciseAlreadyReached(child, child, exerciseAfterThis);
+//					}
 				}
 				//spare the exception, that is the exercise that shall remain
 				if (!child.equals(exception)/*Because once we reached the follow up exercise we can remove again.*/
@@ -521,6 +533,11 @@ public class Exercise extends ContentToImage {
 				}
 				else {
 					reachedThisExerciseDeclarationElement = true;
+					/* Is the next exercise within the same branch as this exercise?
+					 * Then we have reached begin and end of the elements to spare
+					 * at once and only have to skip one element. The rest has to be removed. */
+					reachedNextExerciseDeclarationElement
+					= checkIfNextExerciseAlreadyReached(child, child, exerciseAfterThis);
 				}
 				
 			}
@@ -591,10 +608,55 @@ public class Exercise extends ContentToImage {
 		
 		
 	}
-	
+
+	public void determineDeclaration() throws Exception {
+		this.splitbyDeclaration = findDeclaration(filelink);
+	}
+	public Declaration findDeclaration() throws Exception {
+		return findDeclaration(filelink);
+	}
+	public Declaration findDeclaration(String filelink) throws Exception {
+		//re-determine the declaration of this exercise:
+		extractPlainText();
+		String splitter = Global.extractSplitByFromFilelink(filelink);
+		java.util.regex.Pattern splitterPattern = Global.determinePatternBestFittingToSplitterHint(splitter);
+
+		List<DeclarationSet> declarationSets = DeclarationFinder.findDeclarationSets(getPlainText(), false);
+		/* The problem is: the pattern is the same for all declarations of one kind, ie. exercises 
+		 * or solutions. => we have to examine all possible declarationSets not only the most successful one. 
+		 * The most successful one might furthermore be different when looked for in the exercise's text 
+		 * instead of on the sheetdraft's text. 
+		 */
+		for (DeclarationSet declarationSet: declarationSets) {
+			// The pattern check can't go here nomore as the set's patterns are wildly mixed (exercise + solution).
+			for (Declaration d : declarationSet.declarations) {
+				// => Exercise or Solution? Does the pattern match?
+				if (d.getMatchedPattern().name().equalsIgnoreCase(splitter) || d.getMatchedPattern().getPattern().equals(splitterPattern)) {/*<--relevant only if more 
+						than one splitter found and that would be a bad sign anyway as only one
+						exercise is to be expected.*/
+					return d;
+				}
+			}
+		}
+		System.out.println("No declaration could be found in exercise file : " + filelink);
+//				+ "\r\nNow deriving it from the splitby expression as stored in the filelink: ");
+//		//Global.determinePatternMusterNameBestFittingToSplitterHint(splitter);
+//		Muster m = Muster.getMusterByName(splitter);
+//		if (m != null) {
+//			new Declaration(m, )
+//		}
+		
+		
+		return null;
+	}
 	
 	/*======= CONSTRUCTOR ==================================================*/
 	//CREATE NEW EXERCISE.
+	public Exercise(String filelink) throws Exception {
+		//re-determine the declaration of this exercise:
+		this(filelink, Global.extractSplitByFromFilelink(filelink), "");
+		this.splitbyDeclaration = findDeclaration(filelink);
+	}
 	public Exercise(String filelink, String splitby, String header  
 			/*, Sheetdraft sheetdraft*/) throws FileNotFoundException { 
 		//CREATE EXERCISE FROM DATABASE (plainText to be read from filesystem)
@@ -672,6 +734,9 @@ public class Exercise extends ContentToImage {
 		
 		this.splitbyDeclaration = declarationSplitbySuccessfully;
 //		this.sheetdraft_id = sheetdraft_id;
+		if (!filelink.startsWith(File.separator)) {
+			filelink = Global.root + filelink;
+		}
 		this.filelink = filelink;
 //		this.originsheetdraft_filelink = originsheetdraft_filelink;
 		this.plainText = plainText;
@@ -689,7 +754,6 @@ public class Exercise extends ContentToImage {
 		//and still having the original document content in the original file.
 		//WARNING: THIS IMPLIES THAT CHANGES DON'T PROPAGATE UPWARDS TO THE SHEET.
 		//   TODO: BUTTON FOR QUICKLY CREATING NEW DRAFT OUT OF THE MODIFIED EXER. 
-		
 		File file = new File(filelink);
 		if (!file.exists()) {
 			//file.mkdirs();/*ATTENTION: CREATES THE FILE AS DIRECTORY!!! */
@@ -790,7 +854,10 @@ public class Exercise extends ContentToImage {
 		return this.splitbyDeclaration.getMatchedPattern().toString();
 	}
 	
-	public Declaration getDeclaration() {
+	public Declaration getDeclaration() throws Exception {
+		if (this.splitbyDeclaration == null) {
+			determineDeclaration();
+		}
 		return this.splitbyDeclaration;
 	}
 	
@@ -805,6 +872,9 @@ public class Exercise extends ContentToImage {
 //		while (res.next()) {
 //			return res.getString("filelink");
 //		}
+//		// tackle memory leaks by closing result set and its statement properly:
+//		Global.queryTidyUp(res);
+//		
 //		Global.addMessage("No sheetdraft! Concerned exercise: "
 //				+ filelink + ". Returning empty string.", "warning");
 //		return "";
@@ -815,10 +885,13 @@ public class Exercise extends ContentToImage {
 	public String getOriginSheetdraftFilelink() throws IOException, SQLException {
 		java.sql.ResultSet res = 
 		Global.query("SELECT originsheetdraft_filelink FROM exercise WHERE filelink = "
-				+ this.filelink);
-		while (res.next()) {
+				+ this.getFilelinkRelative());
+		if (res != null && res.next()) {
 			return res.getString("originsheetdraft_filelink");
 		}
+		// tackle memory leaks by closing result set and its statement properly:
+		Global.queryTidyUp(res);
+		
 		Global.addMessage("No originsheetdraft found in database: Concerned exercise: "
 				+ filelink + ". Returning empty string.", "warning");
 		return "";
@@ -832,7 +905,32 @@ public class Exercise extends ContentToImage {
 	
 	
 	
+//	Declaration declaration;
+	DeclarationSet declarationsOfAllExercises;//for skipping the first occurrence of a declaration if there is a double (i.e. if one exercise exists twice or more often).
+	int levelDepth;
+//	public void setDeclaration(Declaration declaration) {
+//		this.declaration = declaration;
+//	}
+	public void setDeclarationsOfAllExercises(DeclarationSet declarationSet) {
+		this.declarationsOfAllExercises = declarationSet;
+	}
 	
+	private boolean isThisElementAlreadyTheDeclarationOfAnotherExercise(Object o) {
+		if (declarationsOfAllExercises == null) {
+			System.out.println("No declarations of other exercises given. So assuming there are no doubles.");
+			return false;
+		}
+		for (Declaration otherDeclaration : declarationsOfAllExercises.declarations) {
+			if (otherDeclaration == this.splitbyDeclaration) {
+				continue;/*only other declarations are relevant*/
+			}
+			if (otherDeclaration.equals(this.splitbyDeclaration)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	
 	
 	
@@ -853,13 +951,9 @@ public class Exercise extends ContentToImage {
 			return null;
 		}
 		
-		Declaration declaration;
-		int levelDepth;
-		public void setDeclaration(Declaration declaration) {
-			this.declaration = declaration;
-		}
 		
-
+		
+		
 	    @Override // to setParent //<-- now done in default handler too.
 	    public void walkJAXBElements(Object o) {
 		//public void DOCX_travelDownUntilDeclarationFound(Object o, Declaration declaration, int levelDepth) {
@@ -889,7 +983,7 @@ public class Exercise extends ContentToImage {
 	        }
 	        //TEXT VIA JAXBElement.
 	        else if (o instanceof JAXBElement) {
-	        	JAXBElement e = (JAXBElement) o;
+	        	JAXBElement<?> e = (JAXBElement<?>) o;
 	        	String tagname = e.getName().getLocalPart();//getQualifiedName();
 	        	System.out.println(tagname);
         		//Child unwrapped = (Child)XmlUtils.unwrap(o);
@@ -931,20 +1025,21 @@ public class Exercise extends ContentToImage {
 	        //======= 1b) If text has been added, this examines the cancel/termination condition. 
 	        if (wasTextAddedInThisLevelDepth) {
 		        //After processing each element we check for the termination or cancel condition:
-		    	String dec_plain_text = declaration.getFirstWord();
+		    	String dec_plain_text = splitbyDeclaration.getFirstWord().trim();
 		    	//alternative to the following if statements: dec_plain_text.replaceAll(" $", "");
-		    	if (declaration.getSecondWord() != null && !declaration.getSecondWord().isEmpty()) {
-		    		dec_plain_text = dec_plain_text + " " + declaration.getSecondWord();
+		    	if (splitbyDeclaration.getSecondWord() != null && !splitbyDeclaration.getSecondWord().isEmpty()) {
+		    		dec_plain_text = dec_plain_text + " " + splitbyDeclaration.getSecondWord().trim();
 		    	}//don't use elseif here because it would prevent the third declaration word from being added!
-		    	if (declaration.getThirdWord() != null && !declaration.getThirdWord().isEmpty()) {
-		    		dec_plain_text = dec_plain_text + " " + declaration.getThirdWord();
+		    	if (splitbyDeclaration.getThirdWord() != null && !splitbyDeclaration.getThirdWord().isEmpty()) {
+		    		dec_plain_text = dec_plain_text + " " + splitbyDeclaration.getThirdWord().trim();
 		    	}
 
 		    	/*Have we found the Declaration in the native format markup again?*/
 		    	//don't use match because point (.) could be contained e.g. '1. Exercise' and would
 		    	//be interpreted as regex ., allowing to match things that must not match.
 		    	//TODO make possible to match things like 'Ue bung' oder special characters encoded.
-		    	if (textBuffer.toString().replaceAll("  ", " ").contains(dec_plain_text)) {
+		    	if (textBuffer.toString().replaceAll("(\r\n)+|[\r\n]+", " ").replaceAll("[ ][ ]+", " ").contains(dec_plain_text)
+		    			&& !isThisElementAlreadyTheDeclarationOfAnotherExercise(o)/*for exercises that are doubles of a previous exercise*/) {
 		    		/*This is redundant because as we stop here the sheetdraftElementsTraversed_index
 		    		 *is not incremented and points to exactly the following element: */
 		    		sheetdraftElementReachedWhenDeclarationFoundInNativeFormat	= o;//.getParentNode();
@@ -1109,7 +1204,7 @@ public class Exercise extends ContentToImage {
 //	                		|| ((JAXBElement)o).getName().getLocalPart().equals("commentRangeStart")
 //	                		|| ((JAXBElement)o).getName().getLocalPart().equals("commentRangeEnd")	                            		
 //	                		)) {
-        		System.out.println("JAXBElement: " + ((JAXBElement)o).getName().getLocalPart());
+        		System.out.println("JAXBElement: " + ((JAXBElement<?>)o).getName().getLocalPart());
         		//Child unwrapped = (Child)XmlUtils.unwrap(o);
         		//TEXT
 //	        		if (((JAXBElement)o).getName().getLocalPart().equals("t")) {
@@ -1197,7 +1292,7 @@ public class Exercise extends ContentToImage {
 //		                    		|| ((JAXBElement)child).getName().getLocalPart().equals("commentRangeStart")
 //		                    		|| ((JAXBElement)child).getName().getLocalPart().equals("commentRangeEnd"))	                            		
 		                    		) {
-		            	((Child)((JAXBElement)child).getValue()).setParent(/*XmlUtils.unwrap(*/ o /*)*/
+		            	((Child)((JAXBElement<?>)child).getValue()).setParent(/*XmlUtils.unwrap(*/ o /*)*/
             			);//o := parent here
 		            }
 
@@ -1298,32 +1393,25 @@ public class Exercise extends ContentToImage {
 					, exerciseSucceding
 			);
 		}
-		public void removeAllSiblingsOf(Object deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-				, Exercise exerciseAfterThis) throws Exception {
-			if (deepestAllExercisesCommonParentElement_sChildContainingThisExercise instanceof Child) {
+		public void removeAllSiblingsOf(Object elementNotToRemove, Exercise exerciseAfterThis)
+				throws Exception {
+			/*XmlUtils.unwrap only unwraps if it is a JAXBElement. If it is already a real element node (unwrapped)
+			  this same unchanged element is returned as it was given.*/
+			if (XmlUtils.unwrap(elementNotToRemove) instanceof Child) {
 				deleteAllChildrenOfExceptFor(
-						((Child)deepestAllExercisesCommonParentElement_sChildContainingThisExercise)
-						.getParent()
-						, deepestAllExercisesCommonParentElement_sChildContainingThisExercise, exerciseAfterThis
-				);
-			}
-			else if (deepestAllExercisesCommonParentElement_sChildContainingThisExercise instanceof JAXBElement) {
-				JAXBElement e = (JAXBElement)deepestAllExercisesCommonParentElement_sChildContainingThisExercise;
-				deleteAllChildrenOfExceptFor(
-						((Child)e.getValue()).getParent()
-						, deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+						((Child)XmlUtils.unwrap(elementNotToRemove)).getParent()
+						, elementNotToRemove
 						, exerciseAfterThis
 				);
 			}
 			//org.w3c.dom.Node
-			else if (deepestAllExercisesCommonParentElement_sChildContainingThisExercise instanceof org.w3c.dom.Node) {
+			else if (elementNotToRemove instanceof org.w3c.dom.Node) {
 			}
 		}
-		public void deleteAllChildrenOfExceptFor(Object deepestCommonParentElement
-				, Object exception, Exercise exerciseAfterThis)
+		public void deleteAllChildrenOfExceptFor(Object parentElement, Object exception, Exercise exerciseAfterThis)
 				throws Exception {
 			
-			if (deepestCommonParentElement == null) {
+			if (parentElement == null) {
 				System.out.print("delete all children of except for resulted in the parent being null!");
 				return ;
 			}
@@ -1335,7 +1423,15 @@ public class Exercise extends ContentToImage {
 			//= findDeepestCommonParentElementEquivalentRecursively(doc.getRootElement(), sheetdraftDeepestCommonParentElement);
 			
 	
+			List<Object> childNodes;
+			childNodes = getChildren(XmlUtils.unwrap(parentElement));
 			
+			if (childNodes == null) {
+				System.out.println("ERROR: deepestToAllExercisesCommonParentElement/parentElement has no childNodes! deepestCommon: " + parentElement);
+				return ;
+			}
+			
+			//No follow up exercise given or this is the last one?
 			if (exerciseAfterThis == null) {
 				//SOMEWHAT GUESS WHAT STILL BELONGS TO THE EXERCISE IF NOT ALL CONTENT
 				//OF THIS EXERCISE IS CONTAINED WITHIN ONE XML-TAG!
@@ -1344,7 +1440,6 @@ public class Exercise extends ContentToImage {
 				//but not the exercise xml markup:
 				boolean keep_next_element_because_the_before_was_a_heading = false;
 				//for (Element child : sheetdraftDeepestCommonParentElement.getChildren()) {
-				List<Object> childNodes = getChildren(deepestCommonParentElement);
 				for (int i = 0; i < childNodes.size(); i++) {
 					Object o = childNodes.get(i);
 					Child child = null;
@@ -1354,14 +1449,15 @@ public class Exercise extends ContentToImage {
 					else if (o instanceof JAXBElement) {
 						//Alternatively more detailed deletion of nodes is possible if 
 						//o.getValue() instanceof Tbl and a reaction to it is used. Below works for both:
-						if ( ((JAXBElement) o).getValue() instanceof Child/*org.w3c.dom.Node*/) {
-							child = (Child) ((JAXBElement) o).getValue();   //alternative: unwrap(); cases.
+						if ( ((JAXBElement<?>) o).getValue() instanceof Child/*org.w3c.dom.Node*/) {
+							child = (Child) ((JAXBElement<?>) o).getValue();   //alternative: unwrap(); cases.
 						}
 						else {
 							continue;
 						}
 					}
 					else {
+						System.out.println("No child node: o = " + o);
 						continue;/*no child node available*/
 					}
 					//spare the exception, that is the exercise that shall remain
@@ -1386,16 +1482,21 @@ public class Exercise extends ContentToImage {
 						//Does this to a high probability belong the the exercise declaration? 
 						if (keep_next_element_because_the_before_was_a_heading) {
 							//This time it was not a heading neither one of the standalone
-							//elements above? -> No longer keep the next few elements.
+							//elements above?
 							if (!(child instanceof Hdr)) {
 							//if (!child.getNodeName().equals("text:h")) {
+								//=> No longer keep the next few elements.
 								keep_next_element_because_the_before_was_a_heading = false;
 							}
 							continue;
 						}
 						//child.getParentNode().removeChild(child);
 						//this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise.getParentNode()
-						boolean deletedNode = DocxUtils.remove(/*((ContentAccessor)deepestCommonParentElement).getContent()*/childNodes, child);
+						boolean deletedNode
+						//WORKING_BUT_THE_LOOP_IS_NOT_NECESSARY__AS_WE_HAVE_THE_CORRESPONDING_JAXBELEMENT_ALREADY: o !!
+						//DocxUtils.remove(/*((ContentAccessor)deepestCommonParentElement).getContent()*/childNodes, child);
+						= childNodes.remove(o);
+						
 						if (deletedNode) {
 							--i;//the deleted node will be replaced by the following childNodes, this
 								//shift has to be accounted for, ie. taken into account. 
@@ -1420,7 +1521,7 @@ public class Exercise extends ContentToImage {
 					}
 					//Is this a heading? Then better keep the next p(aragraph) too as an exercise
 					//will not exist in a heading alone!? 
-					else {//child.getNodeName().equals("text:h")) {
+					else {//child.getNodeName().equals("text:h")) {//<- else only now because if child equals exception we wish to keep the followers too! 
 						keep_next_element_because_the_before_was_a_heading = true;
 					}
 					
@@ -1428,28 +1529,24 @@ public class Exercise extends ContentToImage {
 				
 			}
 	
-			//No follow up exercise given or this is the last one?
+			
 			else {
 				//USE THE GIVEN THIS EXERCISE FOLLOWING EXERCISE FOR ACCESS TO ITS DECLARATION ELEMENT. 
 				boolean reachedThisExerciseDeclarationElement = false;
 				boolean reachedNextExerciseDeclarationElement = false;
 				//for (Element child : sheetdraftDeepestCommonParentElement.getChildren()) {
-				List<Object> childNodes = getChildren(deepestCommonParentElement);
-				if (childNodes == null) {
-					System.out.print("has no child nodes: " + deepestCommonParentElement.toString());
-					return ;
-				}
 				for (int i = 0; i < childNodes.size(); i++) {
 					Object o = childNodes.get(i);
 					Child child = null;
+					//DETERMINE REAL XML OBJECT (not the wrapper)
 					if (o instanceof Child/*org.w3c.dom.Node*/) {
 						child = (Child) o;
 					}
 					else if (o instanceof JAXBElement) {
 						//Alternatively more detailed deletion of nodes is possible if 
 						//o.getValue() instanceof Tbl and a reaction to it is used.
-						if ( ((JAXBElement) o).getValue() instanceof Child/*org.w3c.dom.Node*/) {
-							child = (Child) ((JAXBElement) o).getValue();
+						if ( ((JAXBElement<?>) o).getValue() instanceof Child/*org.w3c.dom.Node*/) {
+							child = (Child) ((JAXBElement<?>) o).getValue();
 						}
 						else {
 							continue;
@@ -1459,10 +1556,12 @@ public class Exercise extends ContentToImage {
 						continue;
 					}
 					
-					if (reachedThisExerciseDeclarationElement) {
-						if (child.equals(XmlUtils.unwrap(exerciseAfterThis.deepestAllExercisesCommonParentElement_sChildContainingThisExercise)) ) {
-							reachedNextExerciseDeclarationElement = true;
-						}
+					
+					//Reached this exercise but not the next one?
+					if (reachedThisExerciseDeclarationElement && !reachedNextExerciseDeclarationElement /* && !child.equals(this.deepestElement_sChild  performance not necessarily improved because we have to many more comparisons!*/
+					        ) {
+						reachedNextExerciseDeclarationElement
+						= checkIfNextExerciseAlreadyReached(o, child, exerciseAfterThis);
 					}
 					//spare the exception, that is the exercise that shall remain
 					if (!child.equals(XmlUtils.unwrap(exception))/*Because once we reached the follow up exercise we can remove again.*/
@@ -1485,7 +1584,10 @@ public class Exercise extends ContentToImage {
 						
 						//else
 						//child.getParentNode().removeChild(child); //IT'S A LIVE LIST (by reference)! ALL CHANGES TAKE EFFECT.
-						boolean deletedNode = DocxUtils.remove(/*((ContentAccessor)deepestCommonParentElement).getContent()*/childNodes, child);
+						boolean deletedNode = 
+						//WORKING_BUT_THE_LOOP_IS_NOT_NECESSARY__AS_WE_HAVE_THE_CORRESPONDING_JAXBELEMENT_ALREADY: o !!
+						//DocxUtils.remove(/*((ContentAccessor)deepestCommonParentElement).getContent()*/childNodes, child);
+						childNodes.remove(o);
 						//attention: removing a node shifts all the childNodes! TODO is this true for docx dom too?
 						if (deletedNode) {
 							--i;
@@ -1497,6 +1599,11 @@ public class Exercise extends ContentToImage {
 					}
 					else {
 						reachedThisExerciseDeclarationElement = true;
+						/* Is the next exercise within the same branch as this exercise?
+						 * Then we have reached begin and end of the elements to spare
+						 * at once and only have to skip one element. The rest has to be removed. */
+						reachedNextExerciseDeclarationElement
+						= checkIfNextExerciseAlreadyReached(o, child, exerciseAfterThis);
 					}
 					
 				}
@@ -1514,7 +1621,78 @@ public class Exercise extends ContentToImage {
 	    }
 	
 	
-	
+
+//		public boolean checkIfNextExerciseAlreadyReached(Object o, Child child, Exercise exerciseAfterThis) {
+//			//check if next exercise's declaration element's branch already reached.
+//			/*The simple case: Only within this level/depth.*/
+//			if ( child.equals(XmlUtils.unwrap(exerciseAfterThis.deepestAllExercisesCommonParentElement_sChildContainingThisExercise)) ) {
+//				//reachedNextExerciseDeclarationElement = true;//From this point on the value of reachedThisExerciseDeclarationElement plays no role anymore.
+//				return true;
+//			}
+//			else if (o.equals(exerciseAfterThis.highestParentElementContainingThisExerciseOnly)) {
+//				//reachedNextExerciseDeclarationElement = true;
+//				return true;
+//			}
+//			/*Here we look throughout the child elements for the other exercise highest only-one-exercise-containing element:*/
+//			else {
+//				
+//				boolean isExerciseWithinThisBranch;
+//				isExerciseWithinThisBranch = false;
+//				
+//				//Object child_schild = child;
+//				//TODO: Perhaps better use recursion therefore put it into a TraversalUtil?
+//				/* The reason for taking the current approach is that we examine the width first
+//				 * for not having to examine branch after branch sequentially.*/
+//					
+//				List<Object> child_schildNodes;
+//				List<List<Object>> child_schildNodesList;
+//				child_schildNodesList = new ArrayList<List<Object>>();
+//				
+//				int index = 0;
+//				child_schildNodesList.add(getChildren(XmlUtils.unwrap(o)));
+//				
+//				while (!child_schildNodesList.isEmpty()/*also possible: index > -1*/) {
+//					child_schildNodes = child_schildNodesList.get(index);
+//					
+//					//cancel condition propagation from inner loop
+//					if (isExerciseWithinThisBranch) {
+//						break;
+//					}
+//					if (child_schildNodes == null) {
+//						continue;
+//					}
+//					//look within these child element nodes if other exercise is contained or not:
+//					for (Object child_schild : child_schildNodes) {
+//						//for (Object wayelement : exerciseAfterThis.wayTowardsRoot) {
+//						if ( XmlUtils.unwrap(child_schild)
+//								.equals(
+//									XmlUtils.unwrap(exerciseAfterThis.highestParentElementContainingThisExerciseOnly)
+//								) ) {//wayelement)) {
+//							isExerciseWithinThisBranch = true;
+//							break;
+//						}
+//						
+//						//}
+//						List<Object> helper_childNodes;
+//						helper_childNodes = getChildren(XmlUtils.unwrap(child_schild));
+//						if (helper_childNodes != null) {
+//							child_schildNodesList.add(helper_childNodes);
+//							++index;
+//						}
+//					}
+//					
+//					//now that we have treated this nodeChildren layer/level/depth:
+//					child_schildNodesList.remove(child_schildNodes);
+//					--index;
+//				}
+//				if (isExerciseWithinThisBranch) {
+//					//reachedNextExerciseDeclarationElement = true;
+//					return true;
+//				}
+//			}
+//			
+//			return false;
+//		}
 	
 	
 	
@@ -1523,6 +1701,113 @@ public class Exercise extends ContentToImage {
 	
 	
 	
+	/**
+	 * Helper for allowing w3c and jaxb to use the same checkIfNextExerciseAlreadyReached function.
+	 * @param nodeList
+	 * @return An unordered List, containing the ordered NodeList's nodes.
+	 */
+	public List<Object> nodeListOrdered2UnorderedList(org.w3c.dom.NodeList nodeList) {
+		List<Object> list = new ArrayList<Object>();
+		int nodeList_index = -1;
+		while (++nodeList_index < nodeList.getLength()) {
+			list.add( nodeList.item(nodeList_index) );
+		}
+		return list;
+	}
+	
+	
+	/**
+	 * 
+	 * @param o		-- the parent node!?
+	 * @param child -- the child node (for convenience?).
+	 * @param exerciseAfterThis
+	 * @return true if next exercise already reached else false.
+	 */
+	public boolean checkIfNextExerciseAlreadyReached(Object o, Object child, Exercise exerciseAfterThis) {
+		//check if next exercise's declaration element's branch already reached.
+		/*The simple case: Only within this level/depth.*/
+		if (/*child instanceof Child && */child.equals(XmlUtils.unwrap(exerciseAfterThis.deepestAllExercisesCommonParentElement_sChildContainingThisExercise)) 
+				/*|| child instanceof org.w3c.dom.Node && not even necessary, the same input object is returned if unwrap couldn't detect it being of type JAXBElement.*/) {
+			//reachedNextExerciseDeclarationElement = true;//From this point on the value of reachedThisExerciseDeclarationElement plays no role anymore.
+			return true;
+		}
+		else if (o.equals(exerciseAfterThis.highestParentElementContainingThisExerciseOnly)) {
+			//reachedNextExerciseDeclarationElement = true;
+			return true;
+		}
+		/*Here we look throughout the child elements for the other exercise highest only-one-exercise-containing element:*/
+		else {
+			
+			boolean isExerciseWithinThisBranch;
+			isExerciseWithinThisBranch = false;
+			
+			//Object child_schild = child;
+			//TODO: Perhaps better use recursion therefore put it into a TraversalUtil?
+			/* The reason for taking the current approach is that we examine the width first
+			 * for not having to examine branch after branch sequentially.*/
+				
+			List<Object> child_schildNodes;
+			List<List<Object>> child_schildNodesList;
+			child_schildNodesList = new ArrayList<List<Object>>();
+			
+			int index = 0;
+			if (child instanceof org.w3c.dom.Node) {
+				child_schildNodesList.add( nodeListOrdered2UnorderedList( ((org.w3c.dom.Node) o).getChildNodes() )  );
+				
+			}
+			else {
+				child_schildNodesList.add( TraversalUtil.getChildrenImpl(XmlUtils.unwrap(o)));
+			}
+			while (!child_schildNodesList.isEmpty()/*also possible: index > -1*/) {
+				child_schildNodes = child_schildNodesList.get(index);
+				
+				//cancel condition propagation from inner loop
+				if (isExerciseWithinThisBranch) {
+					break;
+				}
+				if (child_schildNodes == null) {
+					continue;
+				}
+				//look within these child element nodes if other exercise is contained or not:
+				for (Object child_schild : child_schildNodes) {
+					//for (Object wayelement : exerciseAfterThis.wayTowardsRoot) {
+					if ( XmlUtils.unwrap(child_schild)
+							.equals(
+								XmlUtils.unwrap(exerciseAfterThis.highestParentElementContainingThisExerciseOnly)
+							) ) {//wayelement)) {
+						isExerciseWithinThisBranch = true;
+						break;
+					}
+					
+					//}
+					List<Object> helper_childNodes;
+					if (child_schild instanceof org.w3c.dom.Node) {
+						// w3c
+						helper_childNodes = nodeListOrdered2UnorderedList( ((org.w3c.dom.Node) child_schild).getChildNodes() );
+					}
+					else {
+						// jaxb
+						helper_childNodes =  TraversalUtil.getChildrenImpl(XmlUtils.unwrap(child_schild));
+					}
+					if (helper_childNodes != null) {
+						child_schildNodesList.add(helper_childNodes);
+						++index;
+					}
+				}
+				
+				//now that we have treated this nodeChildren layer/level/depth:
+				child_schildNodesList.remove(child_schildNodes);
+				--index;
+			}
+			if (isExerciseWithinThisBranch) {
+				//reachedNextExerciseDeclarationElement = true;
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 	
 }
 	

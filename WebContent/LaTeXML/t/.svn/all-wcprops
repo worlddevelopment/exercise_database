@@ -1,0 +1,143 @@
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/repos/LaTeXML/!svn/ver/3659/trunk/t
+END
+94_runtimes.t
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/repos/LaTeXML/!svn/ver/3574/trunk/t/94_runtimes.t
+END
+90_latexmlpost.t
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/LaTeXML/!svn/ver/2916/trunk/t/90_latexmlpost.t
+END
+53_alignment.t
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/3574/trunk/t/53_alignment.t
+END
+93_formats.t
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/repos/LaTeXML/!svn/ver/3574/trunk/t/93_formats.t
+END
+20_digestion.t
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/3574/trunk/t/20_digestion.t
+END
+00_tokenize.t
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/repos/LaTeXML/!svn/ver/3574/trunk/t/00_tokenize.t
+END
+30_encoding.t
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/repos/LaTeXML/!svn/ver/3574/trunk/t/30_encoding.t
+END
+56_ams.t
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/repos/LaTeXML/!svn/ver/3574/trunk/t/56_ams.t
+END
+22_fonts.t
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/LaTeXML/!svn/ver/3574/trunk/t/22_fonts.t
+END
+12_grouping.t
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/repos/LaTeXML/!svn/ver/3574/trunk/t/12_grouping.t
+END
+40_math.t
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/repos/LaTeXML/!svn/ver/3574/trunk/t/40_math.t
+END
+92_profiles.t
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/repos/LaTeXML/!svn/ver/3574/trunk/t/92_profiles.t
+END
+maketests
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/repos/LaTeXML/!svn/ver/3251/trunk/t/maketests
+END
+52_namespace.t
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/3574/trunk/t/52_namespace.t
+END
+10_expansion.t
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/3574/trunk/t/10_expansion.t
+END
+50_structure.t
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/3574/trunk/t/50_structure.t
+END
+95_complex_config.t
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/LaTeXML/!svn/ver/3574/trunk/t/95_complex_config.t
+END
+65_graphics.t
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/repos/LaTeXML/!svn/ver/3574/trunk/t/65_graphics.t
+END
+91_latexmlc_api.t
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/LaTeXML/!svn/ver/3574/trunk/t/91_latexmlc_api.t
+END
+55_theorem.t
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/repos/LaTeXML/!svn/ver/3574/trunk/t/55_theorem.t
+END
+81_babel.t
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/LaTeXML/!svn/ver/3574/trunk/t/81_babel.t
+END
+80_complex.t
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/repos/LaTeXML/!svn/ver/3574/trunk/t/80_complex.t
+END
+70_parse.t
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/LaTeXML/!svn/ver/3574/trunk/t/70_parse.t
+END

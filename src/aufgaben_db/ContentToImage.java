@@ -1,7 +1,6 @@
 package aufgaben_db;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -14,6 +13,14 @@ import org.docx4j.TextUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 
+import command.Command;
+
+import converter.DocConverter;
+import converter.PdfConverter;
+import converter.RtfConverter;
+import converter.TextConverter;
+
+import db.UnixComandosThread;
 import docx4j_library.ConvertOutHtml;
 import docx4j_library.ConvertOutPDF;
 
@@ -21,13 +28,7 @@ import docx4j_library.ConvertOutPDF;
 
 import Verwaltung.HashLog;
 
-import HauptProgramm.DocType;
-import HauptProgramm.Konverter.DocKonverter;
-import HauptProgramm.Konverter.PdfKonverter;
-import HauptProgramm.Konverter.RtfKonverter;
-import HauptProgramm.Konverter.TextConverter;
 
-import swp.UnixComandosThread;
 
 /**
  * This class is to be extended. Its heritage provides a function to generate
@@ -46,6 +47,7 @@ public /*abstract*/ class ContentToImage {
 	                            //from exercise B or sheetdraft 1.
 								//It's no static variable!! It's a difference!
 	protected String filelinkPrevious;
+	protected boolean filelinkHasToBeReGenerated;
 	
     							//<-- main attribute (can be every dataformat).
 	//protected String[] rawContent;//Contains the lines of the file from the
@@ -70,6 +72,7 @@ public /*abstract*/ class ContentToImage {
 	
 	public void generateImage() throws Exception {
 		int height = 800;//"<width>x<height> = x800";
+		// Try to derive optimal height from line count of plainText:
 		if (this.plainText == null) {
 			this.extractPlainText();
 		}
@@ -82,25 +85,26 @@ public /*abstract*/ class ContentToImage {
 	}
 	
 	
-	public String[] /*List<String>*/ getCommandListForImageConversion() {
+	public Command[] /*List<String>*/ getCommandListForImageConversion() {
 		return getCommandListForImageConversion(800);//no change in height - anyway we don't need it
 		//anymore as we now use trim option of ImageMagick. A great sorceress. :)
 	}
-	public String[] /*List<String>*/ getCommandListForImageConversion(int heightToCropTo) {
+	public Command[] /*List<String>*/ getCommandListForImageConversion(int heightToCropTo) {
 		
 		/*This is a local commandList to give over to UnixComandosThread
 		 *for execution/here to create/update an image representation of
 		 *this file/content. */
-//    	List<String> commandList = new ArrayList<String>();
-    	String[] commandList = new String[10];
+//    	List<String> commandList = new ArrayList<String>();<--not suitable because of ordering probs. 
+    	Command[] commandList = new Command[10];
 		
 		//-----------------perhaps cycle over this bloc to get other previews also?--//
 		//1. filelink file --> pdf file
 		//PDF
 		String hypo_pdf_filelink = getPDFLink();//same filename, only ending differs
-    	String cmd = UnixComandosThread.getCommand_usingLibreOffice(filelink, "pdf");
-    	//commandList.add(cmd);
-    	commandList[0] = cmd;
+		/* From all our tools used it's most likely that libreoffice (JODConverter for performance 
+		   & cross-platformness)  can handle this format.
+		   */
+		commandList[0] = UnixComandosThread.getCommand_usingLibreOffice(filelink, "pdf");
     	
 		//2. pdf file --> image file
     	//IMAGE
@@ -112,9 +116,9 @@ public /*abstract*/ class ContentToImage {
     		options = " -crop " /*+ width*/ + "x" + (heightToCropTo * Global.ImageMagick_qualityScale) + "+0+" + offsetY /*+ "\\! "*//* + unit*/ + " ";
     		//options = " -trim ";//first we resize to x800pixel in height to have an idea for the target height
     	}
-        cmd = UnixComandosThread.getCommand_pdf2image_usingImageMagick(getPDFLink(), getImageLink(), options);
-//    	commandList.add(cmd);
-        commandList[1] = cmd;
+    	commandList[1] = UnixComandosThread.getCommand_pdf2image_usingImageMagick(getPDFLink(), getImageLink(), options);
+    	
+    	
     	//-----------------END-OF-BLOC-PDF-TO-IMAGE----------------------------------//
 		
     	
@@ -269,390 +273,24 @@ public /*abstract*/ class ContentToImage {
 
 		//the order in which the flavours were generated here plays no role:
 		List<String> generatedFlavours = new ArrayList<String>();
-		
+		/*If DocType instead of the flavour_filelinks are stored, redundancy may occur.*/
 		
 		//all supported filetypes are the flavours that can ideally be created
 		for (DocType docType : DocType.values()) {
-			
-			
 			
 			if (docType.name().equals(Global.extractEnding(filelink))) {
 				//The native format of this sheet can be skipped happily.
 				continue ;
 			}
 			
-			String flavour_filelink = Global.replaceEnding(filelink, docType.name());
-			String ending = Global.extractEnding(filelink);
-			
-			
-			//DOC SOURCE ------------------------------------------------ //
-			if (ending.equals("doc")) {
-				if (docType.name().equals("TXT")) {
-					DocKonverter.erstelleTextausDoc(filelink);
-				}
-				else if (docType.name().equals("PDF")) {
-					//TODO
-				}
+			//WITH THE CHANGE TO THE BACHELOR THESIS, HTML IS THE LONE STORAGE FORMAT. 
+			if (!docType.equals(Aufgaben_DB.commonFormat)) {//DocType.HTML)) { <- as of v31.13d this became dynamic.
+				continue ;
 			}
 			
-			//DOCX SOURCE ------------------------------------------------ //
-			else if (ending.equals("docx")) {
-
-				if (docType.name().equals("DOC")) {
-				}
-//				else if (docType.name().equals("DOCX")) {
-//				}
-				else if (docType.name().equals("HTML")) {
-					ConvertOutHtml.process(filelink, Global.replaceEnding(filelink, "html"));
-					generatedFlavours.add(docType.name());
-				}
-				else if (docType.name().equals("ODT")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_usingLibreOffice(filelink, docType.name().toLowerCase())
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-					generatedFlavours.add(docType.name());
-				}
-				else if (docType.name().equals("PDF")) {
-					ConvertOutPDF.process(filelink, Global.replaceEnding(filelink, "pdf"));
-					generatedFlavours.add(docType.name());
-				}
-				else if (docType.name().equals("RTF")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_2rtf_usingLibreOffice(filelink)
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-					generatedFlavours.add(docType.name());
-				}
-				else if (docType.name().equals("TEX")) {
-					//TODO using docx2tex
-					String filelink_new_absolute = Global.replaceEnding(filelink, "tex");
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_docx2tex(filelink, filelink_new_absolute)
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-					generatedFlavours.add(docType.name());
-				}
-				else if (docType.name().equals("TXT")) {
-					//docx4j alternative:
-					WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new File(filelink));
-					MainDocumentPart mainDocumentPart = wordMLPackage.getMainDocumentPart();
-					org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document)mainDocumentPart.getJaxbElement();
-
-					String txt_filelink = filelink + ".txt";//Global.replaceEnding(filelink, "txt");
-					Writer out = new OutputStreamWriter(new FileOutputStream(txt_filelink)); 
-					
-					TextUtils.extractText(wmlDocumentEl, out);
-					//out.flush();
-					out.close();
-					
-					generatedFlavours.add(docType.name());
-				}
-				
-				
-			}
-			
-			//HTML SOURCE ------------------------------------------------ //
-			else if (ending.equals("html") || ending.equals("htm")) {
-				//Remove html tags. (using e.g. a php striptags() Java equivalent.)
-				//TODO
-				//this.plainText = ;
-			}
-			
-			
-			//ODF (OpenDocumentFormat: Text => ODT)  -------------------- //
-			else if (ending.equals("odt")) {
-				
-				//DOC
-				if (docType.name().equals("DOC")) {
-				}
-				//DOCX
-				else if (docType.name().equals("DOCX")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_2odt_usingLibreOffice(filelink)
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-					
-					generatedFlavours.add(docType.name());
-				}
-				//HTML
-				else if (docType.name().equals("HTML")) {
-					//TODO
-					
-				}
-				//ODT
-//				else if (docType.name().equals("ODT")) {
-//				}
-				//PDF
-				else if (docType.name().equals("PDF")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_2pdf_usingLibreOffice(filelink)
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-					
-					generatedFlavours.add(docType.name());
-					
-				}
-				//RTF
-				else if (docType.name().equals("RTF")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_2rtf_usingLibreOffice(filelink)
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-
-					generatedFlavours.add(docType.name());
-				}
-				//TEX
-				else if (docType.name().equals("TEX")) {
-					//TODO
-					
-				}
-				//TXT
-				else if (docType.name().equals("TXT")) {
-					//At this point a pdf file has to exist in the same folder as the uploaded file.
-
-					//Method 1) At this point a pdf file has to be generated.
-					//TODO
-					//this.plainText = PdfKonverter.textAusPdf(filelink.replaceAll("[.]odt$", ".pdf"));
-					
-					//Method 2)
-					ReadWrite.write(TextConverter.odt2text(filelink), Global.replaceEnding(filelink, "txt"));
-					
-					//Method 3)
-					//TODO using ODFToolkit
-
-					generatedFlavours.add(docType.name());
-				}
-				
-				
-				
-			}
-			//PDF SOURCE ------------------------------------------------ //
-			else if (ending.equals("pdf")) {
-				//DOC
-				if (docType.name().equals("DOC")) {
-				}
-				//DOCX
-				else if (docType.name().equals("DOCX")) {
-					//TODO
-				}
-				//HTML
-				else if (docType.name().equals("HTML")) {
-					//TODO
-					
-				}
-				//ODT
-				else if (docType.name().equals("ODT")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_2odt_usingLibreOffice(filelink)
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-
-					generatedFlavours.add(docType.name());
-				}
-				//PDF
-//				else if (docType.name().equals("PDF")) {
-//				}
-				//RTF
-				else if (docType.name().equals("RTF")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_usingLibreOffice(filelink, docType.name().toLowerCase())
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-
-					generatedFlavours.add(docType.name());
-				}
-				//TEX
-				else if (docType.name().equals("TEX")) {
-					//TODO
-					
-				}
-				//TXT
-				else if (docType.name().equals("TXT")) {
-					//At this point a pdf file has to exist in the same folder as the uploaded file.
-
-					//Method 1) At this point a pdf file has to be generated.
-					ReadWrite.write(PdfKonverter.textAusPdf(filelink), Global.replaceEnding(filelink, "txt"));
-
-					generatedFlavours.add(docType.name());				
-				}
-				
-				
-				
-			}
-			//RTF SOURCE ------------------------------------------------ //
-			else if (ending.equals("rtf")) {
-				//DOC
-				if (docType.name().equals("DOC")) {
-				}
-				//DOCX
-				else if (docType.name().equals("DOCX")) {
-					//TODO
-					
-				}
-				//HTML
-				else if (docType.name().equals("HTML")) {
-					//TODO
-					
-				}
-				//ODT
-				else if (docType.name().equals("ODT")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_2odt_usingLibreOffice(filelink)
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-
-					generatedFlavours.add(docType.name());
-				}
-				//PDF
-				else if (docType.name().equals("PDF")) {
-					//using libre office
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_usingLibreOffice(filelink, docType.name().toLowerCase())
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-
-					generatedFlavours.add(docType.name());
-				}
-				//RTF
-//				else if (docType.name().equals("RTF")) {
-//				}
-				//TEX
-				else if (docType.name().equals("TEX")) {
-					//TODO
-					
-				}
-				//TXT
-				else if (docType.name().equals("TXT")) {
-					//At this point a pdf file has to exist in the same folder as the uploaded file.
-
-					//Method 1) At this point a pdf file has to be generated.
-					
-					//Method 2)
-					this.plainText = RtfKonverter.konvertiereRtfZuText(filelink);
-					MethodenWortSuche.schreibeErstesLetztesWortAusTextInHashMap(plainText);
-					if (this.getClass().toString().equals("Sheetdraft")) {/*Sheetdraft only, not Exercise*/
-						System.out.println("Jetzt folgt noch die Weiterbehandlung des Rtf-Dokuments");
-						RtfTestung.SucheIdentifierRtfNeu.bearbeiteRtf((Sheetdraft)this);
-					}
-
-					generatedFlavours.add(docType.name());
-				}
-
-				
-			}
-			//TEX SOURCE ------------------------------------------------ //
-			else if (ending.equals("tex")) {
-
-				//DOC
-				if (docType.name().equals("DOC")) {
-				}
-				//DOCX
-				else if (docType.name().equals("DOCX")) {
-					//TODO
-					
-				}
-				//HTML
-				else if (docType.name().equals("HTML")) {
-					//TODO
-					
-				}
-				//ODT
-				else if (docType.name().equals("ODT")) {
-					//TODO
-					
-				}
-				//PDF
-				else if (docType.name().equals("PDF")) {
-					//using pdflatex
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_pdfLaTeX(filelink, docType.name().toLowerCase())
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);
-					
-					generatedFlavours.add(docType.name());
-				}
-				//RTF
-				else if (docType.name().equals("RTF")) {
-				}
-				//TEX
-//				else if (docType.name().equals("TEX")) {
-//				}
-				//TXT
-				else if (docType.name().equals("TXT")) {
-					//Method 2)
-					String filelink_absolute_txt;
-					filelink_absolute_txt = Global.replaceEnding(filelink, "txt");
-					final String[] cmdList = {
-							UnixComandosThread.getCommand_tex2txt(filelink, filelink_absolute_txt)
-					};
-					new UnixComandosThread(filelink).d_o(cmdList);			
-					this.plainText = ReadWrite.loadText(filelink_absolute_txt);
-					
-					//Method 1)
-					//At this point a pdf file has to be generated.
-					//TODO e.g. using TexManipulator.java and portable LaTex in root directory.
-					//this.plainText = PdfKonverter.textAusPdf(filelink.replaceAll("[.]tex$", ".pdf"));
-//					this.rawContent = ReadWrite.loadText(filelink);
-					
-
-					generatedFlavours.add(docType.name());
-				}
-				
-			
-				
-			}
-			//TXT SOURCE ------------------------------------------------ //
-			else if (ending.equals("txt")) {
-				this.plainText = ReadWrite.loadText(filelink);
-				HashLog.erweitereLogFile("Bei dem uebergebenen Dokument handelt es sich um ein Textfile namens " + filelink);
-				
-				/*HERE THE MISSION IS RATHER TO CREATE DOCUMENTS OUT OF THE TEXT.
-				  SUCH THAT THE PLAIN TEXT IS IN THE DOCUMENT FORMAT AND ONE SAVES THE COPY PASTE.*/
-				//TODO
-				//DOC
-				if (docType.name().equals("DOC")) {
-				}
-				//DOCX
-				else if (docType.name().equals("DOCX")) {
-					//TODO using docx4j
-					
-				}
-				//HTML
-				else if (docType.name().equals("HTML")) {
-				}
-				//ODT
-				else if (docType.name().equals("ODT")) {
-					//TODO using odftoolkit
-					
-				}
-				//PDF
-				else if (docType.name().equals("PDF")) {
-				}
-				//RTF
-				else if (docType.name().equals("RTF")) {
-				}
-				//TEX
-				else if (docType.name().equals("TEX")) {
-				}
-				//TXT
-//				else if (docType.name().equals("TXT")) {
-//				}
-				
-			}
-			
-			
-			
-			
-			
+			generatedFlavours.addAll(
+					Global.convertFile(filelink, docType.name().toLowerCase())
+			);
 			
 		}
 
@@ -693,7 +331,7 @@ public /*abstract*/ class ContentToImage {
 					" eine bessere Qualitaet gewuenscht wird, kann das Dokument in Word " +
 					"im RTF-Format abgespeichert und dann das rtf-File an dieses " + 
 					"Programm uebergeben werden.");
-			this.plainText = DocKonverter.erstelleTextausDoc(filelink);
+			this.plainText = DocConverter.erstelleTextausDoc(filelink);
 		}
 		//DOCX
 		else if (ending.equals("docx")) {
@@ -703,35 +341,34 @@ public /*abstract*/ class ContentToImage {
 					"im RTF-Format abgespeichert und dann das rtf-File an dieses " + 
 					"Programm uebergeben werden.");
 
-			this.plainText = DocKonverter.erstelleTextausDocX(filelink);
+			this.plainText = DocConverter.erstelleTextausDocX(filelink);
 			
 			//docx4j alternative:
-			WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new File(filelink));
-			MainDocumentPart mainDocumentPart = wordMLPackage.getMainDocumentPart();
-			org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document)mainDocumentPart.getJaxbElement();
-
-			String txt_filelink = filelink + ".txt";//Global.replaceEnding(filelink, "txt");
-			Writer out = new OutputStreamWriter(new FileOutputStream(txt_filelink)); 
-			TextUtils.extractText(wmlDocumentEl, out);
-			//out.flush();
-			out.close();
-			this.plainText = ReadWrite.loadText(filelink + ".txt");//Global.replaceEnding(filelink, "txt"));
+//WORKING BUT SUPERFLUOUS AND ALL IN ONE SINGLE LINE			WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new File(filelink));
+//			MainDocumentPart mainDocumentPart = wordMLPackage.getMainDocumentPart();
+//			org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document)mainDocumentPart.getJaxbElement();
+//
+//			String txt_filelink = filelink + ".txt";//Global.replaceEnding(filelink, "txt");
+//			Writer out = new OutputStreamWriter(new FileOutputStream(txt_filelink)); 
+//			TextUtils.extractText(wmlDocumentEl, out);
+//			//out.flush();
+//			out.close();
+//			this.plainText = ReadWrite.loadText(filelink + ".txt");//Global.replaceEnding(filelink, "txt"));
 
 			
-			txt_filelink = Global.replaceEnding(filelink, "txt.txt");
-			out = new OutputStreamWriter(new FileOutputStream(txt_filelink)); 
-			//this.plainText = TextConverter.docx2text(filelink).split(System.getProperty("line.separator"));//(wmlDocumentEl, out);
-			this.plainText = TextConverter.docx2txt(filelink);//(wmlDocumentEl, out);
-			//out.flush();
-			out.close();
+//WORKING			txt_filelink = Global.replaceEnding(filelink, "txt.txt");
+//			out = new OutputStreamWriter(new FileOutputStream(txt_filelink)); 
+//			//this.plainText = TextConverter.docx2text(filelink).split(System.getProperty("line.separator"));//(wmlDocumentEl, out);
+//			this.plainText = TextConverter.docx2txt(filelink);//(wmlDocumentEl, out);
+//			//out.flush();
+//			out.close();
 			//this.plainText = ReadWrite.loadText(filelink + ".txt");//Global.replaceEnding(filelink, "txt"));
 			
 		}
 		//HTML
 		else if (ending.equals("html") || ending.equals("htm")) {
-			//Remove html tags. (using e.g. a php striptags() Java equivalent.)
-			//TODO
-			//this.plainText = ;
+			//Either remove html tags. (using e.g. a php striptags() Java equivalent.) or DOM:
+			this.plainText = TextConverter.html2text(filelink).split(System.getProperty("line.separator"));
 			HashLog.erweitereLogFile("Bei dem uebergebenen Dokument handelt es sich um ein HTML-file namens " + filelink);
 		}
 		//ODF (OpenDocumentFormat: Text => ODT)
@@ -748,21 +385,42 @@ public /*abstract*/ class ContentToImage {
 			ReadWrite.write( getPlainTextAsString(), Global.replaceEnding(filelink, "txt") );
 			
 		}
+		//IMAGE
+		else if (ending.equals("jpg") || ending.equals("png") || ending.equals("svg")) {
+//			org.apache.pdfbox.TextToPDF;
+//			org.apache.pdfbox.examples.pdmodel.ImageToPDF;<-- only putting images into the PDF. 
+			//TODO
+//			 //http://stackoverflow.com/questions/1312832/java-image-encoding-in-xml	
+//			 //  ENCODING
+//			 BufferedImage img = ImageIO.read(new File("image.png"));    
+//			 ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//			 ImageIO.write(img, "png", baos);    
+//			 baos.flush();
+//			 String encodedImage = Base64.encodeToString(baos.toByteArray());
+//			 baos.close(); // should be inside a finally block
+//			 node.setTextContent(encodedImage); // store it inside node
+//
+//			 // DECODING
+//			 String encodedImage = node.getTextContent();
+//			 byte[] bytes = Base64.decode(encodedImage);
+//			 BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
+			this.plainText = PdfConverter.textAusPdf(filelink);
+		}
 		//PDF
 		else if (ending.equals("pdf")) {
 			HashLog.erweitereLogFile("Bei dem uebergebenen Dokument handelt " +
 					"es sich um ein .tex-File namens " + filelink + ".");
-			this.plainText = PdfKonverter.textAusPdf(filelink);
+			this.plainText = PdfConverter.textAusPdf(filelink);
 			//ReadWrite.write( getPlainTextAsString(), Global.replaceEnding(filelink, "txt") );
 		}
 		//RTF
 		else if (ending.equals("rtf")) {
 			HashLog.erweitereLogFile("Bei dem uebergebenen Dokument handelt es sich um ein Rtf-File namens " + filelink);
-			this.plainText = RtfKonverter.konvertiereRtfZuText(filelink);
+			this.plainText = RtfConverter.konvertiereRtfZuText(filelink);
 			MethodenWortSuche.schreibeErstesLetztesWortAusTextInHashMap(plainText);
 			if (this.getClass().toString().equals("Sheetdraft")) {/*Sheetdraft only, not Exercise*/
 				System.out.println("Jetzt folgt noch die Weiterbehandlung des Rtf-Dokuments");
-				RtfTestung.SucheIdentifierRtfNeu.bearbeiteRtf((Sheetdraft)this);
+				rtf.SucheIdentifierRtfNeu.bearbeiteRtf((Sheetdraft)this);
 			}
 		}
 		//TEX
@@ -775,7 +433,7 @@ public /*abstract*/ class ContentToImage {
 			//Method 2)
 			String filelink_absolute_txt;
 			filelink_absolute_txt = Global.replaceEnding(filelink, "txt");
-			final String[] cmdList = {
+			final Command[] cmdList = {
 					UnixComandosThread.getCommand_tex2txt(filelink, filelink_absolute_txt)
 			};
 			new UnixComandosThread(filelink).d_o(cmdList);			
@@ -846,8 +504,10 @@ public /*abstract*/ class ContentToImage {
 	
 	
 	
-	
-	
+	@Override
+	public String toString() {
+		return this.getClass() + " [filelink:" + this.getFilelinkRelative() + "; isNativeFormat:" + this.isNativeFormat() + "]"; 
+	}
 	
 	
 	

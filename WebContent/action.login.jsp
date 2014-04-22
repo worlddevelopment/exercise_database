@@ -1,20 +1,23 @@
-<%@page import="swp.Login,swp.User,swp.LDAP"
+<%@page import="db.Login,db.User,db.LDAP"
         import="aufgaben_db.Global" %>
 <%
+        
     if ( request.getParameter("login") != null
 		    && !request.getParameter("Benutzer").equals("")
-		    && !request.getParameter("passwort").equals("")) {
-		
-    	String user = request.getParameter("Benutzer");
-    	String pass = request.getParameter("passwort");
-    	User benutzer = new User();
+		    && !request.getParameter("passwort").equals("") ) {
     	
-    	if (pass.equals("valinor") || pass.equals("laew galu")) {
+    	String user = request.getParameter("Benutzer");
+        String pass = request.getParameter("passwort");
+    	
+    	
+    	if (pass.equals("valinor") || pass.equals("laew galu") || pass.equals("local")) {
     		/*for debugging without connection to auth.uni-wuerzburg.de*/
-    	    session.setAttribute("user", "faerietree");//Global.isLoggedIn(session) checks this!
+    	    session.setAttribute("user", user/*"local"*/);//Global.isLoggedIn(session) checks this!
     	    session.setAttribute("pass", pass);
     	}
     	else {
+    	    
+    	    User benutzer = new User();
     		/*per auth.uni-wuerzburg.de*/
 	    	Login log  = new Login();
 	    	
@@ -31,5 +34,12 @@
 	    				" nosuccess ");
 	    	}
     	}
+    }
+    else if (request.getParameter("nologin") != null) {
+    	
+    	/*for debugging without connection to auth.uni-wuerzburg.de*/
+        session.setAttribute("user", "NoLogin");//Global.isLoggedIn(session) checks this!
+        session.setAttribute("pass", "");
+        Global.addMessage("Logged in as NoLogin for testing of features that don't require the user information.", "success");
     }
 %>

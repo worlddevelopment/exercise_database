@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles
+END
+modern.opt
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/modern.opt
+END
+fragment-html.opt
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/fragment-html.opt
+END
+stex-module.opt
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/stex-module.opt
+END
+math.opt
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/math.opt
+END
+stex-migration.opt
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/stex-migration.opt
+END
+fragment-xhtml.opt
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/fragment-xhtml.opt
+END
+standard.opt
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/standard.opt
+END
+fragment.opt
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/fragment.opt
+END
+stex.opt
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/resources/Profiles/stex.opt
+END

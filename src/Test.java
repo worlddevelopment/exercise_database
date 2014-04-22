@@ -1,18 +1,10 @@
-import java.awt.Component;
-import java.awt.GraphicsConfiguration;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Iterator;
 
-import javax.servlet.jsp.JspWriter;
 
-import org.apache.jasper.runtime.JspWriterImpl;
-
-import HauptProgramm.*;
 public class Test {
 	
 
@@ -21,7 +13,7 @@ public class Test {
 		String[] entries = new File(source).list();
 
 			for (int i = 0; i < entries.length; i++) {
-				//myProgram.run(source + "/" + entries[i],target);
+				//myProgram.run(source + File.separator + entries[i],target);
 			}
 
 	}

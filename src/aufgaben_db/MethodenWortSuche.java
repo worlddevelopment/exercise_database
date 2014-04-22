@@ -22,22 +22,23 @@ public class MethodenWortSuche {
 	 * Die Methode ersetzt problematische Java-Sonderzeichen und Umlaute
 	 * durch jeweils ein Leerzeichen (und trennt dadurch auch Woerter!)
 	 * 
+	 * @changelog J.R.I.B.-Wein put in Unicode representations.
 	 * @param zeile der String, in denen die Zeichen ersetzt werden sollen.
-	 * @return String ohne die b�sen Zeichen
+	 * @return String ohne die boesen Zeichen
 	 */
 	private static String ersetzeSzUndUmLeer(String zeile) {
 		
-		String ergebnis = zeile.replaceAll("Ö", " ");
+		String ergebnis = zeile.replaceAll("\u00D6", " ");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("ö", " ");
+		ergebnis = ergebnis.replaceAll("\u00F6", " ");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("Ü", " ");
+		ergebnis = ergebnis.replaceAll("\u00DC", " ");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("ü", " ");
+		ergebnis = ergebnis.replaceAll("\u00FC", " ");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("Ä", " ");
+		ergebnis = ergebnis.replaceAll("\u00C4", " ");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("ä", " ");
+		ergebnis = ergebnis.replaceAll("\u00E4", " ");
 		//System.out.println(ergebnis);
 		ergebnis = ergebnis.replaceAll("", " ");
 		//System.out.println(ergebnis);
@@ -93,7 +94,7 @@ public class MethodenWortSuche {
 				
 				
 				// falls in der Zeile kein passendes Wort enthalten war
-				// wird in der nächsten Zeile weitergesucht
+				// wird in der n\u00E4chsten Zeile weitergesucht
 			}
 		}
 		// falls sich im ganzen Dokument kein Wort fand, wird der leere String zurueckgegeben
@@ -129,7 +130,7 @@ public class MethodenWortSuche {
 						return ergebnis;
 					}
 				// falls in der Zeile kein passendes Wort enthalten war
-				// wird in der nächsten Zeile weitergesucht
+				// wird in der n\u00E4chsten Zeile weitergesucht
 				}
 			}
 		}

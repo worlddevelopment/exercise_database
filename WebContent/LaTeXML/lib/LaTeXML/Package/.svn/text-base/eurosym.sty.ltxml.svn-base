@@ -1,0 +1,45 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  eurosym.sty - Implementation for LaTeXML                            | #
+# |                                                                     | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Catalin David <c.david@jacobs-university.de>                        | #
+# | http://dlmf.nist.gov/LaTeXML/                                       | #
+# \=====================================================================/ #
+
+package LaTeXML::Package::Pool;
+use strict;
+use LaTeXML::Package;
+
+RawTeX('\newif\if@EURleft\@EURlefttrue');
+DeclareOption('left',  '\@EURlefttrue');
+DeclareOption('right', '\@EURleftfalse');
+DeclareOption('official', undef);
+DeclareOption('gen',      undef);
+DeclareOption('gennorrow',undef);
+DeclareOption('genwide',  undef);
+
+ProcessOptions();
+
+DefMacro('\EUR{}','{\if@EURleft\euro\,\fi#1\if@EURleft\else\,\euro\fi}');
+
+DefMacro('\officialeuro', "\x{20AC}");
+Let('\euro', '\officialeuro');
+
+# People shouldn't be using these, but let's at least avoid errors.
+DefMacro('\eurobars','=');
+DefMacro('\eurobarsnarrow','=');
+DefMacro('\eurobarswide','=');
+Let('\geneuro',       '\officialeuro');
+Let('\geneuronarrow', '\officialeuro');
+Let('\geneurowide',   '\officialeuro');
+
+
+
+
+
+1;

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+export CATALINA_HOME="C:/apache_tomcat/"
+
+
+export CATALINA_OPTS=-XX:PermSize=128m -XX:MaxPermSize=256M -Xms256M -Xmx768m
+

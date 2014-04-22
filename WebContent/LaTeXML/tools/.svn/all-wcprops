@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/repos/LaTeXML/!svn/ver/3581/trunk/tools
+END
+genmap
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/LaTeXML/!svn/ver/1720/trunk/tools/genmap
+END
+xtest
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/repos/LaTeXML/!svn/ver/3581/trunk/tools/xtest
+END
+dtd-simplification.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/LaTeXML/!svn/ver/2939/trunk/tools/dtd-simplification.xsl
+END
+symbolscan.sty
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/2003/trunk/tools/symbolscan.sty
+END
+compileschema
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/LaTeXML/!svn/ver/2939/trunk/tools/compileschema
+END
+symbolscan
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/3183/trunk/tools/symbolscan
+END
+genencoded
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/1664/trunk/tools/genencoded
+END
+dtd-dumbdown.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/LaTeXML/!svn/ver/2939/trunk/tools/dtd-dumbdown.xsl
+END
+cluster
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/LaTeXML/!svn/ver/955/trunk/tools/cluster
+END
+texscan
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/repos/LaTeXML/!svn/ver/3529/trunk/tools/texscan
+END

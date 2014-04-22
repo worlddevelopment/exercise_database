@@ -14,11 +14,11 @@
 <%@page import="org.apache.lucene.index.Term"%>
 <%@page import="org.apache.lucene.queryParser.QueryParser.Operator"%>
 <%@page import="org.apache.lucene.search.WildcardQuery"%>
-<%@page import="HauptProgramm.DocType"%>
+<%@page import="aufgaben_db.DocType"%>
 <%@page import="aufgaben_db.Global"%>
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.sql.Connection"%>
-<%@page import="swp.MysqlHelper"%>
+<%@page import="db.MysqlHelper"%>
 <%@page import="java.sql.Statement"%>
 <%@page import="java.sql.SQLException"%>
 <%@page import="org.apache.lucene.queryParser.MultiFieldQueryParser"%>
@@ -136,7 +136,7 @@
 				parser.setAllowLeadingWildcard(true);
 				//String kriterium = " AND course:Didaktik";
 
-				Query query = parser.parse(search_query);// "(+inhalt:übung +semester:\"SoSe 12/14\")"
+				Query query = parser.parse(search_query);// "(+inhalt:uebung +semester:\"SoSe 12/14\")"
 				out.println("</br><strong>Query: </strong>" + Global.decodeUmlauts(search_query)
 						+ "</br><p></p>");
 				//#####			
@@ -186,6 +186,14 @@
 							sheetdraft_id = res1.getString("id");
 							
 						}
+						// added as of v31.13c to tackle memory leaks:
+						if (res1 != null) {
+							res1.close();
+						}
+						if (statement1 != null) {
+							statement1.close();
+						}
+						
 					} catch (SQLException e) {
 						e.printStackTrace();
 					} */

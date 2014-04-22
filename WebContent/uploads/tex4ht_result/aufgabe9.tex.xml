@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml searchpaths="/home/administrator/Desktop/apache-tomcat-6.0.18/webapps/aufgaben_db/uploads"?>
+<?latexml options="a4paper,11pt" class="amsart"?>
+<?latexml package="vmargin"?>
+<?latexml package="graphicx"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" class="ltx_leqno">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <resource src="ltx-amsart.css" type="text/css"/>
+  <ERROR class="undefined">\setmargins</ERROR>
+  <para xml:id="p1">
+    <p>2.5cm2cm16cm25cm0mm0cm0mm0cm</p>
+  </para>
+  <!-- %**** auf9.tex-479873197-47.tex Line 25 **** -->
+  <figure placement="ht" xml:id="fig1">
+    <graphics graphic="steuding_elemZtheorie.png" options="height=54.060236pt" xml:id="g1" class="ltx_centering"/>
+  </figure>
+  <para xml:id="p2">
+    <break/>
+  </para>
+  <section xml:id="Sx1">
+    <title font="bold">ELEMENTARE ZAHLENTHEORIE – Lösungshinweise</title>
+    <para xml:id="Sx1.p1">
+      <p><text font="bold">Aufgabe 9 - Mächtigkeit der Potenzmenge (4 Punkte) </text></p>
+    </para>
+    <!-- %**** auf9.tex-479873197-47.tex Line 50 **** -->
+    <para xml:id="Sx1.p2">
+      <p>Beweisen Sie: Die Potenzmenge einer <Math mode="inline" xml:id="Sx1.p2.m1" tex="n" text="n"><XMath><XMTok role="UNKNOWN" font="italic">n</XMTok></XMath></Math>-elementigen Menge besitzt <Math mode="inline" xml:id="Sx1.p2.m2" tex="2^{n}" text="2 ^ n"><XMath><XMApp><XMTok role="SUPERSCRIPTOP" scriptpos="post3"/><XMTok meaning="2" role="NUMBER">2</XMTok><XMTok role="UNKNOWN" font="italic">n</XMTok></XMApp></XMath></Math> Elemente.</p>
+    </para>
+    <para xml:id="Sx1.p3">
+      <p><text font="bold">Hinweise zur Lösung </text></p>
+    </para>
+    <para xml:id="Sx1.p4">
+      <break/>
+    </para>
+    <para xml:id="Sx1.p5">
+      <p><text font="bold">Beweis durch vollständige Induktion nach <Math mode="inline" xml:id="Sx1.p5.m1" tex="\bf n" text="n"><XMath><XMTok role="UNKNOWN">n</XMTok></XMath></Math>:<break/></text>
+<text font="bold">Induktionsanfang <Math mode="inline" xml:id="Sx1.p5.m2" tex="\bf(n=0)" text="n = 0"><XMath><XMApp close=")" open="("><XMTok meaning="equals" role="RELOP" font="medium">=</XMTok><XMTok role="UNKNOWN">n</XMTok><XMTok meaning="0" role="NUMBER">0</XMTok></XMApp></XMath></Math>:<break/></text>Ist <Math mode="inline" xml:id="Sx1.p5.m3" tex="M=\emptyset" text="M = empty-set"><XMath><XMApp><XMTok meaning="equals" role="RELOP">=</XMTok><XMTok role="UNKNOWN" font="italic">M</XMTok><XMTok meaning="empty-set" name="emptyset" role="ID">∅</XMTok></XMApp></XMath></Math>, dann gilt <Math mode="inline" xml:id="Sx1.p5.m4" tex="2^{M}={\emptyset}" text="2 ^ M = empty-set"><XMath><XMApp><XMTok meaning="equals" role="RELOP">=</XMTok><XMApp><XMTok role="SUPERSCRIPTOP" scriptpos="post3"/><XMTok meaning="2" role="NUMBER">2</XMTok><XMTok role="UNKNOWN" font="italic">M</XMTok></XMApp><XMTok meaning="empty-set" name="emptyset" role="ID">∅</XMTok></XMApp></XMath></Math> und <Math mode="inline" xml:id="Sx1.p5.m5" tex="|2^{M}|=1=2^{0}" text="absolute-value@(2 ^ M) = 1 = 2 ^ 0"><XMath><XMApp><XMTok meaning="multirelation"/><XMApp><XMTok argclose="|" argopen="|" meaning="absolute-value" role="FENCED"/><XMApp><XMTok role="SUPERSCRIPTOP" scriptpos="post3"/><XMTok meaning="2" role="NUMBER">2</XMTok><XMTok role="UNKNOWN" font="italic">M</XMTok></XMApp></XMApp><XMTok meaning="equals" role="RELOP">=</XMTok><XMTok meaning="1" role="NUMBER">1</XMTok><XMTok meaning="equals" role="RELOP">=</XMTok><XMApp><XMTok role="SUPERSCRIPTOP" scriptpos="post3"/><XMTok meaning="2" role="NUMBER">2</XMTok><XMTok meaning="0" role="NUMBER">0</XMTok></XMApp></XMApp></XMath></Math>.<break/>
+<text font="bold">Induktionsvoraussetzung:<break/></text>Für ein fest gewähltes beliebiges <Math mode="inline" xml:id="Sx1.p5.m6" tex="n" text="n"><XMath><XMTok role="UNKNOWN" font="italic">n</XMTok></XMath></Math> gilt die Behauptung.<break/>
+<text font="bold">Induktionsschritt <Math mode="inline" xml:id="Sx1.p5.m7" tex="\bf(n\rightarrow n+1)" text="n rightarrow n + 1"><XMath><XMApp close=")" open="("><XMTok name="rightarrow" role="ARROW" font="medium">→</XMTok><XMTok role="UNKNOWN">n</XMTok><XMApp><XMTok meaning="plus" role="ADDOP" font="medium">+</XMTok><XMTok role="UNKNOWN">n</XMTok><XMTok meaning="1" role="NUMBER">1</XMTok></XMApp></XMApp></XMath></Math>:<break/></text>Die Menge <Math mode="inline" xml:id="Sx1.p5.m8" tex="M" text="M"><XMath><XMTok role="UNKNOWN" font="italic">M</XMTok></XMath></Math> besitze <Math mode="inline" xml:id="Sx1.p5.m9" tex="n+1" text="n + 1"><XMath><XMApp><XMTok meaning="plus" role="ADDOP">+</XMTok><XMTok role="UNKNOWN" font="italic">n</XMTok><XMTok meaning="1" role="NUMBER">1</XMTok></XMApp></XMath></Math> Elemente. Sei <Math mode="inline" xml:id="Sx1.p5.m10" tex="a" text="a"><XMath><XMTok role="UNKNOWN" font="italic">a</XMTok></XMath></Math> ein beliebiges Element aus <Math mode="inline" xml:id="Sx1.p5.m11" tex="M" text="M"><XMath><XMTok role="UNKNOWN" font="italic">M</XMTok></XMath></Math>. Dann besteht die Menge <Math mode="inline" xml:id="Sx1.p5.m12" tex="M\setminus\{a\}" text="M set-minus set@(a)"><XMath><XMApp><XMTok meaning="set-minus" name="setminus" role="ADDOP">∖</XMTok><XMTok role="UNKNOWN" font="italic">M</XMTok><XMApp><XMTok argclose="}" argopen="{" meaning="set" role="FENCED"/><XMTok role="UNKNOWN" font="italic">a</XMTok></XMApp></XMApp></XMath></Math> aus <Math mode="inline" xml:id="Sx1.p5.m13" tex="n" text="n"><XMath><XMTok role="UNKNOWN" font="italic">n</XMTok></XMath></Math> Elementen. Außerdem gilt für die Potenzmenge von <Math mode="inline" xml:id="Sx1.p5.m14" tex="M\setminus\{a\}" text="M set-minus set@(a)"><XMath><XMApp><XMTok meaning="set-minus" name="setminus" role="ADDOP">∖</XMTok><XMTok role="UNKNOWN" font="italic">M</XMTok><XMApp><XMTok argclose="}" argopen="{" meaning="set" role="FENCED"/><XMTok role="UNKNOWN" font="italic">a</XMTok></XMApp></XMApp></XMath></Math> nach Induktionvoraussetzung: <Math mode="inline" xml:id="Sx1.p5.m15" tex="\left|2^{M\setminus\{a\}}\right|=2^{n}" text="absolute-value@(2 ^ (M set-minus set@(a))) = 2 ^ n"><XMath><XMApp><XMTok meaning="equals" role="RELOP">=</XMTok><XMApp><XMTok argclose="|" argopen="|" meaning="absolute-value" role="FENCED"/><XMApp><XMTok role="SUPERSCRIPTOP" scriptpos="post4"/><XMTok meaning="2" role="NUMBER">2</XMTok><XMApp><XMTok meaning="set-minus" name="setminus" role="ADDOP">∖</XMTok><XMTok role="UNKNOWN" font="italic">M</XMTok><XMApp><XMTok argclose="}" argopen="{" meaning="set" role="FENCED"/><XMTok role="UNKNOWN" font="italic">a</XMTok></XMApp></XMApp></XMApp></XMApp><XMApp><XMTok role="SUPERSCRIPTOP" scriptpos="post3"/><XMTok meaning="2" role="NUMBER">2</XMTok><XMTok role="UNKNOWN" font="italic">n</XMTok></XMApp></XMApp></XMath></Math>. Für die Potenzmenge von <Math mode="inline" xml:id="Sx1.p5.m16" tex="M" text="M"><XMath><XMTok role="UNKNOWN" font="italic">M</XMTok></XMath></Math> gilt somit:</p>
+      <equation xml:id="Sx1.Ex1">
+        <Math mode="display" xml:id="Sx1.Ex1.m1" tex="2^{M}=2^{M\setminus\{a\}}\cup\bigcup_{N\in 2^{M\setminus\{a\}}}(N\cup\{a\})" text="2 ^ M = 2 ^ (M set-minus set@(a)) union (union _ (N element-of 2 ^ (M set-minus set@(a))))@(N union set@(a))">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="equals" role="RELOP">=</XMTok>
+              <XMApp>
+                <XMTok role="SUPERSCRIPTOP" scriptpos="post2"/>
+                <XMTok meaning="2" role="NUMBER">2</XMTok>
+                <XMTok role="UNKNOWN" font="italic">M</XMTok>
+              </XMApp>
+              <XMApp>
+                <XMTok meaning="union" name="cup" role="ADDOP">∪</XMTok>
+                <XMApp>
+                  <XMTok role="SUPERSCRIPTOP" scriptpos="post2"/>
+                  <XMTok meaning="2" role="NUMBER">2</XMTok>
+                  <XMApp>
+                    <XMTok meaning="set-minus" name="setminus" role="ADDOP">∖</XMTok>
+                    <XMTok role="UNKNOWN" font="italic">M</XMTok>
+                    <XMApp>
+                      <XMTok argclose="}" argopen="{" meaning="set" role="FENCED"/>
+                      <XMTok role="UNKNOWN" font="italic">a</XMTok>
+                    </XMApp>
+                  </XMApp>
+                </XMApp>
+                <XMApp>
+                  <XMApp scriptpos="mid">
+                    <XMTok role="SUBSCRIPTOP" scriptpos="mid2"/>
+                    <XMTok mathstyle="display" meaning="union" name="bigcup" role="SUMOP" scriptpos="mid">⋃</XMTok>
+                    <XMApp>
+                      <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+                      <XMTok role="UNKNOWN" font="italic">N</XMTok>
+                      <XMApp>
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="post3"/>
+                        <XMTok meaning="2" role="NUMBER">2</XMTok>
+                        <XMApp>
+                          <XMTok meaning="set-minus" name="setminus" role="ADDOP">∖</XMTok>
+                          <XMTok role="UNKNOWN" font="italic">M</XMTok>
+                          <XMApp>
+                            <XMTok argclose="}" argopen="{" meaning="set" role="FENCED"/>
+                            <XMTok role="UNKNOWN" font="italic">a</XMTok>
+                          </XMApp>
+                        </XMApp>
+                      </XMApp>
+                    </XMApp>
+                  </XMApp>
+                  <XMApp close=")" open="(">
+                    <XMTok meaning="union" name="cup" role="ADDOP">∪</XMTok>
+                    <XMTok role="UNKNOWN" font="italic">N</XMTok>
+                    <XMApp>
+                      <XMTok argclose="}" argopen="{" meaning="set" role="FENCED"/>
+                      <XMTok role="UNKNOWN" font="italic">a</XMTok>
+                    </XMApp>
+                  </XMApp>
+                </XMApp>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math>
+      </equation>
+      <p>Mit anderen Worten: Die Potenzmenge von <Math mode="inline" xml:id="Sx1.p5.m17" tex="M" text="M"><XMath><XMTok role="UNKNOWN" font="italic">M</XMTok></XMath></Math> besteht aus allen Mengen von <Math mode="inline" xml:id="Sx1.p5.m18" tex="2^{M\setminus\{a\}}" text="2 ^ (M set-minus set@(a))"><XMath><XMApp><XMTok role="SUPERSCRIPTOP" scriptpos="post2"/><XMTok meaning="2" role="NUMBER">2</XMTok><XMApp><XMTok meaning="set-minus" name="setminus" role="ADDOP">∖</XMTok><XMTok role="UNKNOWN" font="italic">M</XMTok><XMApp><XMTok argclose="}" argopen="{" meaning="set" role="FENCED"/><XMTok role="UNKNOWN" font="italic">a</XMTok></XMApp></XMApp></XMApp></XMath></Math> und aus deren Vereinigung mit der Menge <Math mode="inline" xml:id="Sx1.p5.m19" tex="\{a\}" text="set@(a)"><XMath><XMApp><XMTok argclose="}" argopen="{" meaning="set" role="FENCED"/><XMTok role="UNKNOWN" font="italic">a</XMTok></XMApp></XMath></Math> - das sind noch einmal <Math mode="inline" xml:id="Sx1.p5.m20" tex="2^{n}" text="2 ^ n"><XMath><XMApp><XMTok role="SUPERSCRIPTOP" scriptpos="post2"/><XMTok meaning="2" role="NUMBER">2</XMTok><XMTok role="UNKNOWN" font="italic">n</XMTok></XMApp></XMath></Math> Mengen. Insgesamt gilt also für die Mächtigkeit der Potenzmenge von <Math mode="inline" xml:id="Sx1.p5.m21" tex="M" text="M"><XMath><XMTok role="UNKNOWN" font="italic">M</XMTok></XMath></Math>:</p>
+      <equation xml:id="Sx1.Ex2">
+        <Math mode="display" xml:id="Sx1.Ex2.m1" tex="|2^{M}|=2^{n}+2^{n}=2\cdot 2^{n}=2^{n+1}" text="absolute-value@(2 ^ M) = 2 ^ n + 2 ^ n = 2 cdot 2 ^ n = 2 ^ (n + 1)">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="multirelation"/>
+              <XMApp>
+                <XMTok argclose="|" argopen="|" meaning="absolute-value" role="FENCED"/>
+                <XMApp>
+                  <XMTok role="SUPERSCRIPTOP" scriptpos="post2"/>
+                  <XMTok meaning="2" role="NUMBER">2</XMTok>
+                  <XMTok role="UNKNOWN" font="italic">M</XMTok>
+                </XMApp>
+              </XMApp>
+              <XMTok meaning="equals" role="RELOP">=</XMTok>
+              <XMApp>
+                <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                <XMApp>
+                  <XMTok role="SUPERSCRIPTOP" scriptpos="post2"/>
+                  <XMTok meaning="2" role="NUMBER">2</XMTok>
+                  <XMTok role="UNKNOWN" font="italic">n</XMTok>
+                </XMApp>
+                <XMApp>
+                  <XMTok role="SUPERSCRIPTOP" scriptpos="post2"/>
+                  <XMTok meaning="2" role="NUMBER">2</XMTok>
+                  <XMTok role="UNKNOWN" font="italic">n</XMTok>
+                </XMApp>
+              </XMApp>
+              <XMTok meaning="equals" role="RELOP">=</XMTok>
+              <XMApp>
+                <XMTok name="cdot" role="MULOP">⋅</XMTok>
+                <XMTok meaning="2" role="NUMBER">2</XMTok>
+                <XMApp>
+                  <XMTok role="SUPERSCRIPTOP" scriptpos="post2"/>
+                  <XMTok meaning="2" role="NUMBER">2</XMTok>
+                  <XMTok role="UNKNOWN" font="italic">n</XMTok>
+                </XMApp>
+              </XMApp>
+              <XMTok meaning="equals" role="RELOP">=</XMTok>
+              <XMApp>
+                <XMTok role="SUPERSCRIPTOP" scriptpos="post2"/>
+                <XMTok meaning="2" role="NUMBER">2</XMTok>
+                <XMApp>
+                  <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                  <XMTok role="UNKNOWN" font="italic">n</XMTok>
+                  <XMTok meaning="1" role="NUMBER">1</XMTok>
+                </XMApp>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math>
+      </equation>
+      <p>Damit ist die Behauptung gezeigt.</p>
+    </para>
+  </section>
+</document>

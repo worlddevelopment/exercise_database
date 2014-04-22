@@ -24,7 +24,7 @@ public enum Language {
 
 	//public static final Map<String, String> translation;
 	
-	public static final Map<String, String> english;//en2en;
+	public static final Map<String, String> english;//en2en;<--not required as english is already english
 	public static final Map<String, String> german;//en2de;
 	public static final Map<String, String> french;//en2fr;
 	//The cleaner not working approach using the enums ordinal().
@@ -33,69 +33,12 @@ public enum Language {
 		
 		/* ENGLISH */
 		//position 0 <-- English (see enumeration Languages)
-		Map<String, String> aMap = new HashMap<String, String>();
+		Map<String, String> aMap;
+		aMap = new HashMap<String, String>();
 		aMap.clear();
-		aMap.put("exercise database", "Exercise Database");
 		
-		aMap.put("semester", "semester");
-		aMap.put("course", "course");
-		aMap.put("courses", "courses");
-		aMap.put("lecturer", "lecturer");
-		aMap.put("type", "type");
-		aMap.put("types", "types");
-
-		aMap.put("filelink", "filelink");
-		aMap.put("author", "author");
-		aMap.put("uploaded by", "uploaded by");
-		aMap.put("splitter", "splitter");
-		
-		aMap.put("filetype", "filetype");
-		aMap.put("content", "content");
-		
-		aMap.put("uebung", "exercise");//TODO redo this completely, adapt search to look within all languages
-		aMap.put("loesung", "solution");
-		aMap.put("klausur", "exam");
-		aMap.put("klausurloesung", "exam solution");
-		
-		aMap.put("sheet", "sheet");
-		aMap.put("sheets", "sheets");
-		aMap.put("draft", "draft");
-		aMap.put("drafts", "drafts");
-		aMap.put("exercise", "exercise");
-		aMap.put("exercises", "exercises");
-		aMap.put("exercise_sheettype", "exercise");//for distinction simply add '_sheettype'
-		aMap.put("exercises_sheettype", "exercise_sheets");
-		
-		aMap.put("upload", "upload");
-		aMap.put("send", "send");
-		aMap.put("create", "create");
-		aMap.put("to_search", "search");
-		aMap.put("search", "search");
-		aMap.put("extended search", "extended search");
-		aMap.put("more searchcriteria", "more searchcriteria");
-		aMap.put("last modified", "last modified");
-		aMap.put("hello", "hello");
-		aMap.put("view", "view");
-		//search
-		aMap.put("hits", "hits");
-				
-		
-		//MENU
-		aMap.put("start", "start");//home
-		aMap.put("add sheet", "add sheet");//home
-		aMap.put("add a sheet", "add sheet");//home
-		aMap.put("statistics", "statistics");
-		aMap.put("profile", "profile");
-		
-		aMap.put("edit", "edit");
-		aMap.put("add to draft", "add to draft");
-		
-		aMap.put("seconds", "seconds");
-		aMap.put("collapse the whole tree", "collapse the whole tree");
-		aMap.put("minimize the whole tree", "minimize the whole tree");
-		aMap.put("unfold the whole tree", "unfold the whole tree");
-		aMap.put("expand the whole tree", "expand the whole tree");
-		
+//		aMap.put("exercise_sheettype", "exercise");//for distinction simply add '_sheettype'
+//		aMap.put("exercises_sheettype", "exercise_sheets");
 		
 		english = Collections.unmodifiableMap(aMap);
 		//translations[Language.ENGLISH.ordinal()] = Collections.unmodifiableMap(aMap);
@@ -111,6 +54,10 @@ public enum Language {
 		aMap = new HashMap<String, String>();
 		//position 1 <-- German (see enumeration Languages)
 		//aMap.clear();<-old approach,not working for unmodifiable list,only last assignment is valid
+		aMap.put("english", "Englisch");
+		aMap.put("german", "Deutsch");
+		aMap.put("french", "Franz&ouml;sisch");
+		
 		aMap.put("exercise database", "Aufgaben Datenbank");
 		
 		aMap.put("semester", "Semester");
@@ -128,10 +75,17 @@ public enum Language {
 		aMap.put("filetype", "Dateityp");
 		aMap.put("content", "Inhalt");
 		
-		aMap.put("uebung", "\u00DCbung");//TODO redo this completely, adapt search to look within all languages
-		aMap.put("loesung", "L\u00F6sung");
-		aMap.put("klausur", "Klausur");
-		aMap.put("klausurloesung", "Klausurl\u00F6sung");
+		//aMap.put("exercise", "\u00DCbung");//TODO redo this completely, adapt search to look within all languages
+		aMap.put("sheet", "\u00DCbungsblatt");
+		aMap.put("sheet_solution", "\u00DCbungsblattl\u00F6sung");
+		aMap.put("spreadsheet", "\u00DCbungsblatt");
+		aMap.put("spreadsheet_solution", "\u00DCbungsblattl\u00F6sung");
+		aMap.put("exercise_sheet", "\u00DCbungsblatt");
+		aMap.put("exercise_sheet_solution", "\u00DCbungsl\u00F6sung");
+		aMap.put("exercise_solution", "\u00DCbungsl\u00F6sung");
+		aMap.put("exercises_solution", "\u00DCbungsl\u00F6sung");
+		aMap.put("exam", "Klausur");
+		aMap.put("exam_solution", "Klausurl\u00F6sung");
 		
 		aMap.put("sheet", "Blatt");
 		aMap.put("sheets", "Bl\u00E4tter");
@@ -157,9 +111,9 @@ public enum Language {
 		
 		//MENU
 		aMap.put("start", "Start");//home
-		aMap.put("upload sheet", "Blatt hinzuf\u00FCgen");//home
-		aMap.put("add sheet", "Blatt hinzuf\u00FCgen");//home
-		aMap.put("add a sheet", "Blatt hinzuf\u00FCgen");//home
+		aMap.put("upload sheet", "Blatt hinzuf\u00FCgen");
+		aMap.put("add sheet", "Blatt hinzuf\u00FCgen");
+		aMap.put("add a sheet", "Blatt hinzuf\u00FCgen");
 		aMap.put("statistics", "Statistik");
 		aMap.put("profile", "Profil");
 		
@@ -172,6 +126,42 @@ public enum Language {
 		aMap.put("unfold the whole tree", "Den ganzen Baum aufklappen");
 		aMap.put("expand the whole tree", "Den ganzen Baum ausklappen");
 		
+		aMap.put("entries_found", "Eintru00E4ge gefunden");
+		aMap.put("entries found", "Eintru00E4ge gefunden");
+		
+		aMap.put("fileformat", "Dateiformat");
+		aMap.put("remove", "entfernen");
+		aMap.put("remove multiple", "Mehrere entfernen");
+		aMap.put("multiple", "mehrere");
+		//B
+		aMap.put("belongs to", "geh\u00F6rt zu");
+		aMap.put("belongs", "geh\u00F6rt");
+		//C
+		aMap.put("category", "Kategorie");
+		aMap.put("corresponding", "zugeh\u00F6rig");
+		aMap.put("corresponding solution", "zugeh\u00F6rige L\u00F6sung");
+		//D
+		aMap.put("data", "Daten");
+		//N
+		aMap.put("new draft", "neuer Entwurf");
+		//O
+		aMap.put("or", "oder");
+		aMap.put("origin", "Ursprung");
+		//P
+		aMap.put("program", "Programm");
+		//S
+		//aMap.put("settings", "Einstellungen");//"Sonnenunterg\u00E4nge");
+		//T
+		aMap.put("tag", "Begriff");
+		aMap.put("tags", "Begriffe");
+		aMap.put("to", "zu");
+		//U
+		aMap.put("upload date", "Hochlade-Datum");
+		//V
+		//W
+		//X
+		//Y
+		//Z
 		
 		german = Collections.unmodifiableMap(aMap);
 		//translations[Language.GERMAN.ordinal()] = Collections.unmodifiableMap(aMap);
@@ -187,6 +177,10 @@ public enum Language {
 		/* FRENCH */
 		aMap = new HashMap<String, String>();
 		aMap.clear();
+		aMap.put("english", "anglais");
+		aMap.put("german", "allemand");
+		aMap.put("french", "francais");
+		
 		aMap.put("exercise database", "Base de Données d'Exercice");
 		
 		aMap.put("semester", "semestre");
@@ -204,10 +198,16 @@ public enum Language {
 		aMap.put("filetype", "type de fichier");
 		aMap.put("content", "contenu");
 		
-		aMap.put("uebung", "exercice");//TODO redo this completely, adapt search to look within all languages
-		aMap.put("loesung", "solution");
-		aMap.put("klausur", "exam");
-		aMap.put("klausurloesung", "exam solution");
+		aMap.put("sheet", "feuille d'exercice");
+		aMap.put("sheet_solution", "solution de la feuille d'exercice");
+		aMap.put("spreadsheet", "feuille d'exercice");
+		aMap.put("spreadsheet_solution", "solution de la feuille d'exercice");
+		aMap.put("exercise_sheet", "feuille d'exercice");//TODO redo this completely, adapt search to look within all languages
+		aMap.put("exercise_sheet_solution", "solution de la feuille d'exercice");
+		aMap.put("exercise_solution", "solution d'exercice");
+		aMap.put("exercises_solution", "solution de la feuille d'exercice");
+		aMap.put("exam", "exam");
+		aMap.put("exam_solution", "exam solution");
 		
 		aMap.put("sheet", "feuille");
 		aMap.put("sheets", "feuilles");
@@ -247,6 +247,49 @@ public enum Language {
 		aMap.put("minimize the whole tree", "minimiser l'arbre entierDen ganzen Baum ausklappen");
 		aMap.put("unfold the whole tree", "développez l'arbre entier");
 		aMap.put("expand the whole tree", "développez l'arbre entierDen ganzen Baum ausklappen");
+
+		aMap.put("entries found", "trouvu00E9es");
+		
+		aMap.put("fileformat", "fileformat"/*format fichier"*/);
+		
+		aMap.put("remove", "supprimer");
+		//aMap.put("remove multiple", "supprimer");
+		aMap.put("multiple", "multiple");
+		
+		
+		//B
+		aMap.put("belongs to", "appartient \u00E0");//belongs to //TODO:grammar. 
+		aMap.put("belongs", "associ\u00E9");
+		//C
+		aMap.put("category", "Kategorie");
+		aMap.put("corresponding", "correspondant");
+		aMap.put("corresponding solution", "solution correspondant");
+		//D
+		aMap.put("data", "data");
+		//N
+		aMap.put("new draft", "nouveaux \u00E9bauche");//e accente aigu <-TODO
+		//O
+		aMap.put("or", "ou");
+		aMap.put("origin", "origine");
+		//P
+		aMap.put("program", "programme");
+		//S
+		//aMap.put("settings", "Einstellungen");//"Sonnenunterg\u00E4nge");
+		//T
+		aMap.put("tag", "terme");
+		aMap.put("tags", "termes");
+		aMap.put("to", "\u00E0");//a apostrophe de grave :)
+		//U
+		aMap.put("upload date", "upload date");
+	    //V
+		
+		//W
+		
+		//X
+		
+		//Y
+		
+		//Z
 		
 		//en2fr
 		french = Collections.unmodifiableMap(aMap);

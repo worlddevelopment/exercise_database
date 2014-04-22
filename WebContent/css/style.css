@@ -13,6 +13,9 @@
 
 /*======= GENERAL ========================================================*/
 /* affects tags */
+hr {
+	clear: both;
+}
 input[type="radio"],
 input[type="checkbox"] {
 	margin: 7px;
@@ -48,13 +51,18 @@ input[type="file"] {
 td {
   padding-top:5px;
   padding-bottom:5px;
-  padding-right:5px;   
+  padding-right:5px; 
+  width: 13%;
+  max-width: 200px;
+  overflow: hidden;  
 }
-
-
 td:first-child {
-  padding-left:5px;
-  padding-right:5;
+  padding-left:0px;
+  padding-right:0;
+  text-align: left;/*as of v31.14*/
+}
+td input[type="checkbox"] {
+	box-shadow: none;
 }
 
 #edit_buttons a:visited,a,a:LINK{
@@ -113,17 +121,22 @@ button.menue {
 
 
 /* affecting id bearing elements */
-#wrapper{
-    padding-left:30px;
-    min-width:1024px; // Wrapper: damit wird die Seite nich zerrisen.
+div#wrapper {
+    min-width:1024px; /*// Wrapper: damit wird die Seite nich zerrisen. [sic.] */
+    width: 90%;
+    max-width: 1450px; /* because of the limited resolution of the header image */
+    margin: auto;
+}
+div#wrapper > div,
+div#wrapper > a {
+	/*width: 100%;/*95%;*/ 
+	/*max-width: 1450px; /* because of the limited resolution of the header image */
 }
 
-#kopf{
-    /*width:95%;
-    background-color:#C1C9CA;*/
+#kopf {
+    background-color:#C1C9CA;
     
     background-image: url(../pictures/logo.png);
-    width: 95%;
     height: 55px;
     display: block;
     z-index: 4;
@@ -131,8 +144,7 @@ button.menue {
     background-repeat: no-repeat;
     
 }   
-#navi{
-    width:95%;
+#navi {
     /*min-height:250px;*/
     height: 70px;
     text-align:left;
@@ -141,13 +153,11 @@ button.menue {
 #inhalt{
     font-family:Arial, Helvetica, sans-serif;
     /*background-color:#39C; */
-    width: 95%; 
     min-height:300px;
     
 }
 #fuss{
     margin-top:10px;
-    width:95%;
     clear:both;
     
 }
@@ -159,16 +169,23 @@ button.menue {
     padding:5px;
     display:none;
     color:green;
+    
+}
+#screenshot_img {/*55em*/
+    /*width: 100%; for smaller devices*/
+	max-width: 595pt;/*for A4: 1pt = 0,3527mm <=> 2,8353pt = 1mm <=> 5,6706pt + 0,28353pt = 2mm + 0,1mm <=> 5,95413pt = 2,1mm <=> 595,413pt*/
 }
 
 #stern {
     color: red;
 }
-#draft_img {
+#draft_img,
+.draft_img,
+.draftimg {
     border: solid 3px gray;
     padding: 8px;
-    margin: 10px;
-    margin-left: 100px;
+    /*margin: 10px;*/
+    /*margin-left: 100px;*/
     }
 #info {
     margin-top:50px;
@@ -185,7 +202,20 @@ button.menue {
 
 
 /* classes */
-
+.overlay {
+	position: fixed;
+	width: 101%;
+	height: 101%;
+	scroll: no-scroll;
+	top:0;
+	left:0;
+	display: none;
+	z-index: 1;
+	background-color:rgba(55,55,55, .7);
+}
+.overlay[class*="inline"] {
+	display: inline;
+}
 .login {
 	font-size : 16px;
 }
@@ -212,12 +242,12 @@ button.menue {
 
 
 /*======= GLOBAL MESSAGES ================================================*/
-div.globalMessage {
-	box-shadow: 0 0 2px;
-}
 body,
 .reset {
 	counter-reset: no;
+}
+div.globalMessage {
+	box-shadow: 0 0 2px;
 }
 div.globalMessage div {
 	counter-increment: no;
@@ -240,8 +270,8 @@ div.globalMessage div:before {
 	box-shadow: 0 0 2px;
 	padding: 0;
     margin-top:8px;
-	width: 96.5%; /*95% + .5em*/
-    max-width: 1480px;
+	width: 100%;/*96.5%; /*95% + .5em*/
+    /*max-width: 1480px;*/
 }
 .info {
     display: block;
@@ -288,9 +318,41 @@ div.globalMessage div:before {
 }
 
 
+.centered {
+    position: absolute;
+	width: 78%;
+	/*height: 75%;*/
+	left: 50%;
+	top: 15%;/*50%;*/
+	max-height: 70%;
+	overflow: auto;
+	margin-left: -41%;
+	/*margin-top: -10%;*/
+	z-index: 111;
+	padding: 2%;
+	/*border: 3px solid rgb(155, 155, 255);
+	background-color: rgba(255, 255, 255, 0.9);*/
+
+}
+.fixed {
+	position: fixed;
+}
+
+/*#screenshot { z-index:1111; } <--inside toolTip.js*/
+
+
+
+
 /*-------START------------------------------------------------------------------*/
 .start_list {
 	clear: both;
+}
+#ansichtLabel {
+	line-height: 24pt;
+} 
+.filterForm {
+	width: 30%;
+	float: right;
 }
 
 /*from my fairyclasses*/
@@ -385,6 +447,234 @@ div.globalMessage div:before {
  
  .icon {
    height: 25px;
+   vertical-align: bottom;
+   /*for now the icons are created directly as image in the html.
+   background-position: 10px; 
+   background-repeat: no-repeat;
+   */
+ }
+ 
+
+/*icons for each file type:*/
+.docx {
+   background-image: url("../img/css/docx.svg");
+}
+.odt {
+   /*background-image: url("../img/css/odt.svg");*/
+}
+.tex {
+   background-image: url("../img/css/tex.svg");
+}
+
+.pdf {
+   background-image: url("../img/css/pdf.svg");
+}
+
+/*-------INDICATORY--------------------------------------------------------------*/
+.loader, #loader {
+	display: none;/*<-- default is to not display the indicators. 
+	       They are shown once an ajax request is dispatched.*/
+	background-image: url("../pictures/loader.gif");
+	background-repeat: no-repeat;
+	height: 70px;
+	width: 70px;
+	padding-top: 30px; 
+	/* without padding possible descriptive text in the container is hovering the background-image. */
+}
+
+tr[onclick] th {/*<-- Only those table headings that have events attached should transform the mouse into a clickable indicator. */
+	cursor: pointer;
+}
+ 
+ /*-------DRAFTS------------------------------------------------------------------*/
+ .draftrow {
+     margin-top: 20px;
+     margin-bottom: 20px;
+     border: solid 3px gray;
+     padding: 8px;
+ }
+ .draftform:nth-child(2n) {
+     background-color: rgb(255, 200, 255);
+ }
+ .draftform:nth-child(2n+1) {/*odd*/
+     background-color: rgb(255, 255, 200);
+ }
+
+ .draft_exercise_row {
+     /*text-align: right;*/
+     margin-top: 30px;
+     /*position: relative;
+     top: 30px;*/
+     clear: both;
+     width: 100%;
+ }
+ .draft_exercise_img label {
+     width: 97%;
+     clear: both; /*as in the bootstrap the label is assigned float:left; what will break the layout here.*/
  }
  
  
+ 
+ 
+ /*-------TABLESORTER-------------------------------------------------------------*/
+tr label img,
+tr label + hr {
+    display:none;
+}
+tr:hover label img
+/*, tr:hover + tr label img*/ {
+    /*display: inline;
+    max-width: inherit;*/
+}
+    .pager {
+            padding: 0 20px 5px 20px;
+    }
+    table.grid tr td:first-child {
+        min-width: 10px;
+        width: 10px;
+        padding-left: 0px;
+    }
+    table.grid td:nth-child(2) {
+        overflow: visible;
+    }
+    /*<--non-visibility is the default to avoid confusion as 
+            there is nothing being grouped by by default and then the plus/minus image is senseless.*/
+    tr:not(.expand-child) ~ /*read: Those tr with the expansion class following a tr without expansion class.*/
+    tr.expand-child td:first-child a {/*first-child because the action/checkbox is in this column.*/
+        /*hide the collapse/expand links (to whom the javascript collapse/expand event is attached)*/
+        visibility: hidden;
+    }
+    /*Note: This className (expand-child) has to be equal to JavaScript CSS_CLASS_EXPANSION.*/
+    /*@Override special case because this ensures here the imagelinks for collapsing/expanding are shown:*/
+    /*
+    tr:not(.expand-child) td:first-child a {
+        visibility: hidden;
+    }
+    */
+    
+    /* define table skin */
+    table.grid {
+        margin: 0;
+        padding: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+    
+    table.grid * {
+        font: 11px Arial, Helvetica, sans-serif;
+        vertical-align: top;
+        text-align: left;
+    }
+    
+    /*
+    table.grid thead,
+    table.grid .collapsible {
+        background-color: #e6edc1;
+    }
+    */
+
+    /* use the below style below to hide the collapsed rows via CSS, you must also set the showCollapsed setting to true */     
+/*
+*/
+    table.grid tr.expand-child.collapsed td { /*<-- to make 'collapsed' the default state, see tablesorter.collapsible.js*/
+        display: none;
+    }
+    /* Override: */
+    /* Attention: destroying the formatting because of setting display explicitely for tds somehow!
+    table.grid tr.expand-child.expanded td { / *<-- to make 'collapsed' the default state, see tablesorter.collapsible.js * /
+        display: block;
+    }
+    table.grid tr.expanded td {
+        display: inline;
+    }
+    */
+    /* buggy on readding the table row: (will indent into the preceding tr strangely, but different to above)
+    table.grid tr.collapsed {
+        display: none;
+    }
+  */
+
+    table.grid th {
+        color: #565770;
+        padding: 4px 16px 4px 0;
+        cursor: pointer;
+        background-image: url(../jquery/tablesorter/tablesorter_bkgrd.png);
+        background-position: -101% -101%;/*to put it out of visibility*/
+        background-repeat: no-repeat;
+        /*background-color: #e6edc1;*/
+        border-bottom: 4px solid lavender;
+    }
+    table.grid tbody tr:first-child td {
+        padding-top: 7pt;
+    } 
+    
+    table.grid td {
+        color: #565770;
+        padding: 4px 6px;
+    }
+    
+    table.grid th.headerSortUp {
+        background-position: 100% -80px;
+    }
+    
+    table.grid th.headerSortUp span {
+        background-position: 0 -80px;
+    }
+    
+    table.grid th.headerSortDown {
+        background-position: 100% 2px;
+    }
+    
+    table.grid th.headerSortDown span {
+         background-position: 0 2px;
+    }
+    
+    table.grid th span {
+        padding: 4px 0 4px 6px;
+        font-weight: bold;
+    }
+    
+    table.grid a:link,
+    table.grid a:visited,
+    table.grid a:focus,
+    table.grid a:hover {
+        color: #565770;
+        font-weight: bold;
+        text-decoration: underline;
+    }
+    
+    table.grid a:hover {
+        color: #d07c57;
+    }
+    
+    table.grid tr.even/*,
+    table.grid tr:nth-of-type(2n)*/ {
+        background-color: #f0f0f0;
+    }
+    
+
+    /* expand/collapse */
+    table.grid .collapsible {
+        padding: 0 0 3px 0;
+    }
+
+    .collapsible a.collapsed {
+        /*background: url(./tablesorter_expand.png) no-repeat 3px 3px;*/
+        background: url("../jquery.treeview/images/plus.gif") no-repeat;
+    }
+    .collapsible a.expanded,
+    .collapsible a.collapsed {
+        margin-left: 10px;
+        margin-top: 2px;
+        display: block;
+        width: 15px;
+        height: 15px;
+        outline: 0;
+    }
+    .collapsible a.expanded {
+        /*background: url(./tablesorter_expand.png) no-repeat -24px 3px;*/
+        background: url("../jquery.treeview/images/minus.gif") no-repeat;
+    }
+    
+    

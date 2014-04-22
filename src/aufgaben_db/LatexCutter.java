@@ -12,16 +12,18 @@ import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
+//TODO use JEuclid instead. (scilab jlatexmath was introduced by me (J.R.I.B.) only temporarily).
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
 
-import HauptProgramm.Declaration;
+import converter.Converter;
+
 
 /**
  * Klasse, die Methoden zum schneiden eines .tex-files bereitstellt.
  * 
- * @author Schweiner
+ * @author Schweiner, Artijom, J.R.I.B.
  *
  */
 public class LatexCutter {
@@ -108,7 +110,7 @@ public class LatexCutter {
 		for (int i = 0; i < linesToCut.size() - 1; i++) {
 			// ArrayList für eine geschnittene Aufgabe erzeugen
 			ArrayList<String> cutExercise = new ArrayList<String>();
-			// von der Zeile des derzeigen Cut-indices bis zur Zeile des nächsten cut-indices
+			// von der Zeile des derzeigen Cut-indices bis zur Zeile des n\u00E4chsten cut-indices
 			// schneiden und speichern
 			for (int j = linesToCut.get(i); j < linesToCut.get(i + 1); j++ ) {
 				cutExercise.add(allTexLines[j]);
@@ -131,7 +133,7 @@ public class LatexCutter {
 			
 			//write to filesystem 
 			String new_ex_filelink = sheetdraft.getFilelinkForExerciseFromPosWithoutEnding(
-					ex_count_and_pos) + sheetdraft.getFileEnding();
+					ex_count_and_pos, ex_count_and_pos) + sheetdraft.getFileEnding();
 			ReadWrite.write(exerciseText, new_ex_filelink);
 			
 			/*METHOD 1 via pdf*/
@@ -166,66 +168,12 @@ public class LatexCutter {
 	}
 	static void createImagesForExercises(Collection<Exercise> exercises) throws FileNotFoundException {
 		for (Exercise exercise : exercises) {
-			tex2image(exercise.filelink);
+			Converter.tex2image(exercise.filelink);
 		}
 	}
 	
-	/**
-	 * Creates an image out of a chunk of tex that gets loaded from the filesystem.
-	 * 
-	 * @param filelink
-	 * @param writeToDisk -- write the image to the filesystem replacing the original ending with png.
-	 * @return a buffer of the image
-	 * @throws FileNotFoundException
-	 */
-	static BufferedImage tex2image(String filelink) throws FileNotFoundException {
-		return tex2image(filelink, true);
-	}
 	
-	static BufferedImage tex2image(String filelink, boolean writeToDisk) throws FileNotFoundException {
-//		String math = "\\frac {V_m} {K_M+S}";
-//		TeXFormula formula = new TeXFormula(math);
-//		TeXIcon ti = fomula.createTeXIcon(TeXConstants.STYLE_DISPLAY, 40);
-//		BufferedImage b = new BufferedImage(ti.getIconWidth(), ti.getIconHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-//		ti.paintIcon(new JLabel(), b.getGraphics(), 0, 0);
-		String tex;
-		tex = Global.arrayToString(ReadWrite.loadText(filelink));
-		
-		TeXFormula formula = new TeXFormula(tex);
-		TeXIcon icon = formula.new TeXIconBuilder()
-				.setStyle(TeXConstants.STYLE_DISPLAY)
-//				.setWidth(TeXConstants.UNIT_CM, 4, TeXConstants.ALIGN_LEFT)
-//				.setInterLineSpacing(TeXConstants.UNIT_CM, 0.5f)
-				.setSize(20)
-				.build();
-		
-		
-		icon.setInsets(new Insets(5, 5, 5, 5));
-		
-		BufferedImage tex_image_buffer
-		= new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-		
-		//Graphics2D g2 = image.createGraphics();
-		//g2.setColor(Color.white);
-		//g2.fillRect(0,0,icon.getIconWidth(),icon.getIconHeight());
-		//JLabel jl = new JLabel();
-		//jl.setForeground(new Color(0, 0, 0));
-		//icon.paintIcon(jl, g2, 0, 0);
-		if (writeToDisk) {
-			File tex_image_file = new File(Global.convertToImageLink(filelink));
-			try {
-			    ImageIO.write(tex_image_buffer, "png", tex_image_file.getAbsoluteFile());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		//ALTERNATIVELY
-		//formula.createPNG(TeXConstants.STYLE_DISPLAY, 20, "Example5.png", Color.white, Color.black);
-		
-		return tex_image_buffer;
-		
-	}
+
 
 		
 		
@@ -310,7 +258,7 @@ public class LatexCutter {
 //	}
 
 	/**
-	 * Ersetzt alle Umlate und ß in der ensprechenden Zeile durch Ersatzzeichen
+	 * Ersetzt alle Umlate und \u00DF in der ensprechenden Zeile durch Ersatzzeichen
 	 * und gibt den veraenderten String wieder aus. 
 	 * 
 	 * @changelog JRIBW changed Oe -> \"O, etc. It's latex, to be tested! TODO
@@ -319,19 +267,19 @@ public class LatexCutter {
 	 */
 	private static String ersetzeUmlaute(String zeile) {
 		
-		String ergebnis = zeile.replaceAll("Ö", "\\\"O");
+		String ergebnis = zeile.replaceAll("\u00D6", "\\\"O");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("ö", "\\\"o");
+		ergebnis = ergebnis.replaceAll("\u00F6", "\\\"o");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("Ü", "\\\"U");
+		ergebnis = ergebnis.replaceAll("\u00DC", "\\\"U");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("ü", "\\\"u");
+		ergebnis = ergebnis.replaceAll("\u00FC", "\\\"u");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("Ä", "\\\"A");
+		ergebnis = ergebnis.replaceAll("\u00C4", "\\\"A");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("ä", "\\\"a");
+		ergebnis = ergebnis.replaceAll("\u00E4", "\\\"a");
 		//System.out.println(ergebnis);
-		ergebnis = ergebnis.replaceAll("ß", "sz");
+		ergebnis = ergebnis.replaceAll("\u00DF", "sz");
 		return ergebnis;
 	}
 }	

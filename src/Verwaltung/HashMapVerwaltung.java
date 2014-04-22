@@ -1,7 +1,8 @@
 package Verwaltung;
 
 import java.util.*;
-import RtfTestung.*;
+
+import rtf.*;
 
 /**
  * 

@@ -24,6 +24,7 @@ import java.io.OutputStream;
 
 import org.docx4j.Docx4J;
 import org.docx4j.convert.out.FOSettings;
+import org.docx4j.convert.out.pdf.viaXSLFO.PdfSettings;
 import org.docx4j.fonts.IdentityPlusMapper;
 import org.docx4j.fonts.Mapper;
 import org.docx4j.fonts.PhysicalFont;
@@ -126,8 +127,8 @@ public class ConvertOutPDF extends AbstractSample {
 		// Document loading (required)
 		WordprocessingMLPackage wordMLPackage;
 		if (inputfilepath == null) {
-			// Create a docx
-			System.out.println("No input path passed, creating dummy document");
+			 // Create a docx
+			 System.out.println("No input path passed, creating dummy document");
 			 wordMLPackage = WordprocessingMLPackage.createPackage();
 			 //TODO fix this -- ONLY RELEVANT FOR standalone use, that is using main() above.
 			 //SampleDocument.createContent(wordMLPackage.getMainDocumentPart());	
@@ -159,19 +160,25 @@ public class ConvertOutPDF extends AbstractSample {
 		// foSettings.setApacheFopMime(apacheFopMime)
 		// apacheFopMime can be any of the output formats defined in org.apache.fop.apps.MimeConstants or
 		// FOSettings.INTERNAL_FO_MIME if you want the fo document as the result.
-		
+		//foSettings.setApacheFopMime(FOSettings.INTERNAL_FO_MIME);
 		
 		// exporter writes to an OutputStream.		
 		OutputStream os = new java.io.FileOutputStream(outputfilepath);
     	
-
-		//Don't care what type of exporter you use
-		Docx4J.toFO(foSettings, os, Docx4J.FLAG_NONE);
-		//Prefer the exporter, that uses a xsl transformation
-		//Docx4J.toFO(foSettings, os, Docx4J.FLAG_EXPORT_PREFER_XSL);
-		//Prefer the exporter, that doesn't use a xsl transformation (= uses a visitor)
-		//Docx4J.toFO(foSettings, os, Docx4J.FLAG_EXPORT_PREFER_NONXSL);
-    	
+		try {
+			//Don't care what type of exporter you use
+//			Docx4J.toFO(foSettings, os, Docx4J.FLAG_NONE);
+			//Prefer the exporter, that uses a xsl transformation
+			Docx4J.toFO(foSettings, os, Docx4J.FLAG_EXPORT_PREFER_XSL);
+			//Prefer the exporter, that doesn't use a xsl transformation (= uses a visitor)
+			//Docx4J.toFO(foSettings, os, Docx4J.FLAG_EXPORT_PREFER_NONXSL);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		finally {
+			os.close();
+		}
 		System.out.println("Saved to: " + outputfilepath);
     }
     

@@ -6,9 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Enumeration;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -23,6 +26,11 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.catalina.tribes.util.Arrays;
 import org.apache.commons.io.IOUtils;
+import org.apache.fop.util.XMLUtil;
+import org.apache.xml.serializer.SerializationHandler;
+import org.apache.xpath.FoundIndex;
+
+
 import org.docx4j.Docx4J;
 import org.docx4j.TraversalUtil;
 import org.docx4j.XmlUtils;
@@ -38,19 +46,25 @@ import org.docx4j.wml.CommentRangeEnd;
 import org.docx4j.wml.CommentRangeStart;
 import org.docx4j.wml.ContentAccessor;
 import org.docx4j.wml.R.CommentReference;
-import org.dom4j.io.SAXWriter;
-import org.jdom2.Content;
-import org.jdom2.Document;
+
+//import org.dom4j.io.SAXWriter;
+
+import org.htmlcleaner.CleanerProperties;
+import org.htmlcleaner.DomSerializer;
+import org.htmlcleaner.HtmlCleaner;
+import org.htmlcleaner.JDomSerializer;
+import org.htmlcleaner.SimpleHtmlSerializer;
+import org.htmlcleaner.TagNode;
+//import org.jdom2.Content;
+//import org.jdom2.Document;
 import org.jdom2.Element;
-import org.jdom2.JDOMException;
-import org.jdom2.Text;
-import org.jdom2.input.SAXBuilder;
-import org.jdom2.output.SAXOutputter;
+//import org.jdom2.JDOMException;
+//import org.jdom2.Text;
+//import org.jdom2.input.SAXBuilder;
+//import org.jdom2.output.SAXOutputter;
 import org.junit.Assert;
 import org.jvnet.jaxb2_commons.ppp.Child;
 
-import HauptProgramm.Declaration;
-import HauptProgramm.DeclarationSet;
 import Verwaltung.HashLog;
 
 import aufgaben_db.Exercise.Docx4JTravelCallback;
@@ -61,9 +75,9 @@ import org.odftoolkit.odfdom.pkg.OdfPackageDocument;
 import org.odftoolkit.simple.TextDocument;
 import org.odftoolkit.simple.text.Paragraph;
 /*For generating images from tex-chunks, i.e. LaTeX exercises.*/
-import org.scilab.forge.jlatexmath.TeXConstants;
-import org.scilab.forge.jlatexmath.TeXFormula;
-import org.scilab.forge.jlatexmath.TeXIcon;
+//import org.scilab.forge.jlatexmath.TeXConstants;
+//import org.scilab.forge.jlatexmath.TeXFormula;
+//import org.scilab.forge.jlatexmath.TeXIcon;
 import org.w3c.dom.Node;
 
 import docx4j_library.HeaderFooterRemove;
@@ -71,7 +85,9 @@ import docx4j_library.HeaderFooterRemove;
 import java.awt.image.BufferedImage;
 
 import javax.xml.bind.JAXBElement;
+import javax.xml.parsers.ParserConfigurationException;
 
+import aufgaben_db.DeclarationFinder;
 
 
 /**
@@ -105,8 +121,9 @@ public class Sheetdraft extends ContentToImage {
 	
 	//For easy fetching of exercises out of the mass by filelink as key!
 	/* To avoid a false exercise count, plain text and raw format exercises are stored separately.*/
-	private Map<String, Exercise> allExercisesRawFormat = new HashMap<String, Exercise>();
-	private Map<String, Exercise> allExercisesPlainText = new HashMap<String, Exercise>();
+	private Map<String, Exercise> allExercisesPlainText = new TreeMap<String, Exercise>();
+	private Map<String, Exercise> allExercisesRawFormat = new TreeMap<String, Exercise>();
+	private Map<String, Exercise> allExercisesCommonFormat = new TreeMap<String, Exercise>();
 	private Map<String, String> exerciseEndingsAsKeysSplitterAsValues = new HashMap<String, String>();	
 	
 	
@@ -140,11 +157,21 @@ public class Sheetdraft extends ContentToImage {
 		String new_draft_headermixture = "";     //the same applies here. 
 		
 		//build the filelink
-		String new_draft_filelink = Global.uploadTarget + new_draft_semester + "/" + new_draft_course
-				+ "/N.N." + /*new_draft_lecturer_id*/"" + "/" + new_draft_type
-				+ "/" + new_draft_course + "_" + new_draft_semester
-				+ "-" + new_draft_type + "-randomsheet" + Math.round(Math.random() * 10000) + ".none";//".tbd";
-		
+		String new_draft_filelink = Global.uploadTarget + new_draft_semester + System.getProperty("file.separator") + new_draft_course
+				+ System.getProperty("file.separator") + "N.N." + /*new_draft_lecturer_id*/"" + System.getProperty("file.separator") + new_draft_type
+				+ System.getProperty("file.separator") /*+ new_draft_course + "_" + new_draft_semester
+				+ "-" + new_draft_type + "-"*/ + "randomsheet" + Math.round(Math.random() * 10000)
+				+ ".draft.draft";//<-- If a sheetdraft is taken as a basis for a draft then the draft ending will be .sheetdraft_ending.draft ! 
+		String author;
+		if (Global.session == null || Global.session.getAttribute("user") == null
+				|| ! (Global.session.getAttribute("user") instanceof String)
+				|| ((String) Global.session.getAttribute("user")).isEmpty()/* == ""*/) {
+			author = "none";
+		}
+		else {
+			author = (String)Global.session.getAttribute("user");
+		}
+			
 		setAllAttributes(
 				//-1	/*new draft id -- to be set by the database!*/
 			    new_draft_filelink
@@ -153,7 +180,7 @@ public class Sheetdraft extends ContentToImage {
 				, new_draft_semester
 				, new_draft_lecturer_id
 				, new_draft_description
-				, (String)Global.session.getAttribute("user")
+				, author//(String)Global.session.getAttribute("user")
 				, Calendar.getInstance()	/*uses actual current time as default*/
 				, 1							/*read: true*/
 				, new_draft_headermixture
@@ -251,6 +278,8 @@ public class Sheetdraft extends ContentToImage {
 			    )
 			);
 		}
+		// tackle memory leaks by closing result set and its statement properly:
+		Global.queryTidyUp(res);
 		
 	}
 		
@@ -316,11 +345,11 @@ public class Sheetdraft extends ContentToImage {
 		    		   + " ,semester = "	+ "'" + this.semester + "'"
 		    		   + " ,lecturer_id = "	+ "" + this.lecturer_id + ""
 		    		   + " ,description = "	+ "'" + this.description + "'"
-		    		   + " ,whencreated = "	+ "'" + new Timestamp(Global.now.getTimeInMillis()) + "'"
+		    		   + " ,whencreated = "	+ " UNIX_TIMESTAMP()"// + /*'new Timestamp(*/Global.now.getTimeInMillis()/*)'*/ + ""
 		    		   + " ,author = "		+ "'" + Global.session.getAttribute("user") + "'"
 		    		   + " ,is_draft = "	+ " " + this.is_draft
 		    		   + " ,headermixture ="+ "'" + this.headermixture + "'"
-		    		   + " ,whenchanged = "	+ "NOW()"//CURRENT_TIMESTAMP() OR CURRENT_TIMESTAMP" all valid
+		    		   + " ,whenchanged = "	+ " UNIX_TIMESTAMP()"//CURRENT_TIMESTAMP() OR CURRENT_TIMESTAMP" all valid?
 		    		   + "";
 		    		          
 		    //TODO Better not updating the database if draft content is strange!
@@ -328,12 +357,11 @@ public class Sheetdraft extends ContentToImage {
 		    
 		}
 		else {
-			
 			//Create a new draft in database:
 		    String query = "INSERT INTO `sheetdraft`"
-		    		   + " (filelink, type, course, semester, lecturer_id, description"
-		    		   + ", whencreated"
-		    		   + ", author, is_draft, headermixture, whenchanged)"
+		    		   + " (`filelink`, `type`, `course`, `semester`, `lecturer_id`, `description`"
+		    		   + ", `whencreated`"
+		    		   + ", `author`, `is_draft`, `headermixture`, `whenchanged`)"
 		    		   + " VALUES ("
 		    		           + " '" + this.getFilelinkRelative() + "'"
 		    		           + ",'" + this.type + "'"
@@ -341,11 +369,11 @@ public class Sheetdraft extends ContentToImage {
 		    		           + ",'" + this.semester + "'"
 		    		           + ", " + this.lecturer_id + ""
 		    		           + ",'" + this.description + "'"
-		    		           + ",'" + /*new Timestamp(*/Global.now.getTimeInMillis()/*)*/ + "'"
-	  		        		   + ",'" + Global.session.getAttribute("user") + "'"
+		    		           + ", UNIX_TIMESTAMP()"// + /*'new Timestamp(*/Global.now.getTimeInMillis()/*)'*/ + ""
+	  		        		   + ",'" + (String)Global.session.getAttribute("user") + "'"
 	  		        		   + ", " + this.is_draft //TODO:is_draft == 1 implies no plain text? 
 	  		        		   + ",'" + this.headermixture + "'"
-	  		        		   + ", NOW()" //CURRENT_TIMESTAMP() OR CURRENT_TIMESTAMP" all valid
+	  		        		   + ", UNIX_TIMESTAMP()" //CURRENT_TIMESTAMP() OR CURRENT_TIMESTAMP" all valid
 		    		   + ")";
 		    //Executive branch.
 		    Global.query(query);
@@ -495,7 +523,8 @@ public class Sheetdraft extends ContentToImage {
 	    	//INT(15) => 10^15 - 2^32 >> 0 but
 	    	//INT(15) => 10^15 - 2^64 << 0 hence 64 bits are enough.
 	    }
-	    
+	    // tackle memory leaks by closing result set and its statement properly:
+ 		Global.queryTidyUp(res);
 	    return this; //for chaining
 
 	}
@@ -596,7 +625,8 @@ public class Sheetdraft extends ContentToImage {
 //	    	//INT(15) => 10^15 - 2^32 >> 0 but
 //	    	//INT(15) => 10^15 - 2^64 << 0 hence 64 bits are enough.
 //	    }
-//	    
+//	    // tackle memory leaks by closing result set and its statement properly:
+//		Global.queryTidyUp(res);
 //	    return this; //for chaining
 //	}
 	
@@ -642,7 +672,8 @@ public class Sheetdraft extends ContentToImage {
 		
 		
 		/* Creation of exercise objects to store in the sheet's map. */
-		extractExercisesFromPlainText();		
+		extractExercisesFromPlainText();
+		
 	}
 	
 	
@@ -651,10 +682,16 @@ public class Sheetdraft extends ContentToImage {
 	 * EXTRACT EXERCISES RAW/NATIVE FORMAT
 	 * @throws Exception 
 	 */
-	public void extractExercisesNativeFormat() throws Exception {
-		/*DANGER: IT'S A REAL PROBLEM TO DETERMINE THE RAW FILETYPE EXERCISE CONTENTS BY
+//	public void extractExercisesNativeFormat() throws Exception {
+//		extractExercisesNativeFormat(null);
+//	}
+	public void extractExercisesNativeFormat(/*String force_source_filelink*/) throws Exception {
+		/*DANGER: IT'S A REAL PROBLEM TO DETERMINE THE NATIVE FILETYPE EXERCISE CONTENTS BY
 		  USING THE PLAIN TEXT LINE NUMBERS. IS IT GUARANTEED THAT THE LINES ARE EQUIVALENT?
-		  FOR NOW: => We should not store raw content.*/
+		  INSTEAD WE LOOK FOR THE XML NODE THAT CONTAINS THE DECLARATION.
+		  
+		  NOTE: We should not store raw/native content in the database. For plain text we do.
+		  */
 		
 		
 		// Sheets, in denen keine Deklarationen gefunden wurden, abfangen
@@ -662,8 +699,13 @@ public class Sheetdraft extends ContentToImage {
 		if(!wereDeclarationsFound()) {
 			return ;
 		}
-		
-		
+//		String filelink = this.filelink;
+//		if (force_source_filelink != null && new File(force_source_filelink).exists()) {
+//			System.out.println("Using forced source filelink for extracting exercises from instead of native format: "
+//					+ force_source_filelink + "\r\nInstead of: " + this.filelink);
+//			filelink = force_source_filelink;
+//		}
+//		
 		/* THE CREATION OF EXERCISES IN THE ORIGINAL FILE FORMAT */
 		//We store the link to the individual .type exercises in the exercise map (as keys).
 		String ending = Global.extractEnding(filelink);
@@ -689,7 +731,8 @@ public class Sheetdraft extends ContentToImage {
 		//HTML
 		else if (ending.equals("html") || ending.equals("htm")) {
 			HashLog.erweitereLogFile("Extract exercises (x)HTML: Filelink: " + filelink + ".");
-			extractExercisesFromHTML();
+			extractExercisesFromHTML(filelink); /* TODO do for other formats too? Currently only HTML is 
+					necessary as it's the only flavour the exercises are extracted from. */
 		}
 		//ODT (OpenDocumentFormat Text)
 		else if (ending.equals("odt")) {
@@ -697,7 +740,6 @@ public class Sheetdraft extends ContentToImage {
 			//extractExercisesFromODT();
 			//extractExercisesFromODT_ODFToolkit();
 			extractExercisesFromODT_ODFToolkitSimpleAPI();
-			
 			
 		}
 		//PDF
@@ -742,7 +784,7 @@ public class Sheetdraft extends ContentToImage {
 			}
 		}
 //		else if (ending.equals("php")) {
-			/*PHP IS REALLY NOT USEFUL FOR EXERCISE SHEETS, ONLY FOR GENERATION OF SUCH SHEETS.*/
+			/*PHP IS REALLY NOT USEFUL FOR EXERCISE SHEETS, ONLY FOR PARSING/GENERATION OF SUCH SHEETS.*/
 //			HashLog.erweitereLogFile("Extract exercises PHP: Filelink: " + filelink + ".");
 		    /*THE FOLLOWING RATHER BELONGS TO THE extractPlainText-Method.*/
 //			//1) Remove/convert php related to HTML output.
@@ -798,6 +840,7 @@ public class Sheetdraft extends ContentToImage {
 	int elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index = 1;
 	 
 	public void/*org.w3c.dom.Node*/ determineAllExercisesDeepestCommonParentElement() {
+		
 		//Exercise lastExercise = this.allExercisesRawFormat.get(allExercisesRawFormat.size() - 1);
 		Exercise lastExercise = this.allExercisesRawFormat.get(
 				Global.replaceEnding(lastExercisePlainText.getFilelink(), this.getFileEnding()));
@@ -832,8 +875,10 @@ public class Sheetdraft extends ContentToImage {
 		elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index
 		= lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index;
 		
-		//keep track of the route towards the deepestAllExercisesCommonParentElement
-		lastExercise.wayTowardsRoot.add(lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+		//keep track of the route towards the deepestAllExercisesCommonParentElement (here still equal to its child node)
+		lastExercise.wayTowardsRoot.clear();
+		/*this would result to adding the first element twice!*/
+		//lastExercise.wayTowardsRoot.add(lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
 		
 		//while(--lastExercise_elementsTraversed_depth > -1) {//<--Emerge by one level!
 		//As the element when the declaration was found is too deep in the xml we emerge
@@ -857,6 +902,7 @@ public class Sheetdraft extends ContentToImage {
 				if (exerciseRF == lastExercise) {//The last exercise deepest is in the outer loop already!!
 					continue;
 				}
+				
 				//Check in this exercise's waypath if the current Element checked for from the 
 				//last exercise's wayelements has been passed on its way to finding this currently
 				//investigated exercise's declaration.
@@ -876,7 +922,9 @@ public class Sheetdraft extends ContentToImage {
 				= exerciseRF.highestParentElementContainingThisExerciseOnly
 				= exerciseRF.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
 				//keep track of the route towards the deepestAllExercisesCommonParentElement
-				exerciseRF.wayTowardsRoot.add(exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+				exerciseRF.wayTowardsRoot.clear();
+				//This results in the waynode being added twice.
+				//exerciseRF.wayTowardsRoot.add(exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
 				//= exerciseRF.sheetdraftElementsTraversed.get(
 				//		exerciseRF.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index
 				//);
@@ -916,7 +964,7 @@ public class Sheetdraft extends ContentToImage {
 									.getParent();
 						}
 						else if (exerciseRF.deepestAllExercisesCommonParentElement instanceof JAXBElement) {
-							JAXBElement e = (JAXBElement) exerciseRF.deepestAllExercisesCommonParentElement;
+							JAXBElement<?> e = (JAXBElement<?>) exerciseRF.deepestAllExercisesCommonParentElement;
 							if (e.getValue() instanceof Child) {
 								exerciseRF.deepestAllExercisesCommonParentElement = ((Child)e.getValue())
 										.getParent();
@@ -964,8 +1012,6 @@ public class Sheetdraft extends ContentToImage {
 			}
 			
 			if (noOtherExercisesTraversedThisElementToCheckFor) {
-				//keep track of the route towards the deepestAllExercisesCommonParentElement
-				lastExercise.wayTowardsRoot.add(lastExercise.deepestAllExercisesCommonParentElement);
 				lastExercise.highestParentElementContainingThisExerciseOnly = lastExercise.deepestAllExercisesCommonParentElement;
 			}
 			
@@ -999,7 +1045,7 @@ public class Sheetdraft extends ContentToImage {
 							.getParent();
 				}
 				else if (lastExercise.deepestAllExercisesCommonParentElement instanceof JAXBElement) {
-					JAXBElement e = (JAXBElement) lastExercise.deepestAllExercisesCommonParentElement;
+					JAXBElement<?> e = (JAXBElement<?>) lastExercise.deepestAllExercisesCommonParentElement;
 					if (e.getValue() instanceof Child) {
 						lastExercise.deepestAllExercisesCommonParentElement = ((Child)e.getValue())
 								.getParent();
@@ -1046,7 +1092,7 @@ public class Sheetdraft extends ContentToImage {
 		boolean noOtherExerciseDeclarationContainedBelowCurrentElement;
 		
 		
-		for (Exercise exercise: allExercisesRawFormat.values()) {
+		for (Exercise exercise : allExercisesRawFormat.values()) {
 			
 			noOtherExerciseDeclarationContainedBelowCurrentElement = true;
 			//Begin with deepest element (elementWhereExerciseDeclarationWasFound):
@@ -1054,7 +1100,7 @@ public class Sheetdraft extends ContentToImage {
 			if (exercise_wayTowardsRoot_index == 0) {
 				System.out.print(
 						Global.addMessage("The way towards root (at least until"
-								+ " the deepestCommonParentElementOfAllExercises it reached) is empty!"
+								+ " the deepestCommonParentElementOfAllExercises is reached) is empty!"
 								+ " \r\nHas function determineDeepestAllExercisesCommonParent been called?"
 								+ " \r\nThe exercise the wayTowardsRoot belongs to: " + exercise.toString()
 							, "danger")
@@ -1067,7 +1113,7 @@ public class Sheetdraft extends ContentToImage {
 			 * The first element added is deeper to the leaves than the ones added later. So
 			 * if we start from the top (deepestAllExercisesCommonParentElement), we will probably
 			 * have a shorter way and come to an quicker end as the exercise declaration
-			 * for sure will be surrounded by masses of extra-markup resulting in many more elements
+			 * for sure will be surrounded by masses of extra-markup resulting in many more elements (the more we come to the leaves) 
 			 * between where the declaration was found and the highestOnlyOneExerciseDeclarationContainingElement
 			 * than can be expected between the deepest all exercises common parent element and the highest
 			 * element containing one, and only one, exercise declaration.
@@ -1078,7 +1124,7 @@ public class Sheetdraft extends ContentToImage {
 			 * (each exercises with each exercise that is different). 
 			 */
 			Object exerciseWayElementToCheckFor;
-			while (--exercise_wayTowardsRoot_index > 0) {
+			while (--exercise_wayTowardsRoot_index > -1) {
 				exerciseWayElementToCheckFor = exercise.wayTowardsRoot.get(exercise_wayTowardsRoot_index);
 				/*-------------------------------------------
 				 * 1. assume true for each new (and deeper towards exercise declaration) way element:*/ 
@@ -1093,21 +1139,23 @@ public class Sheetdraft extends ContentToImage {
 					if (!noOtherExerciseDeclarationContainedBelowCurrentElement) {
 						break;
 					}
-					/* only othe exercises */
-					if (e == exercise) {
+					/* only other exercises */
+					if (e == exercise
+							/*even equal exercises have to be skipped*/
+							|| e.equals(exercise)) {
 						continue;/*skip the exercise e that is the identity of the current exercise
 					because if not we would not come to an end as there always was another
 					exercise declaration (an identical one at same position, the identity!) */
 					}
 					
 					//Begin with deepest element (elementWhereExerciseDeclarationWasFound):
-					e_wayTowardsRoot_index = exercise.wayTowardsRoot.size();// - 1;
+					e_wayTowardsRoot_index = e.wayTowardsRoot.size();// - 1;
 					
 					if (e_wayTowardsRoot_index == 0) {
 						System.out.print(
 								Global.addMessage("[This message can occur multiple times as it's a nested loop!]"
 										+ "\r\nThe way towards root (at least until"
-										+ " the deepestCommonParentElementOfAllExercises it reached) is empty!"
+										+ " the deepestCommonParentElementOfAllExercises is reached) is empty!"
 										+ " \r\nHas function determineDeepestAllExercisesCommonParent been called?"
 										+ " \r\nThe e(xercise) the wayTowardsRoot belongs to: " + exercise.toString()
 										, "danger"
@@ -1117,14 +1165,15 @@ public class Sheetdraft extends ContentToImage {
 					}
 					
 					//Travel down the way from the deepestAllExercisesCommonParentElement to where the exercise declaration was found.
-					while (--e_wayTowardsRoot_index > 0) {
+					while (--e_wayTowardsRoot_index > -1) {
 						//if (exercise.wayTowardsRoot.get(e_wayTowardsRoot_index) == exerciseWayElementToCheckFor) {
-						if (e.wayTowardsRoot.get(e_wayTowardsRoot_index).equals(exerciseWayElementToCheckFor)) {
+						if ( XmlUtils.unwrap(e.wayTowardsRoot.get(e_wayTowardsRoot_index))
+								== /*.equals(*/XmlUtils.unwrap(exerciseWayElementToCheckFor)/*)*/ ) {
 							//=> The element is in this way path towards deepestAllExercisesCommonParentElement too.
 							noOtherExerciseDeclarationContainedBelowCurrentElement = false;
 							System.out.print(Global.addMessage("Element to check for was found within the waypath (elements traversed) towards another exercise declaration! => Two exercise declaration below this level in this branch!"
 									+ "\r\nPerhaps one exercise way element to check for deeper in the tree (more towards where the declaration was found) will contain one and only one exercise declaration.", "info"));
-							break;
+							break;//Then check the next deeper level element, perhaps there no other exercise declaration element is below in the branch.
 						}
 					}
 					
@@ -1137,7 +1186,7 @@ public class Sheetdraft extends ContentToImage {
 				if (noOtherExerciseDeclarationContainedBelowCurrentElement) {
 					//the quicker we found the element the better as this nested loop is costly!
 					exercise.highestParentElementContainingThisExerciseOnly = exerciseWayElementToCheckFor;
-					return ;
+					break;//return; <--This woud result in only one exercise having the correct highestParentElementContainingOnlyOneExercise assigned! But we need it to be correct for all exercises! =>break instead of return
 				}
 				//else next round or not found
 				else if (exercise_wayTowardsRoot_index == 0) {
@@ -1218,7 +1267,7 @@ public class Sheetdraft extends ContentToImage {
 			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);
 			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
 				//We start with 1 instead of 0 in the filesystem!
-				String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1)
+				String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1, exerciseNumber + 1) //here exerciseNumber equals overall position.
 						+ ".odt.odt";
 				exerciseSucceding = allExercisesRawFormat.get(//increase by 1 as it's the following exercise
 						exercise_filelink
@@ -1256,8 +1305,8 @@ public class Sheetdraft extends ContentToImage {
 //Extract each exercise according to found declarations.
 private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 	
-		TextDocument textDocument = TextDocument.loadDocument(filelink);
-		org.w3c.dom.Node rootElement = textDocument.getContentRoot();
+		//TextDocument textDocument = TextDocument.loadDocument(filelink);
+		//org.w3c.dom.Node rootElement = textDocument.getContentRoot();
 
 		//0) Copy over the exercises found as plain text.
 		//for (int ei = 0; ei < allExercisesPlainText.size(); ei++) {
@@ -1296,7 +1345,7 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 		//3b) or extract the individual exercise's markup, the headers and references.
 		
 		//3a)
-		textDocument.close();
+		//textDocument.close();
 		//Copy complete zip archive odt file for each exercise, delete foreign content, save.
 		for (Exercise exercise : allExercisesRawFormat.values()) {
 
@@ -1311,53 +1360,11 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 
 			
 			//3a.3) retraverse it
-			//1) Therefore search for the declaration in the markup starting from the root.
-			for (Exercise exer : allExercisesRawFormat.values()) {
-				exer.clearTraversedAndTextBuffer();//to prevent still having the old data in there
-				exer.travelDownUntilDeclarationFound(exercise_rootElement);
-			}/*After this loop the exercises have traversed this exercise dom's nodes!*/
-			/*=> So now if we determine the deepest common parent element we get the deepest 
-			 * in this current exercise containing only elements from within this DOM.*/
-			determineAllExercisesDeepestCommonParentElement();
-			determineHighestParentThatContainsOneAndOnlyOneExerciseDeclaration();//determineHighestParentElementThatContainsOneExerciseOnly();
-			
-			//exercise_rootElement.removeChild(exercise.sheetdraftElementsTraversed.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index));
-			
-			//IMPORTANT: copy over the deepest common parent element
-			/*the indices are not determined correctly due to matching in indexOf(Node)
-			exercise.deepestAllExercisesCommonParentElement = exercise.sheetdraftElementsTraversed
-					.get(deepestAllExercisesCommonParentElement_index);
-			exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise = exercise.sheetdraftElementsTraversed
-					.get(deepestAllExercisesCommonParentElement_sChild_index);
-			*/
-			
-			//3a.4)figure out which exercise comes after this current one:
-			Exercise exerciseSucceding = null;
-			//<-- null indicates guess which sibling elements still belong to this exercise's xml 
-			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);
-			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
-				//We start with 1 instead of 0 in the filesystem!
-				String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1)
-						+ ".odt.odt";
-				exerciseSucceding = allExercisesRawFormat.get(//increase by 1 as it's the following exercise
-						exercise_filelink
-				);
-			}
-			
+			//3a.4) figure out the exercise's following exercise.
 			//3a.5) remove unused xml.
-			//Start at the deepest common parent element and travel down to delete all
-			//the other exercises' xml markup/content and all that is referenced
-			//AND NOT referenced by other parts.
-			//=> first delete xml , then at the end delete reference content that 
-			//is no longer referenced.
-//			exercise.deleteAllChildrenOfExceptFor(
-//					exercise.deepestAllExercisesCommonParentElement_index, exerciseSucceding);
-			
-			exercise.removeAllSiblingsOf(
-					(org.w3c.dom.Node)exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-					, exerciseSucceding
+			retraverseNativeFormatExercisesDetermineSucceedingExerciseAndRemoveUnused(
+					exercise, exercise_rootElement
 			);
-			// exercise_rootElement = exercise_textDocument.getContentRoot();
 			
 			//3a.6) save the exercise native file
 			//exercise_textDocument.getContentDom().replaceChild(exercise_rootElement, exercise.deepestAllExercisesCommonParentElement);
@@ -1385,7 +1392,151 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 
 	
 	}
+	
+	public void retraverseNativeFormatExercisesDetermineSucceedingExerciseAndRemoveUnused(
+			Exercise exercise, org.w3c.dom.Node exercise_rootElement) throws Exception {
+		
+		//3a.3) retraverse it
+		//1) Therefore search for the declaration in the markup starting from the root.
+		for (Exercise exer : allExercisesRawFormat.values()) {
+			exer.clearTraversedAndTextBuffer();//to prevent still having the old data in there
+			exercise.setDeclarationsOfAllExercises(this.declarationSet);//for skipping declarations if identical double exercises exist! Otherwise the first found match will be taken as correct declaration while it is the declaration of the first occurrence of the same twice existing exercise.
+			exer.travelDownUntilDeclarationFound(exercise_rootElement);
+		}/*After this loop the exercises have traversed this exercise dom's nodes!*/
+		/*=> So now if we determine the deepest common parent element we get the deepest 
+		 * in this current exercise containing only elements from within this DOM.*/
+		determineAllExercisesDeepestCommonParentElement();
+		determineHighestParentThatContainsOneAndOnlyOneExerciseDeclaration();//determineHighestParentElementThatContainsOneExerciseOnly();
+		
+		//exercise_rootElement.removeChild(exercise.sheetdraftElementsTraversed.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index));
+		
+		//IMPORTANT: copy over the deepest common parent element
+		/*the indices are not determined correctly due to matching in indexOf(Node)
+		exercise.deepestAllExercisesCommonParentElement = exercise.sheetdraftElementsTraversed
+				.get(deepestAllExercisesCommonParentElement_index);
+		exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise = exercise.sheetdraftElementsTraversed
+				.get(deepestAllExercisesCommonParentElement_sChild_index);
+		*/
+		
+		//3a.4)figure out which exercise comes after this current one: (increases performance as otherwise a cross product check if any exercise declaration comes after this exercise where we switch the delete-nodes-mode)
+		Exercise exerciseSucceding = null;
+		//<-- null indicates guess which sibling elements still belong to this exercise's xml 
+		exerciseSucceding = getSuccedingExercise(exercise);
+		
+		//3a.5) remove unused xml.
+		//Start at the deepest common parent element and travel down to delete all
+		//the other exercises' xml markup/content and all that is referenced
+		//AND NOT referenced by other parts.
+		//=> first delete xml , then at the end delete reference content that 
+		//is no longer referenced.
+//		exercise.deleteAllChildrenOfExceptFor(
+//				exercise.deepestAllExercisesCommonParentElement_index, exerciseSucceding);
+		travelUpAndRemoveAllSiblingsForEachLevel(exercise, exerciseSucceding, exercise_rootElement, null);
+		/*previously just: 
+		exercise.removeAllSiblingsOf(
+				(org.w3c.dom.Node)exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+				, exerciseSucceding
+		);
+		 (now the same is done for all levels up from the highestParentElementOnlyContainingOneExercise to the root or deepest to all exercises common parent element)
+		 */
+		// exercise_rootElement = exercise_textDocument.getContentRoot();
+		
+	}
+	
+	
+	/**
+	 * By reusing the fact that the declarations that were found in the plain text were ordered 
+	 * by line number, we can easily figure the next, i.e. succeding exercise to any other.   
+	 * @param exercise The declaration-found-part whose succeding declaration-found-part we wish
+	 *  		to determine. A declaration-found-part currently is either a solution or exercise.    
+	 * @return EITHER the succeding exercise/solution OR null if there wasn't found any. 
+	 * @throws Exception
+	 */
+	public Exercise getSuccedingExercise(Exercise exercise) throws Exception {
 
+		if (allExercisesRawFormat == null) {
+			System.err.println("No succeding exercise to " + exercise 
+					+ ". allExercisesRawNativeFormat was null: " + allExercisesRawFormat);
+			return null;
+		}
+
+		
+		/* Note: Since v31.13c the exercise number is no longer the exercise index/position within 
+		         allExercises. The reason for this is that the solutions are now recognised automatically 
+		         too and hence contained in the same list! While the exercises' and solutions' numbers 
+		         are all maintained separately for each kind (solution, exercise).
+		         That's why for determining the succeding exercise the declaration index has to be used:
+		 */
+		//int declaration_index = this.declarationSet.declarations.indexOf(exercise.getDeclaration());
+		int exerciseSucceding_index = this.declarationSet.declarations.indexOf(exercise.getDeclaration()) + 1;
+		// The exerciseNumber might be the same for two or more exercises but that's not true for the index.
+		// =>check: Is it out of range/bounds? 
+		if (exerciseSucceding_index > this.allExercisesRawFormat.size() - 1) {
+			System.err.println("No succeding exercise to " + exercise + " because this one is already the last.");
+			return null;
+		}
+		
+////	int solutionCounter = 0;<-- as we are not looping here, we can't use it. There are alternative methods:
+////	int exerciseCounter = 0;
+//		String subsequent_filelink;
+		Exercise exerciseSucceding = null;
+		
+		// EITHER: (string concatenation. Additionally the procedure might fail at certain edge cases.) 
+/*NOT CHOSEN BUT SHOULD WORK IN PRICIPLE
+		// Was exercise found by a solution pattern? <--the declaration index now ensures the correct subsequent pattern is picked.
+//		if (false && exercise.getDeclaration() != null && exercise.getDeclaration().getMatchedPattern().isSolutionPattern()) {
+			// The solution comes after the exercise but has the same number.
+			
+			// Note: We start with 1 instead of 0 in the filesystem!
+			
+			// Was the previous exercise a solution too? (indicates that it's probably only solutions in this sheet)
+			// OR
+			// Try to find the corresponding exercise that might exist (if it's a mixed sheet) or might not (if it's one kind only).
+			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);//result could be arbritrary so check it!!
+			
+			/* We ask for the number being valid, though the exerciseNumber cannot exceed the declaration_index and this was check.
+			   i.e. the exerciseSucceding_index was checked. Nevertheless it's theoretically possible to love. * /
+			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1* /) {
+			    subsequent_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber, exerciseSucceding_index)
+						+ "." + getFileEnding() + "." + getFileEnding();//+ ".odt.odt"; 
+				/*(the sheetdraft's last ending is the exercise's native format (2nd last ending) as it's derived from that one)* /
+				exerciseSucceding = allExercisesRawFormat.get(
+						subsequent_filelink
+				);
+			}
+			
+			// Was nothing found?
+			if (exerciseSucceding == null) {
+				// Try the other possibility: increase by 1 but flip to the opposite of this splitby pattern (which is automatically reached via the next exercise's declaration):
+				subsequent_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1, exerciseSucceding_index)
+						+ "." + getFileEnding() + "." + getFileEnding();//+ ".odt.odt";
+				/*(the sheetdraft's last ending is the exercise's native format (2nd last ending) as it's derived from that one)* /
+				exerciseSucceding = allExercisesRawFormat.get(
+						subsequent_filelink
+				);
+			}
+			
+//		}
+NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */		
+		
+		
+		// OR:
+		/* Attention: As a HashMap is not sorted, this not works out of the box. The map has to be sorted 
+		   alphabetically at least for Aufgabe and Loesung as well as Exercise and Solution this is true!
+		   A TreeMap preserves order. It may even be given a custom comparator that overrides 
+		   int compare(, ) from  implements Comparator<Object> .
+		 */
+		if (exerciseSucceding_index < allExercisesRawFormat.size()) {
+			// we spare the instanceof here because we know it must be an Exercise.
+//			if (object instanceof Exercise) {
+			return (Exercise)(allExercisesRawFormat.values().toArray()[exerciseSucceding_index]);
+//			}
+		}
+		
+		
+		return exerciseSucceding;
+		
+	}
 
 //	private void extractExercisesFromODT() throws Exception {
 //		
@@ -1490,7 +1641,6 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 //	
 //	}
     	
-	
 
 	/**
 	 * PDF: Find and store exercises to filesystem. 
@@ -1554,6 +1704,8 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 			String eRC_filelink = Global.replaceEnding(ePT.getFilelink(), "docx");
 			ReadWrite.write("", eRC_filelink);
 			Exercise eRC = new Exercise(eRC_filelink, ePT.getDeclaration(), ePT.getHeader());
+			/*eRC.plainText = ePT.getPlainText();/*<-- this is only a working. enable if plainText 
+					shall not be reloaded dynamically for each exercise flavour format, instead only once for the native format. */
 			allExercisesRawFormat.put(eRC_filelink, eRC);
 		}
 		
@@ -1603,7 +1755,8 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 			exercise.clearTraversedAndTextBuffer();//to prevent still having the old data in there
 			//exer.travelDownUntilDeclarationFound(exercise_rootElement);
 			Exercise.Docx4JTravelCallback exercise_traveller = exercise.new Docx4JTravelCallback();
-			exercise_traveller.setDeclaration(exercise.getDeclaration());
+//			exercise_traveller.setDeclaration(exercise.getDeclaration());
+			exercise/*_traveller*/.setDeclarationsOfAllExercises(this.declarationSet);//for skipping declarations if identical double exercises exist! Otherwise the first found match will be taken as correct declaration while it is the declaration of the first occurrence of the same twice existing exercise.
 			new TraversalUtil(rootElement, exercise_traveller);
 			
 			//3a.3) retraverse it
@@ -1616,12 +1769,15 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 				exer.clearTraversedAndTextBuffer();//to prevent still having the old data in there
 				//exer.travelDownUntilDeclarationFound(exercise_rootElement);
 				Exercise.Docx4JTravelCallback finder = exer.new Docx4JTravelCallback();
-				finder.setDeclaration(exer.getDeclaration());
+//				finder.setDeclaration(exer.getDeclaration());
+				exercise/*finder*/.setDeclarationsOfAllExercises(this.declarationSet);//for skipping declarations if identical double exercises exist! Otherwise the first found match will be taken as correct declaration while it is the declaration of the first occurrence of the same twice existing exercise.
 			    new TraversalUtil(rootElement, finder);
 			}/*After this loop the exercises have traversed this exercise dom's nodes!*/
 			/*=> So now if we determine the deepest common parent element we get the deepest 
 			 * in this current exercise containing only elements from within this DOM.*/
 			determineAllExercisesDeepestCommonParentElement();
+			determineHighestParentThatContainsOneAndOnlyOneExerciseDeclaration();//determineHighestParentElementThatContainsOneExerciseOnly();
+
 			//exercise_rootElement.removeChild(exercise.sheetdraftElementsTraversed.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index));
 			
 			//IMPORTANT: copy over the deepest common parent element
@@ -1633,17 +1789,18 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 			*/
 			
 			//3a.4)figure out which exercise comes after this current one:
-			Exercise exerciseSucceding = null;
+			Exercise exerciseSucceding = getSuccedingExercise(exercise);
 			//<-- null indicates guess which sibling elements still belong to this exercise's xml 
-			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);
-			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
-				//We start with 1 instead of 0 in the filesystem!
-				String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1)
-						+ ".docx.docx";
-				exerciseSucceding = allExercisesRawFormat.get(//increase by 1 as it's the following exercise
-						exercise_filelink
-				);
-			}
+//			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);
+//			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
+//				//We start with 1 instead of 0 in the filesystem!
+//				String exercise_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber + 1, exerciseNumber + 1)
+//						+ ".docx.docx";
+//				exerciseSucceding = allExercisesRawFormat.get(//increase by 1 as it's the following exercise
+//						exercise_filelink
+//				);
+//			}
+			 
 			
 			//3a.5) remove unused xml.
 			//Start at the deepest common parent element and travel down to delete all
@@ -1653,50 +1810,8 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 			//is no longer referenced.
 //			exercise.deleteAllChildrenOfExceptFor(
 //					exercise.deepestAllExercisesCommonParentElement_index, exerciseSucceding);
-			
-			
-			//TODO debug! commit to mercurial for versioning prior to deleting the old approach!
-			//1 Start with this exercise's highestOnlyOneExerciseDeclarationContainingWayToWhereDeclarationFoundElement
-			//  as the current element.
-			Object elementNotToRemove = exercise.highestParentElementContainingThisExerciseOnly;
-			
-			while (elementNotToRemove != null
-					/* The optional condition for keeping the common contents like general info,
-					   sheet heading, et alia: */
-					&& !elementNotToRemove.equals(exercise.deepestAllExercisesCommonParentElement)) {
-				
-				//2  Remove all siblings of mentioned current element.
-				for (Object child : getChildren(elementNotToRemove.getParent())) {
-					if (child.equals(elementNotToRemove)) {
-						continue;
-					}
-					//Remove:
-					getChildren(elementNotToRemove.getParent()).remove(child);
-				}
-				
-				//3 Switch to the parent element of the current element as the new current element.
-				//  Go to 2 (Optional condition: only if current element is not equal to the deepestCommonElement).
-				elementNotToRemove = elementNotToRemove.getParent();
-				
-			}
-			
-			//4 Terminate. All non-this-exercise-related contents is removed
-			//  (besides the to all exercise common content :only if Optional condition). 
-			//return;
-			
-			
-//			try {
-			System.out.println("CLASS: " 
-					+ exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise.getClass());
-				exercise_traveller.removeAllSiblingsOf(
-						exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-						, exerciseSucceding
-				);
-//			} catch (Exception e) {
-//				System.out.print("Exercise traveller removeAllSiblingsOf node"
-//						+ " deepestAllExercisesCommonParentElement_sChildContainingThisExercise encountered a problem.");
-//				e.printStackTrace();
-//			}
+			travelUpAndRemoveAllSiblingsForEachLevel(exercise, exerciseSucceding, rootElement, exercise_traveller);
+//			
 			// exercise_rootElement = exercise_textDocument.getContentRoot();
 			
 			//3a.6) save the exercise native file
@@ -1705,7 +1820,7 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 			Docx4J.save(wMLPac, new File(exercise.filelink), Docx4J.FLAG_NONE);
 			//exercise_textDocument.close();
 			//exercise_textDocument.getPackage().save(exercise.filelink);
-			HeaderFooterRemove.removeHFFromFile(new File(filelink));
+			HeaderFooterRemove.removeHFFromFile(new File(filelink));//TODO necessary or redundant?
 			
 			
 			//3a7) Extract plain text for each exercise.
@@ -1761,14 +1876,202 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 	}
 	
 	
+	
+	
+	public void travelUpAndRemoveAllSiblingsForEachLevel(Exercise exercise, Exercise exerciseSucceding
+			, Object rootElement, Exercise.Docx4JTravelCallback exercise_traveller) throws Exception {
+		//old approach is in mercurial versioning system, the difference is the call of the remove function
+		// multiple times for each element from highestOnlyOneExerciseContainingElement up until root.  
+		//1 Start with this exercise's highestOnlyOneExerciseDeclarationContainingWayToWhereDeclarationFoundElement
+		//  as the current element.
+		Object elementNotToRemove = exercise.highestParentElementContainingThisExerciseOnly;
+		
+		while (elementNotToRemove != null
+				/* The optional condition for keeping the common contents like general info,
+				   sheet heading, et alia: */
+				&& !XmlUtils.unwrap(elementNotToRemove).equals(XmlUtils.unwrap(exercise.deepestAllExercisesCommonParentElement))
+				/* The required termination condition for keeping all non-content related settings. */
+				&& !XmlUtils.unwrap(elementNotToRemove).equals(XmlUtils.unwrap(rootElement))) {
+			
+			System.out.println("ElementNotToRemove: " + XmlUtils.unwrap(elementNotToRemove));
+			//2  Remove all siblings of mentioned current element.
+			//DOCX4J: LiveList:ParentElement_sChildrenElements, xml node wrapped in a JAXBElement.
+			///*Node*/List<Object> children = TraversalUtil.getChildrenImpl(((Child)(XmlUtils.unwrap(elementNotToRemove))).getParent());
+			//ODT: remove directly from ParentElement.  
+			//NodeList children = ((org.w3c.dom.Node)elementNotToRemove).getParentNode().getChildNodes();
+			//TODO <- reminder that odt functionality exists.
+			/*
+			for (Object child : children) {
+				if (child.equals(elementNotToRemove) || XmlUtils.unwrap(child).equals(elementNotToRemove)) {
+					continue;
+				}
+				//Debug Information:
+				if (Global.debug) {
+					System.out.println("DeepestCommon_sChildElement: " + exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise//.getClass()
+							+ " \r\nHighestContainingOnlyOneExercise: " + exercise.highestParentElementContainingThisExerciseOnly);
+				}
+				//Remove:
+				//TraversalUtil.getChildrenImpl( ((org.w3c.dom.Node)elementNotToRemove).getParentNode() ).remove(child);
+				children.remove(child);
+			}
+			*/
+			/*THIS IS REQUIRED FOR THE SPECIAL CASE THAT MANY HEADINGS AND PARAGRAPHS
+			 * OF DIFFERENT EXERCISES ARE WITHIN THE SAME PARENT ELEMENT. */
+			if (exercise_traveller != null) {
+				exercise_traveller.removeAllSiblingsOf(
+					//exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+					//exercise.highestParentElementContainingThisExerciseOnly
+					elementNotToRemove
+					, exerciseSucceding
+				);
+			}
+			else {
+				exercise.removeAllSiblingsOf(
+						//(org.w3c.dom.Node)exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+						//(org.w3c.dom.Node)exercise.highestParentElementContainingThisExerciseOnly
+						(org.w3c.dom.Node)elementNotToRemove
+						, exerciseSucceding
+				);
+			}
+			
+			//3 Switch to the parent element of the current element as the new current element.
+			//  Go to 2 (Optional condition: only if current element is not equal to the deepestCommonElement).
+			if (XmlUtils.unwrap(elementNotToRemove) instanceof Child) {
+				elementNotToRemove = ((Child)XmlUtils.unwrap(elementNotToRemove)).getParent();
+			}
+			else if (elementNotToRemove instanceof org.w3c.dom.Node) {
+				elementNotToRemove = ((org.w3c.dom.Node)elementNotToRemove).getParentNode();
+			}
+			else {
+				elementNotToRemove = null;
+			}
+			
+		}
+		
+		//4 Terminate. All non-this-exercise-related contents is removed
+		//  (besides the to all exercise common content :only if Optional condition). 
+		//return;
+	}
+	
+	
+	
+	
+	
+	
 	/**
 	 * HTML: Find and store exercises to filesystem. 
+	 * @throws Exception 
+	 * @throws FileNotFoundException 
 	 */
-	private void extractExercisesFromHTML() {
-		// Erzeugt fuer alle Texte zwischen zwei Deklarationen eine neue Aufgabe,
-		// letzte Declaration bis zum Ende fehlt noch.
+	private void extractExercisesFromHTML() throws FileNotFoundException, Exception {
+		extractExercisesFromHTML(this.filelink);
+	}
+	
+	private void extractExercisesFromHTML(String filelink) throws FileNotFoundException, Exception {
+
+		// Achieve a JDOM or DOM representation after cleaning and tidying up the HTML to XHTML:
+		HtmlCleaner cleaner = new HtmlCleaner();
 		
-		//TODO
+		// take default cleaner properties:
+		CleanerProperties props = cleaner.getProperties();
+		props.setOmitComments(true);
+		//props.set();
+		
+		//new PrettyXmlSerializer(props).writeToFile(tagNode, "<fileName>.xml", "utf-8");
+		/*
+		// traverse whole DOM and update images to absolute URLs
+		node.traverse(new TagNodeVisitor() {
+		    public boolean visit(TagNode tagNode, HtmlNode htmlNode) {
+		        if (htmlNode instanceof TagNode) {
+		            TagNode tag = (TagNode) htmlNode;
+		            String tagName = tag.getName();
+		            if ("img".equals(tagName)) {
+		                String src = tag.getAttributeByName("src");
+		                if (src != null) {
+		                    tag.setAttribute("src", Utils.fullUrl(siteUrl, src));
+		                }
+		            }
+		        } else if (htmlNode instanceof CommentNode) {
+		            CommentNode comment = ((CommentNode) htmlNode); 
+		            comment.getContent().append(" -- By HtmlCleaner");
+		        }
+		        // tells visitor to continue traversing the DOM tree
+		        return true;
+		    }
+		});
+		 
+		SimpleHtmlSerializer serializer = 
+		    new SimpleHtmlSerializer(cleaner.getProperties());
+		serializer.writeToFile(node, "<fileName>.html");
+		*/
+		
+		
+		
+		
+		//0) Copy over the exercises found as plain text.
+		//for (int ei = 0; ei < allExercisesPlainText.size(); ei++) {
+		for (Exercise ePT : allExercisesPlainText.values()) {
+			//create a copy (TODO: Better join allExercises-PlainText and -Raw/NativeContent?)
+			String eRC_filelink = Global.replaceEnding(ePT.getFilelink(), "html");
+			ReadWrite.write("", eRC_filelink);
+			Exercise eRC = new Exercise(eRC_filelink, ePT.getDeclaration(), ePT.getHeader());
+			allExercisesRawFormat.put(eRC_filelink, eRC);
+		}
+		
+		
+		//3) From this parent element on
+		//3a) either delete the exercise not required (following references).
+		//3b) or extract the individual exercise's markup, the headers and references.
+		
+		//3a)
+		//textDocument.close();
+		//Copy complete zip archive odt file for each exercise, delete foreign content, save.
+		for (Exercise exercise : allExercisesRawFormat.values()) {
+
+			//3a.1) copy native file
+			//Global.copy(filelink, exercise.filelink);
+			
+			//3a.2) reload the sheetdraft's xml - now for each exercise it will be saved separately
+			//this is required as the nodes currently known are from the sheetdraft's xml only!
+			//and indices are not necessarily determined correctly because of indexOf(Node) not working here somehow.
+			TagNode rootTagNode = cleaner.clean(new File(filelink));//<--this.filelink is absolute.
+			org.w3c.dom.Document exercise_document = new DomSerializer(props, true).createDOM(rootTagNode);
+			org.w3c.dom.Node exercise_rootElement = exercise_document.getDocumentElement();
+
+			
+			//3a.3) retraverse it
+			//3a.4) figure out the exercise's following exercise.
+			//3a.5) remove unused xml.
+			retraverseNativeFormatExercisesDetermineSucceedingExerciseAndRemoveUnused(
+					exercise, exercise_rootElement
+			);
+			
+			//3a.6) save the exercise native file
+			// TODO wants a TagNode so after serialization we will have to use another method to save.
+			//new SimpleHtmlSerializer(props).writeToFile(exercise_rootElement, exercise.filelink);
+			javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+			javax.xml.transform.Result target = new javax.xml.transform.stream.StreamResult(new File(exercise.filelink));//for testing use System.out
+			javax.xml.transform.Source source = new javax.xml.transform.dom.DOMSource(exercise_document);
+			transformer.transform(source, target);
+			//exercise_document.getPackage().save(exercise.filelink);
+//			exercise_document.close();
+
+			
+			//3a7) Extract plain text for each exercise.
+			exercise.extractPlainText();
+			
+			//3a8) Create images native format.
+			exercise.generateImage();
+			
+			
+		}
+		
+		
+		//4) Store the newly created native filelink exercises in the db:
+		//done in action.upload.jsp because of the index also being updated
+		//inserting this raw/native format exercise data into the db together
+		//with the plain text exercises.
+		
 		
 	}
 	
@@ -1790,16 +2093,25 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 		extractExercisesFromPlainText(this.getPlainText());
 	}
 	private void extractExercisesFromPlainText(String[] plainText) {
+		/*TODO If the filtering of double declarations leads to removed content (so if the declaration 
+		may be equal but the content was not!) then the declarations should not be filtered at all and 
+		rather here according to the content the filtering should be performed.
+		Then the declarations have to be updated (the doubles that were filtered here have to be removed) -
+		so as to not have to refilter the Native format content what is almost impossible anyway. 
+		*/
 		
 		// Erzeugt fuer alle Texte zwischen zwei Deklarationen eine neue Aufgabe,
 		//letzte Declaration bis zum Ende fehlt noch.
 		String header_of_its_sheet = "";
 		String ex_filelink;
-		int ex_count_and_pos = 0;
-		for (; ex_count_and_pos < declarationSet.declarations.size() - 1; ex_count_and_pos++) {
+		int ex_count_and_pos = -1;
+		int solution_count_and_pos = -1;
+		int dec_count_and_pos = 0;
+		for (; dec_count_and_pos < declarationSet.declarations.size() - 1; dec_count_and_pos++) {
+			
 			// Neues String[] mit der groesse des Zeilenabstands zwischen zwei aufeinanderfolgenden Deklarationen
 			int ex_row_count_according_declarations
-			= (declarationSet.declarations.get(ex_count_and_pos + 1).getLineNumber() - declarationSet.declarations.get(ex_count_and_pos).getLineNumber());
+			= (declarationSet.declarations.get(dec_count_and_pos + 1).getLineNumber() - declarationSet.declarations.get(dec_count_and_pos).getLineNumber());
 			String[] exerciseText = new String[ex_row_count_according_declarations];
 			//TODOString[] exerciseRaw = new String[exercise_count_according_declarations];
 //					String lineBeforeNewExerciseDeclaration;
@@ -1808,7 +2120,7 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 //					}
 			// von der Zeile der Declaration an wir ins neue String[] ruebergeschrieben
 			for (int j = 0; j < ex_row_count_according_declarations; j++) {
-				int nextLine = j + declarationSet.declarations.get(ex_count_and_pos).getLineNumber();
+				int nextLine = j + declarationSet.declarations.get(dec_count_and_pos).getLineNumber();
 				exerciseText[j] = plainText[nextLine];
 				//TODOexerciseRaw[j] = this.getRawContent()[nextLine];
 				/*ATTENTION: The first (or last) exercise-raw-content-lines
@@ -1821,12 +2133,20 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 //					}
 			// Erzeugen eines neuen Aufgaben-objekts
 			//increment here because we start the exercise count human readable with 1 instead of 0
-			ex_filelink = getFilelinkForExerciseFromPosWithoutEnding(ex_count_and_pos + 1) + "." + this.getFileEnding() + ".txt";
+			//DEPENDS ON IF IT'S A SOLUTION DECLARATION OR AN EXERCISE DECLARATION. Note: The Exercise-class is used for both types!
+			if (declarationSet.declarations.get(dec_count_and_pos).getMatchedPattern().isSolutionPattern()) {
+				// => Solution.
+				ex_filelink = getFilelinkForExerciseFromPosWithoutEnding(++solution_count_and_pos + 1, dec_count_and_pos + 1) + /*"-Lsg" +*/ "." + this.getFileEnding() + ".txt";
+			}
+			else {
+				// => Exercise declaration:
+				ex_filelink = getFilelinkForExerciseFromPosWithoutEnding(++ex_count_and_pos + 1, dec_count_and_pos + 1) + "." + this.getFileEnding() + ".txt";
+			}
 			//TODOString[] exerciseRawPlusExtraNextLine = new String[exerciseRaw.length + 1];
 			//System.arraycopy(exerciseRaw, 0, exerciseRawPlusExtraNextLine, 0, exerciseRaw.length);
 			Exercise loopExercise = new Exercise(
 					ex_filelink
-					, declarationSet.declarations.get(ex_count_and_pos)
+					, declarationSet.declarations.get(dec_count_and_pos)
 					, exerciseText
 					//, exerciseRaw/*TODO determine if the extra line really is req.)*/
 					, header_of_its_sheet
@@ -1841,10 +2161,62 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 		}
 		
 		
-		//Letzte Declaration bis zum Ende:
+
+		//Letzte Declaration bis zum Ende: <-- not until end of file! (see below)
+		int lineToStopBefore = this.getPlainText().length;
+		/* This did not work reliable enough as double sheets are possible and double declarations 
+		   are filtered!
+		   So here is the fix:
+		*/
 		Declaration lastDec = declarationSet.declarations.get(declarationSet.declarations.size() - 1);
-		int exercise_count_according_declarations = this.getPlainText().length - lastDec.getLineNumber();
-		String[] exerciseText = new String[exercise_count_according_declarations];
+		
+		//Find earlier line to stop at/before:
+		System.out.println("[Extract plain text last exercise]\r\nTrying to find an earlier line to stop at"
+				+ " (more precisely:before)"
+				//+ " than the whole end of the text. The reason is that content might be double and then all"
+				//+ " this double content would be included in the last exercise."
+		);
+		int line_relative = -1 + 1; //<- + 1 because we must not start on this line as this matches all the time as its the last exercise's declaration on its own. 
+		int woerter_to_analyse_maximum = 4;//only overridden if all text is in one line (what is inprobable here).
+		while (++line_relative < lineToStopBefore - lastDec.getLineNumber()) {
+			int line = line_relative + lastDec.getLineNumber();
+			
+			//EITHER GIVE COMPLETE ARRAY OF TEXT AND GET ALL DECLARATIONS BACK:
+			//if (new RegExFinder().sucheMuster(this.getPlainText()[line], Muster.getMusterThatMatches())) {
+			
+			//OR A CUSTOM REDUNDANT REPRODUCTION OF THE TEXT:
+			String[] woerter = MethodenWortSuche.teileZeileInWoerter(this.getPlainText()[line]);
+			//if (woerter.length > 0) {
+			if (woerter.length < woerter_to_analyse_maximum) {//the minimum out of both
+				woerter_to_analyse_maximum = woerter.length;
+			}
+			
+			int word_index = 0;
+			for (; word_index < woerter_to_analyse_maximum; word_index++) {
+				String wort = woerter[word_index];
+				String message = "das " + word_index + ". Wort lautet: " + wort;
+				if (woerter.length > word_index + 1) {
+					message += " \t nachfolgend: " + woerter[word_index + 1];
+				}
+				System.out.println(message);
+				boolean gleich = 
+//						Muster.getMusterByName(Global
+//						.extractSplitterFromFilelink(exercise_filelink))
+						lastDec
+						.getMatchedPattern()
+						.getPattern().matcher(wort).matches();
+				//Contains this line a suitable declaration?
+				if (gleich) {
+					//=> stop before this line (as from now on the content doubles for sure).
+					lineToStopBefore = line;//refine the line to stop before (so we stop earlier than end of file/text).
+					break; //<-- we only look for the first next best declaration to stop there. 
+				}
+				
+			}
+		}
+		
+		int exercise_row_count_according_declarations = lineToStopBefore - lastDec.getLineNumber();
+		String[] exerciseText = new String[exercise_row_count_according_declarations];
 		//String[] exerciseRaw = new String[exercise_count_according_declarations];
 		//String[] exerciseRawPlusExtraNextLine = new String[exerciseRaw.length + 1];
 		//TODO probably overflow here:System.arraycopy(exerciseRaw, 0, exerciseRawPlusExtraNextLine, 0, exerciseRaw.length);
@@ -1858,7 +2230,14 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 		}
 		// Erzeugen eines neuen Aufgaben-objekts
 									/*increment here because we start with 1 instead of 0 */
-		ex_filelink = this.getFilelinkForExerciseFromPosWithoutEnding(ex_count_and_pos + 1) + "." + this.getFileEnding() + ".txt";
+		if (lastDec.getMatchedPattern().isSolutionPattern()) {
+			// => Solution.
+			ex_filelink = getFilelinkForExerciseFromPosWithoutEnding(++solution_count_and_pos + 1, dec_count_and_pos + 1) + /*"-Lsg" +*/ "." + this.getFileEnding() + ".txt";
+		}
+		else {
+			// => Exercise declaration:
+			ex_filelink = getFilelinkForExerciseFromPosWithoutEnding(++ex_count_and_pos + 1, dec_count_and_pos + 1) + "." + this.getFileEnding() + ".txt";
+		}
 		Exercise loopExercise = new Exercise(
 				ex_filelink
 				, lastDec
@@ -1873,13 +2252,20 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 		//Write to filesystem.
 		//ReadWrite.write(exerciseText, ex_filelink);
 		
+		/* Sort alphabetically as it's needed for determiningSuccedingExercise since solutions are 
+		 * supported (v31.13c).
+		 * Alphabetically because Aufgabe comes before Loesung and Exercise before Solution. Maybe
+		 * this has to be differentiated between languages. (for those where this order is not valid.)
+		 */
+		
+		
 	}
 
 			
 			
 	/**
-	 * Löscht die Inhalte aller angegebenen Zeilen
-	 * @param filename Text als String[] (Zeile pro Feld)
+	 * L\u00F6scht die Inhalte aller angegebenen Zeilen
+	 * @param filename Text als String[] (Zeile pro Feld) <-- Why call filename??
 	 * @param anfang
 	 * @param ende
 	 * @return String[] mit allen Zeilen zwischen anfang und ende geloescht.
@@ -1889,7 +2275,7 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 		for (int i = anfang; i <= ende; i++ ) {
 			filename[i] = "";
 			}
-		System.out.println("Die Zeilen " + anfang + " bis " + ende + " wurden gelöscht");
+		System.out.println("Die Zeilen " + anfang + " bis " + ende + " wurden gel&ouml;scht");
 		return filename;
 	}
 			
@@ -1916,7 +2302,7 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 	 * stored separately.*/
 	public void setExercises(ArrayList<Exercise> exercisesListToSet) {
 		//Clearing old exercises!? TODO investigate what better
-		this.allExercisesRawFormat = new HashMap<String, Exercise>();
+		this.allExercisesRawFormat = new TreeMap<String, Exercise>();
 		for (Exercise e : exercisesListToSet) {
 			this.allExercisesRawFormat.put(e.filelink, e);
 		}
@@ -1925,7 +2311,7 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 	
 	public void setExercisesPlainText(ArrayList<Exercise> exercisesListToSet) {
 		//Clearing old exercises!? TODO investigate what better
-		this.allExercisesPlainText = new HashMap<String, Exercise>();
+		this.allExercisesPlainText = new TreeMap<String, Exercise>();
 		for (Exercise e : exercisesListToSet) {
 			this.allExercisesPlainText.put(e.filelink, e);
 		}
@@ -1960,15 +2346,32 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 	public String getType() {
 		return type;
 	}
-
+	public void setType(String type) {
+		if (!this.type.equals(type)) {
+			this.type = type;
+			this.filelinkHasToBeReGenerated = true;
+		}
+	}
+	
 	public String getCourse() {
 		return course;
+	}
+	public void setCourse(String course) {
+		if (!this.course.equals(course)) {
+			this.course = course;
+			this.filelinkHasToBeReGenerated = true;
+		}
 	}
 
 	public String getSemester() {
 		return semester;
 	}
-
+	public void setSemester(String semester) {
+		if (!this.semester.equals(semester)) {
+			this.semester = semester;
+			this.filelinkHasToBeReGenerated = true;
+		}
+	}
 	public int getLecturerId() {
 		return lecturer_id;
 	}
@@ -2013,6 +2416,15 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 	public Map<String, Exercise> getAllExercises() {
 		return allExercisesRawFormat;
 	}
+	public void setAllExercisesRawFormat(Map<String, Exercise> newAllExercisesRawFormat) {
+		allExercisesRawFormat = newAllExercisesRawFormat;
+	}
+	public Map<String, Exercise> getAllExercisesCommonFormat() {
+		return allExercisesCommonFormat;
+	}
+	public void setAllExercisesCommonFormat(Map<String, Exercise> newAllExercisesCommonFormat) {
+		allExercisesCommonFormat = newAllExercisesCommonFormat;
+	}
 	public List<String> getAllExerciseFilelinksAsList() {
 		List<String> allExerciseFilelinks = new ArrayList<String>();
 		allExerciseFilelinks.addAll(allExercisesRawFormat.keySet());
@@ -2030,7 +2442,10 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 	}
 	
 	
-	public String getFilelinkForExerciseFromPosWithoutEnding(int exercise_num_and_position) {
+	public String getFilelinkForExerciseFromPosWithoutEnding(int exercise_num_and_position, int declaration_index) {
+		return getFilelinkForExerciseFromPosWithoutEnding(exercise_num_and_position, this.declarationSet.declarations.get(declaration_index - 1));
+	}
+	public String getFilelinkForExerciseFromPosWithoutEnding(int exercise_num_and_position, Declaration declaration) {
 		//For now we keep the . experimentally. If this turns out robust on all systems
 		//this is a better solution than __ because we then directly can use filelink.
 		String to_append_to_filename = //"."/*"__"*/ +
@@ -2041,7 +2456,8 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 				//	"__splitby_" + this.getSplitterRepresentation(declaration)
 				//:
 				/*Declarations are the same for this sheet/draft's plain text AND raw format exercises!*/
-					"__splitby_" + this.getSplitterRepresentation(this.declarationSet.declarations.get(exercise_num_and_position - 1))
+					//"__splitby_" + this.getSplitterRepresentation(this.declarationSet.declarations.get(declaration_index - 1))
+					"__splitby_" + this.getSplitterRepresentation(declaration)
 				//)
 				;
 		return getFilelinkWithoutEnding() + to_append_to_filename;
@@ -2076,7 +2492,8 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 				}
 				else {
 					/*It's a preconfigured repository/common splitby pattern.*/
-					splitter = Muster.getValueByPattern(splitterDeclaration.getMatchedPattern());
+					//splitter = Muster.getValueByPattern(splitterDeclaration.getMatchedPattern());
+					splitter = splitterDeclaration.getMatchedPattern().name();
 					//Hopefully INTDOT, INTBRACKET, ...
 					return splitter;
 				}
@@ -2123,7 +2540,9 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 					)
 			);
 		}
-		
+		// tackle memory leaks by closing result set and its statement properly:
+		Global.queryTidyUp(res);
+				
 		return this;	//for chaining
 		
 	}
@@ -2203,7 +2622,7 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI() throws Exception {
 		for (Exercise exercise : exerciseMap.values()) {
 			
 //			String dirs_reversed = new StringBuffer(Global.extractPathTo(filelink)).reverse().toString();
-//			int last_slash =  dirs_reversed.indexOf("/");
+//			int last_slash =  dirs_reversed.indexOf(System.getProperty("file.separator"));
 //			String filename_t_reversed = dirs_reversed.substring(0,last_slash);
 //			String filename_t = new StringBuffer(filename_t_reversed).reverse().toString();
 //			int punkt = filename_t_reversed.indexOf('.');

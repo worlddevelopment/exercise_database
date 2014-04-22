@@ -20,14 +20,14 @@
 <%@page import="org.apache.lucene.store.Directory"%>
 
 <%
-	String id = "";
+// 	String id = "";
 	String filelink = "";
 	String type = "";
 	String course = "";
 	String semester = "";
 	String lecturer = "";
 	String description = "";
-	String author = "";
+// 	String author = "";
 // 	String whencreated = "";
 // 	String is_draft = "";
 // 	String headermixture = "";
@@ -43,22 +43,22 @@
 	
 	try {
 		ResultSet res =
-		Global.query("SELECT filelink, course,"
-				+ " semester, l.lecturer, type, plain_text"
+		Global.query("SELECT filelink, semester," //l.id,
+				+ " course, l.lecturer, type, description, plain_text" /*, author "*/
 				+ " FROM sheetdraft, lecturer l"
 				+ " WHERE l.id = lecturer_id"); /*join over id, lecturer,sheetdraft*/
 	    int count = 0;
 		while (res.next()) {
 			count++;
 			//out.print("count " + count + "</br>");
-			id = res.getString("id");
+// 			id = res.getString("id");
 			filelink = res.getString("filelink");
-			type = res.getString("type");
-			course = res.getString("course");
 			semester = res.getString("semester");
+			course = res.getString("course");
 			lecturer = res.getString("lecturer");
+			type = res.getString("type");
 			description = res.getString("description");
-			author = res.getString("author");
+// 			author = res.getString("author");
             //whencreated = res.getString("whencreated");
             //is_draft = res.getString("is_draft");
             //headermixture = res.getString("headermixture");
@@ -81,12 +81,14 @@
 
 			Document doc = new Document();
 			doc.add(new Field("filelink", filelink, Field.Store.YES, Field.Index.ANALYZED));
-			doc.add(new Field("type", type, Field.Store.YES, Field.Index.ANALYZED));
-			doc.add(new Field("course", course,	Field.Store.YES, Field.Index.ANALYZED));
 			doc.add(new Field("semester", semester,	Field.Store.YES, Field.Index.ANALYZED));
+			doc.add(new Field("course", course,	Field.Store.YES, Field.Index.ANALYZED));
 			doc.add(new Field("lecturer", lecturer,	Field.Store.YES, Field.Index.ANALYZED));
-			doc.add(new Field("author", filelink,	Field.Store.YES, Field.Index.ANALYZED));
-			doc.add(new Field("description", description, Field.Store.YES, Field.Index.ANALYZED));
+			doc.add(new Field("type", type, Field.Store.YES, Field.Index.ANALYZED));
+// 			doc.add(new Field("author", filelink,	Field.Store.YES, Field.Index.ANALYZED));
+            if (plain_text != null) {			
+                doc.add(new Field("description", description, Field.Store.YES, Field.Index.ANALYZED));
+            }
 			doc.add(new Field("content", plain_text, Field.Store.YES, Field.Index.ANALYZED));
 			
 			
@@ -95,6 +97,8 @@
 			iwriter.close();
 			
 		}
+		// tackle memory leaks by closing result set and its statement properly:
+        Global.queryTidyUp(res);
 
 	} catch (SQLException e) {
 		e.printStackTrace();

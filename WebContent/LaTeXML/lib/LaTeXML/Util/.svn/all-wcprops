@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/3637/trunk/lib/LaTeXML/Util
+END
+Config.pm
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/LaTeXML/!svn/ver/3398/trunk/lib/LaTeXML/Util/Config.pm
+END
+MathMLLinebreaker.pm
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/LaTeXML/!svn/ver/3339/trunk/lib/LaTeXML/Util/MathMLLinebreaker.pm
+END
+Geometry.pm
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/LaTeXML/!svn/ver/1892/trunk/lib/LaTeXML/Util/Geometry.pm
+END
+KeyVal.pm
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/LaTeXML/!svn/ver/3181/trunk/lib/LaTeXML/Util/KeyVal.pm
+END
+Transform.pm
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/2645/trunk/lib/LaTeXML/Util/Transform.pm
+END
+ObjectDB.pm
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/LaTeXML/!svn/ver/3637/trunk/lib/LaTeXML/Util/ObjectDB.pm
+END
+Pathname.pm
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/LaTeXML/!svn/ver/3482/trunk/lib/LaTeXML/Util/Pathname.pm
+END
+Alignment.pm
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/3549/trunk/lib/LaTeXML/Util/Alignment.pm
+END
+Test.pm
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/LaTeXML/!svn/ver/3574/trunk/lib/LaTeXML/Util/Test.pm
+END

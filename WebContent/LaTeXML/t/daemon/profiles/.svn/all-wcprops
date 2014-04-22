@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/repos/LaTeXML/!svn/ver/3418/trunk/t/daemon/profiles
+END
+default.spec
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/default.spec
+END
+standard.xml
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/LaTeXML/!svn/ver/3418/trunk/t/daemon/profiles/standard.xml
+END
+fragment.xml
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/fragment.xml
+END
+math.spec
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/math.spec
+END
+standard.status
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/standard.status
+END
+default.xml
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/3418/trunk/t/daemon/profiles/default.xml
+END
+fragment.status
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/fragment.status
+END
+default.status
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/default.status
+END
+math.xml
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/math.xml
+END
+standard.spec
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/standard.spec
+END
+math.status
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/math.status
+END
+fragment.spec
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/profiles/fragment.spec
+END

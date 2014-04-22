@@ -3,11 +3,10 @@
  */
 package aufgaben_db;
 
-import HauptProgramm.Declaration;
 import java.util.ArrayList;
+import java.util.List;
 
 import Verwaltung.HashMapVerwaltung;
-import HauptProgramm.DeclarationSet;
 
 /**
  * "Unterprogramm" welches Methoden zum finden von Aufgabendeklarationen einer Uwbungsaufgabe bereitstellt.
@@ -21,25 +20,47 @@ public class DeclarationFinder {
 	
 	/**
 	 * Untersucht das uebergebene Sheetdraft mit regulaeren Ausdruecken (siehe Muster.java) auf 
-	 * Aufgabendeklarationen und gibt den passendsten Satz an Aufgabendeklarationen aus.
+	 * Aufgabendeklarationen und gibt den passendsten Satz an Aufgabendeklarationen aus. (1 and only 1)
 	 * Prerequisite: Requires the sheetdraft's plain text to be extracted at this point!
 	 * 
 	 * @param sheet	zu untersuchendes Sheetdraft
 	 * @return DeclarationSet, fall eine passender Satz an Deklarationen gefunden wurde <br>
 	 * null , falls keine passenden Deklarationen gefunden wurden.
 	 */
+	public static List<DeclarationSet> findDeclarationSets(String[] plainText, boolean isToBeFiltered) {
+		if (/*filter == null ||*/ !isToBeFiltered) {
+			return findeAlleDeklarationen(plainText);
+		}
+		List<DeclarationSet> foundDeclarationSets = new ArrayList<DeclarationSet>();
+		foundDeclarationSets.add( findeDeklarationen(plainText) );
+		return foundDeclarationSets;
+	}
+	
 	public static DeclarationSet findeDeklarationen(Sheetdraft sheet) {
-
+		return findeDeklarationen(sheet.getPlainText());
+	}
+	
+	public static List<DeclarationSet> findeAlleDeklarationen(String[] plainText) {
 		// SpeicherOrt fuer alle zu findenden Deklarationssets wird angelegt	
-		ArrayList<DeclarationSet> foundDeclarationSets = new ArrayList<DeclarationSet>();
+		List<DeclarationSet> foundDeclarationSets = new ArrayList<DeclarationSet>();
 		
 		// Es wird nach allen bekannten Deklarationsmustern gesucht und abgelegt
 		for (Muster m : Muster.values()) {
 			if (Global.debug) {
 				System.out.println(m.toString());
 			}
-			foundDeclarationSets.add(regExFinder.sucheMuster(sheet.getPlainText(), m));
+			foundDeclarationSets.add(regExFinder.sucheMuster(plainText, m));
 		}
+		
+		return foundDeclarationSets;
+		
+	}
+	public static DeclarationSet findeDeklarationen(String[] plainText) {
+
+		List<DeclarationSet> foundDeclarationSets = new ArrayList<DeclarationSet>();
+		
+		foundDeclarationSets = findeAlleDeklarationen(plainText);   //<- filter all out but one by default.
+		
 		
 		System.out.println("Der folgende Schritt ist eventuell kritisch: (declaration aus declarationSet wird geloescht)");
 		// Nun wird verglichen, gefiltert und ein Score erstellt, am Ende wird die sinnvollste Deklaration genommen
@@ -122,7 +143,9 @@ public class DeclarationFinder {
 			return null;
 		}
 		
-		DeclarationSet setWithHighestScore = foundDeclarationSets.get(0);
+		
+		DeclarationSet setWithHighestScoreSolution = null;// = foundDeclarationSets.get(0); <-- null by default, hence only exercise declarations are expected by default.
+		DeclarationSet setWithHighestScore = null;// = foundDeclarationSets.get(0);
 		double score = 0;
 //		for (int i = 0; i < foundDeclarationSets.size(); i++) {
 //			score = foundDeclarationSets.get(i).calculateScore();
@@ -139,35 +162,147 @@ public class DeclarationFinder {
 			System.out.println("Score der Deklarationen, die mit dem Pattern "+ set.getPattern() + " gefunden wurden : " + score );
 		}
 		for (int i = 0; i < foundDeclarationSets.size(); i++) {
-			if (foundDeclarationSets.get(i).getScore() > setWithHighestScore.getScore()) {
-				setWithHighestScore = foundDeclarationSets.get(i);
+			if (foundDeclarationSets.get(i).getPattern().isSolutionPattern()) {
+				
+				// solution declaration set:
+				if (setWithHighestScoreSolution == null//<-this ensures we only have non-null set if there exist solution sets.
+						|| foundDeclarationSets.get(i).getScore() > setWithHighestScoreSolution.getScore()) {
+					
+					setWithHighestScoreSolution = foundDeclarationSets.get(i);
+					
+				}
+				
+			}
+			else {
+				
+				// exercise declaration set:
+				if (setWithHighestScore == null
+						|| foundDeclarationSets.get(i).getScore() > setWithHighestScore.getScore()) {
+					
+					setWithHighestScore = foundDeclarationSets.get(i);
+					
+				}
+				
 			}
 		}
 		
 		
+		// no solution declarations exist/ were found?
+		if (setWithHighestScoreSolution == null) {
+			// => Then there is nothing to merge and we can give back the result immediately:
+			System.out.println("Score wurde erstellt: " + setWithHighestScore.getScore() + setWithHighestScore.getPattern());
+			return setWithHighestScore;
+			
+		}
+		// no exercise declarations found?
+		else if (setWithHighestScore == null) {
+			System.out.println("Score fuer Loesungen wurde erstellt: " + setWithHighestScoreSolution.getScore() + setWithHighestScoreSolution.getPattern());
+			return setWithHighestScoreSolution;
+		}
+		//else
+		
+		// both solutions and exercises exist. => we have to merge.
 		System.out.println("Score wurde erstellt: " + setWithHighestScore.getScore() + setWithHighestScore.getPattern());
+		System.out.println("Score fuer Loesungen wurde erstellt: " + setWithHighestScoreSolution.getScore() + setWithHighestScoreSolution.getPattern());
+		
+		
+		/* Merge both the exercise declarations and those for the solutions according to the line number
+		   where they were found. If that's equal then the word count will be compared.
+		   An earlier found declaration should come earlier in the merged declaration list to keep order.
+		*/
+		DeclarationSet mergedExerciseAndSolutionDeclarationSet = new DeclarationSet();
+		int setWithHighestScoreExercises_count = 0;
+		int setWithHighestScoreSolutions_start_index = 0;//at the end this must be equal to the set's size!
+		
+		//Note: Here we use that each set's declarations are already sorted by occurrence, i.e. line number!
+		for (Declaration exercise_dec : setWithHighestScore.declarations) {
+			
+			// Examine the not-yet-stored-in-merged-set solutions' occurences: 
+			//for (Declaration solution_dec : setWithHighestScoreSolution.declarations) {
+			int setWithHighestScoreSolutions_index = setWithHighestScoreSolutions_start_index - 1;
+			while (++setWithHighestScoreSolutions_index < setWithHighestScoreSolution.declarations.size()) {
 
+				Declaration solution_dec = setWithHighestScoreSolution.declarations
+						.get(setWithHighestScoreSolutions_index);
+				
+				// Is this solution occurring earlier in the text than the exercise declaration?
+				// if it's equal we have to examine the word count. (important if all decs were found in one line).
+				if (solution_dec.getLineNumber() < exercise_dec.getLineNumber()
+						/*TODO first let's check if we can go without this word prior to dec count...
+						  || solution_dec.getWordPriorToDeclarationCount() < exercise_dec.getWordPriorToDeclarationCount()*/) {
+					
+					// then add/store the solution declaration.
+					mergedExerciseAndSolutionDeclarationSet.declarations.add(solution_dec);
+					// increase the start index as this Declaration is now out/already stored.   
+					++setWithHighestScoreSolutions_start_index; // == dec_index + 1
+					
+					//break;<-- check next exercise solution too.
+											
+				    /* Too early to tell that the next solution is not earlier too! (the occurrence 
+					should be followed strictly no matter if each exercise has a solution in the 
+					end or not.) */
+				}
+				// if instead the exercise occurred prior to this solution dec then we can stop examining solution decs as they are already sorted by occurrence.
+				else /*TODO if (solution_dec.getLineNumber() > exercise_dec.getLineNumber())*/ {
+					break; // only if the exercise is earlier than the solution, we stop to store the exercise.
+					// if both line numbers, i.e. occurrences, are equal, then we prefer the exercise. TODO determine if this is rigid enough or if we need to examine the word count too.
+				}
+				
+				
+			}
+			
+			
+			// => At this point all (solutions') declarations that occurred earlier are already stored.
+			
+			/* Then now the earliest still available/non-stored declaration is this exercise declaration,
+			   so we add/store it in the merged set:*/
+			mergedExerciseAndSolutionDeclarationSet.declarations.add(exercise_dec);
+			
+			
+		}
+		
+		
+		/* Add missing solution declarations that have occurred later than the last exercise (hence 
+		the loop stopped with some or all the solution declarations still not having been added.):
+		*/
+		int solution_declarations_index = setWithHighestScoreSolutions_start_index - 1;//because we increment instantly below in the while loop condition:
+		while (++solution_declarations_index < setWithHighestScoreSolution.declarations.size()) {
+			mergedExerciseAndSolutionDeclarationSet.declarations.add(
+					setWithHighestScoreSolution.declarations.get(solution_declarations_index)
+			);
+		}
+		
+		
+		
+		/* At this point the merged Exercise And Solution Declaration Set should contain
+		 * all declarations in the order of occurrence in the plain text.
+		 */
+		
+		
+		
+
+		
 		// ------------------------------------------DEPRECATED----------------------------------------------//
 		// -------------------------------- Altlasten von Sabine --------------------------------------------//
-		int anzahl = setWithHighestScore.declarations.size();
-//		Muster muster = setWithHighestScore.getPattern();
-		if (anzahl == 1) {
-			HashMapVerwaltung.erweitereHashmapBoolean(HashMapVerwaltung.genauEineAufgabe, true);
-		}	
-		HashMapVerwaltung.erweitereHashmapInt(HashMapVerwaltung.keyAnzahl, anzahl);
-		System.out.println("Es wurden " + HashMapVerwaltung.getAufgabenzahlAusHashmap() + " Aufgabendeklarationen gefunden");
-//		HashMapVerwaltung.erweitereHashmapMuster(HashMapVerwaltung.keyDeklaration, muster);
-		for (int i = 0; i < anzahl; i++) {
-			String key = "Aufgabe" + (i + 1);
-			int zeile = setWithHighestScore.declarations.get(i).getLineNumber();
-			String schluesselWort = setWithHighestScore.declarations.get(i).getFirstWord();
-			String aufgabenBezeichnung = setWithHighestScore.declarations.get(i).getSecondWord();
-			HashMapVerwaltung.erweitereHashmap(key, schluesselWort,	aufgabenBezeichnung, zeile);
-		}
+//		int anzahl = setWithHighestScore.declarations.size();
+////		Muster muster = setWithHighestScore.getPattern();
+//		if (anzahl == 1) {
+//			HashMapVerwaltung.erweitereHashmapBoolean(HashMapVerwaltung.genauEineAufgabe, true);
+//		}	
+//		HashMapVerwaltung.erweitereHashmapInt(HashMapVerwaltung.keyAnzahl, anzahl);
+//		System.out.println("Es wurden " + HashMapVerwaltung.getAufgabenzahlAusHashmap() + " Aufgabendeklarationen gefunden");
+////		HashMapVerwaltung.erweitereHashmapMuster(HashMapVerwaltung.keyDeklaration, muster);
+//		for (int i = 0; i < anzahl; i++) {
+//			String key = "Aufgabe" + (i + 1);
+//			int zeile = setWithHighestScore.declarations.get(i).getLineNumber();
+//			String schluesselWort = setWithHighestScore.declarations.get(i).getFirstWord();
+//			String aufgabenBezeichnung = setWithHighestScore.declarations.get(i).getSecondWord();
+//			HashMapVerwaltung.erweitereHashmap(key, schluesselWort,	aufgabenBezeichnung, zeile);
+//		}
 		// -------------------------------------------------------------------------------------------------//
 		// -------------------------------------------------------------------------------------------------//
 	
-		return setWithHighestScore;
+		return mergedExerciseAndSolutionDeclarationSet;//setWithHighestScore;
 		
 	}
 

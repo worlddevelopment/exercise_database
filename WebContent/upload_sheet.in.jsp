@@ -5,9 +5,8 @@ request.setCharacterEncoding("UTF-8");
 %>
 
 
-
+<!-- Since we don't know if we need it at several places at once we have it in a separate file. -->
 <jsp:include page="js/validateForm.js.jsp" />
-
 
 
 
@@ -34,47 +33,7 @@ enctype="multipart/form-data">
         <tr>
             <td><label for="semester">Semester: *</label></td>
             <td>
-               <!--
-               <input type="text" name="semester" class="required noSpecialChars" id="semester"/>
-               -->
-            
-                <% DateFormat dF = new SimpleDateFormat("EEE,  MMM d, ''yy");
-                //Calendar now = new GregorianCalendar();//.getInstance();
-                //offer all semesters from -5 to +5 years
-                int YEAR_AMPLITUDE_TO_SHOW = 5;
-                int y = Global.now.get(Calendar.YEAR) - YEAR_AMPLITUDE_TO_SHOW - 1;
-                int mMin;// = Global.now.get(Calendar.MONTH);
-                int mMax;
-                //out.print("y = " + y + "<br />now[YEAR] = " + Global.now.get(Calendar.YEAR));
-                %>
-                <select name="semester" class="required" id="semester_select"
-                >
-                <%
-                //System.out.println("GregCal: " + dF.format(Global.now.getTime()));
-                int nowMonth = Global.now.get(Calendar.MONTH);
-                //out.println("nowMonth = " + nowMonth);
-                //YEAR-LOOP
-                while (++y < Global.now.get(Calendar.YEAR) + YEAR_AMPLITUDE_TO_SHOW) {
-                	//TERM-LOOP
-                    String[] semterms = {"SS", "WS"};//TODO: PUT IN CONFIGURATION-FILE!
-                    for (String semterm : semterms) {
-                        //add option
-                        mMin = 10 - 1; /*<-- Oktober as first month of semester.*/
-                        mMax =  3 - 1; /*<-- March as last month of semester.*/
-                        boolean semterm_condition = nowMonth >= mMin || nowMonth <= mMax;
-                        if (semterm == "SS") {
-                        	mMin = 4 - 1; /*<-- April as first month of semester.*/
-                        	mMax = 9 - 1; /*<-- September as last month of semester.*/
-                        	semterm_condition = nowMonth >= mMin && nowMonth <= mMax;
-                        }
-                        out.print("<option value='" + semterm + "_" + y + "'"
-                        + ((y == Integer.valueOf(Global.now.get(Calendar.YEAR))
-                        		&& semterm_condition) ? " selected='selected' ": "")
-                        +">" + semterm + " " + y + "</option>");                 
-                    }
-                }
-                %>
-                </select>
+                <jsp:include page="input.semester.jsp" />
             </td>
             
         </tr>
@@ -83,32 +42,8 @@ enctype="multipart/form-data">
         <!-- COURSE -->
         <tr>
             <td><label for="course">Veranstaltung: *</label></td>
-            <td><input type="text" name="course" class="required noSpecialChars"
-             id="course" value="" onkeyup="deactivateIfFilledOrActivateIfEmpty(this, 'course_select');"/>
-                <select name="course_select" class="" id="course_select"
-                 onchange="document.getElementById('course').value=this.value">
-                    <%
-                    //fetch all distinct courses from database
-                    ResultSet res = Global.query("SELECT DISTINCT `course` FROM `sheetdraft`");
-                   	//get length
-                   	int resL = 0;
-                   	if (res.last() /*&& res.getType() == res.TYPE_SCROLL_SENSITIVE*/) {
-	                    resL = res.getRow();
-                   	    res.beforeFirst();/*because afterwards follows a next()*/
-                   	}
-                    //generate the option fields
-                    if (res == null || resL == 0) {
-                        out.print("<option selected='selected' disabled='disabled'>-------</option>");
-                    } else {
-	                   	while (res.next()) {
-	                        //add option
-	                        out.print("<option value='"+ res.getString("course") +"'>"
-			                        + Global.decodeUmlauts(res.getString("course"))
-			                        + "</option>");             
-	                    }
-                    }
-                    %>
-                </select>
+            <td>
+                <jsp:include page="input.course.jsp"/>
             </td>
             
         </tr>
@@ -118,13 +53,7 @@ enctype="multipart/form-data">
         <tr>
             <td><label for="type">Typ: *</label></td>
             <td>
-            <!-- (tbd) better load from database? -->
-            <select class="required noSpecialChars" name="type" id="type">
-            <option value="Uebung" selected="selected">Übung</option>
-            <option value="Loesung">Lösung</option>
-            <option value="Klausur">Klausur</option>
-            <option value="Klausurloesung">Klausurlösung</option>
-            </select>
+                <jsp:include page="input.type.jsp"/>
             </td>
         </tr>
         
@@ -132,27 +61,8 @@ enctype="multipart/form-data">
         <!-- LECTURER ID -->
         <tr>
             <td><label for="lecturer">Dozent: *</label></td>
-            <td><input type="text" name="lecturer" class="required noSpecialChars"
-             id="lecturer" value=""  onkeyup="deactivateIfFilledOrActivateIfEmpty(this, 'lecturer_id_select');"/>
-                <select name="lecturer_id_select" class="" id="lecturer_id_select"
-                onchange="document.getElementById('lecturer').value=this.options[this.selectedIndex].text;">
-	                <%
-	                //fetch all distinct lecturer from database
-	                res = Global.query("SELECT `id`, `lecturer` FROM `lecturer`" /*LIMIT 0, 30*/);
-	                if (!res.next()) {
-	                	out.print("<option disabled='disabled'>---(leer)---</option>");
-	                } else {
-	                	res.beforeFirst();//Because above we already increase by one!!
-		                while (res.next()) {
-		                    //add option
-		                    out.print("<option value='"+ res.getString("id") + ","
-		                              + res.getString("lecturer") +"'>"
-		                    		  + Global.decodeUmlauts(res.getString("lecturer"))
-		                    		  + "</option>");             
-		                }
-	                }
-	                %>
-                </select>
+            <td>
+                 <jsp:include page="input.lecturer.jsp" />
             </td>
         </tr>
         
@@ -161,7 +71,11 @@ enctype="multipart/form-data">
         <!-- DESCRIPTION -->
         <tr>
             <td><label for="description">Beschreibung &amp; Tags: </label></td>
-            <td colspan="2"><input type="text" name="description" value=""/></td>
+            <td colspan="2">
+                <jsp:include page="input.generic.jsp">
+                    <jsp:param name="name" value="description"/>
+                </jsp:include>
+            </td>
         </tr>
 
 
@@ -176,14 +90,14 @@ enctype="multipart/form-data">
             <td><label for="File">Datei: *</label></td>
             <td><input class="required falseFile" name="File" type="file" /></td>
         </tr>
-		<tr>
-		<td></td>
-		<td> <button name="q" type="submit" value="upload" onclick="/*validate();*/show_loader();" style="font-size : 16px;"
-			 class="btn btn-secondary"><i class="icon-gift"></i> Upload
-			</button>
-		</td>
-		</tr>
-		
+        <tr>
+        <td></td>
+        <td> <button name="q" type="submit" value="upload" onclick="/*validate();*/show_loader();" style="font-size : 16px;"
+             class="btn btn-secondary"><i class="icon-gift"></i> Upload
+            </button>
+        </td>
+        </tr>
+        
     </table>
    
  </form>
@@ -193,9 +107,9 @@ enctype="multipart/form-data">
 <%
 //if (request.getParameter("form") != null
 //&& request.getParameter("form").equals("multi")) {
-	%>
-	<!--jsp:include page='action.upload.jsp' /-->
-	<%
+    %>
+    <!--jsp:include page='action.upload.jsp' /-->
+    <%
 //}
 %>
 <p id="add_result"></p>

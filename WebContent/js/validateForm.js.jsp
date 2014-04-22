@@ -106,11 +106,12 @@ $(document).ready(function() {
 </script>
 
 
+<!--
 <div class="loader" id="loader" style="">
       <img src="pictures/loader.gif" alt="Please wait..." />
      Bitte warten...
 </div>
-
+-->
 
 <!-- JQUERY -->
 <script type="text/javascript">

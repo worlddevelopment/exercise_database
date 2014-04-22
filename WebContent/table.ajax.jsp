@@ -1,12 +1,13 @@
+<%@page import="cz.vutbr.web.csskit.antlr.CSSParser.statement_return"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%
-    response.setContentType("text/html; charset=UTF-8");
+	response.setContentType("text/html; charset=UTF-8");
     request.setCharacterEncoding("UTF-8");
 %>
 <%@page import="java.net.URLDecoder, java.net.URLEncoder" %>
 <%@page import="java.util.Map" %>
-<%@page import="swp.SQL_Methods, aufgaben_db.Global, aufgaben_db.Aufgaben_DB, aufgaben_db.Sheetdraft"%>
-<%@page import="swp.MysqlHelper,java.sql.Connection,java.sql.DriverManager,
-                java.sql.ResultSet,java.sql.SQLException,java.sql.Statement"%>
+<%@page import="db.SQL_Methods,aufgaben_db.Global,aufgaben_db.Aufgaben_DB,aufgaben_db.Sheetdraft"%>
+<%@page import="db.MysqlHelper,java.sql.Connection,java.sql.DriverManager,java.sql.ResultSet,java.sql.SQLException,java.sql.Statement"%>
 <!--REDUNDANT - could mess up everything .. we ajax probs (without end)
 <script src="http://code.jquery.com/jquery-latest.js"></script>
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css"
@@ -27,66 +28,65 @@
 <div class="ajax-loaded-content">
     <!-- MULTI SELECTION FORM (send multiple sheets for deletion at the same time) -->
     <form id="form" name='tf' action="index.jsp" method="get">
-        <%
-        //retrieve & decide
-        boolean table_for_sheetdraft_listing = (request.getParameter("exercise_listing") == null);
-        //retrieve
-        //for both the sheetdraft and the exercise list
-        //session = (HttpSession)request.getParameter("session");
-        String session_user = request.getParameter("session_user");
-        if (session_user == null) {
-            System.out.print(
-                    Global.addMessage("Session user was not given for determining"
-                            + "the permissions. -> No permissions granted!"
-                            , "info")
-            );
-            session_user = "";//return ;
-        }
-        else {
-            session_user = URLDecoder.decode(session_user, "utf-8");
-        }
-        
+      <%
+     //retrieve & decide
+     boolean table_for_sheetdraft_listing = (request.getParameter("exercise_listing") == null);
+     //retrieve
+     //for both the sheetdraft and the exercise list
+     //session = (HttpSession)request.getParameter("session");
+     String session_user = request.getParameter("session_user");
+     if (session_user == null) {
+         System.out.print(
+                 Global.addMessage("Session user was not given for determining"
+                         + "the permissions. -> No permissions granted!"
+                         , "info")
+         );
+         session_user = "";//return ;
+     }
+     else {
+         session_user = URLDecoder.decode(session_user, "utf-8");
+     }
+     
 
-        String filelink = request.getParameter("filelink");
-        if (filelink == null && !table_for_sheetdraft_listing) {
-            out.print(
-                Global.addMessage("Without a key (filelink or id) of a sheet/draft"
-                        + " an exercise listing cannot be generated. -> Aborting ..."
-                        , "warning")
-            );
-            return ;
-        }
-        else if (filelink != null) {
-            
-            filelink = new String(request.getParameter("filelink").getBytes("ISO-8859-1"), "UTF-8");
-            filelink = URLDecoder.decode(request.getParameter("filelink"), "utf-8");
-        }
-        
-        
-        String uploader = "";
-        
-        
-        Statement statement1 = null;
-        MysqlHelper mh = new MysqlHelper();
-        Connection con = mh.establishConnection(response);
-        try {
-            statement1 = con.createStatement();
+     String filelink = request.getParameter("filelink");
+     if (filelink == null && !table_for_sheetdraft_listing) {
+         out.print(
+             Global.addMessage("Without a key (filelink or id) of a sheet/draft"
+                     + " an exercise listing cannot be generated. -> Aborting ..."
+                     , "warning")
+         );
+         return ;
+     }
+     else if (filelink != null) {
+         
+         filelink = new String(request.getParameter("filelink").getBytes("ISO-8859-1"), "UTF-8");
+         filelink = URLDecoder.decode(request.getParameter("filelink"), "utf-8");
+     }
+     
+     
+     String uploader = "";
+     
+     
+     Statement statement1 = null;
+     MysqlHelper mh = new MysqlHelper();
+     Connection con = mh.establishConnection(response);
+     try {
+         statement1 = con.createStatement();
 
-            
-            /**------------------------------------------------------
-             FILELINK GIVEN ?
-             **-----------------------------------------------------*/
-            //FILELINK IS EQUAL FOR BOTH CASES! SO THIS DOES NOT WORK:
-            //if (!filelink.matches("[Ee]xercise[_]?[0-9]+")) {
-            if (table_for_sheetdraft_listing) {
-
-                %>
+         
+         /**------------------------------------------------------
+          FILELINK GIVEN ?
+          **-----------------------------------------------------*/
+         //FILELINK IS EQUAL FOR BOTH CASES! SO THIS DOES NOT WORK:
+         //if (!filelink.matches("[Ee]xercise[_]?[0-9]+")) {
+         if (table_for_sheetdraft_listing) {
+        %>
                 <!-- SHEETDRAFT LISTING -->
                 <table class='listing sheetdraft-listing'>
                 <%
                 //SHEETDRAFT LISTING
                 /* deliver all sheetdrafts of this lecturer listing */
-                out.println("<tr>"
+                out.println("<tr onclick=\"var o = this.parentNode/*tbody*/.parentNode.parentNode/*form*/.parentNode/*div-ajax-content*/.parentNode/*div-target-container*/; o.style ? o.style.display='none' : o.setAttribute('style', 'display:none;')\">"
                           + "<th>Dateilink</th>"
                           + "<th>Dozent</th>"
                           + "<th>Veranstaltung</th>"
@@ -113,7 +113,7 @@
                     
                     selectAllSheetdraftsInThisDirectory = "SELECT filelink, sheetdraft.id, author"
                             + " FROM sheetdraft"//WHERE INSTR(column, '') > 0
-                            + " WHERE filelink LIKE '" + pathTo + "'%"
+                            + " WHERE filelink LIKE '" + pathTo + "%'"
                             ;
                     
                 }
@@ -144,101 +144,108 @@
                 
                 ResultSet res1 = statement1.executeQuery(selectAllSheetdraftsInThisDirectory);
                 //--------------------Datei -----------------------
-                while (res1.next()) {
-                    //Tabelle fuer Blatt generieren
-
-                    int sheetdraft_id = res1.getInt("id");
-                    uploader = res1.getString("author");
-                    %>
-                    <tr style='margin: 10px;'>
-                    <td >
-                    <%
-                    out.println("<a href='" + filelink
-                            + "' class='screenshot' rel='" + Global.convertToImageLink(filelink)
-                            + "'><i class='icon-download'></i> <i class='icon-eye-open'></i> "
-                            + Global.extractFilename(filelink) + "." + Global.extractEnding(filelink)
-                            + "</a></td>");
-                    out.println("<td>" + Global.decodeUmlauts(lecturer) + "</td>");
-                    out.println("<td>" +course + "</td>");
-                    out.println("<td>" + Global.decodeUmlauts(semester) + "</td>");
-                    %>
-                    <td>
-                        <!-- <input name='sheetdraft_id[]' value='<%=sheetdraft_id %>' type='checkbox'/>-->
-                        <input name='sheetdraft_filelinks[]' value='<%=filelink %>' type='checkbox'/>
-                        <a href="?id=edit&filelink=<% out.print(URLEncoder.encode(filelink, "utf-8")); /*to be decoded accordingly*/%>"
-                         class="btn btn-secondary" title="edit">
-                            <i class="icon-edit"></i>
-                        </a>
-                        <%
-                        //Merely the lecturer of this course and the uploader/author get permission:
-			            if(lecturer.equals(session_user)/*session.getAttribute("user")*/
-			            	    || uploader.equals(session_user)) {
-		            	%>
-                        <a href="?id=start&q=delete_sheet&filelink=<% out.print(URLEncoder.encode(filelink, "utf-8")); /*to be decoded accordingly*/%>"
-                        class="btn btn-danger" title="delete">
-                            <i class="icon-trash icon-white"></i>
-                        </a>
-                        <%
-                        }
-                        %>
-                    </td>
-                    </tr>
-                    <!-- EDIT FORM -INLINE VERSION -->
-                    <!-- 
-                    <tr>
-                    <td colspan='5'>
-                    <form action="edit.in.jsp" method="post">
-                        <input type="hidden" name="filelink" value="<% out.print(filelink); %>" />
-                        <input type="text" name="filename" value="<% out.print(Global.extractFilename(filelink)); %>" disabled="disabled" />
-                        <input type="text" name="lecturer" value="<% out.print(lecturer); %>" disabled="disabled" />
-                        <input type="text" name="course" value="<% out.print(lecturer); %>" disabled="disabled" />
-                        <input type="text" name="semester" value="<% out.print(lecturer); %>" disabled="disabled" />
-                        <input type="text" name="type" value="<% out.print(lecturer); %>" disabled="disabled" />
-                        <button type="submit" name="q" value="edit_sheetdraft" class="submit"></button>
-                    </form>
-                    </td>
-                    </tr>
-                    -->
-                    <%
-                    /*The above had to be omitted because it gets into trouble because there is a global form
-                    to index.jsp and a form in a form is not allowed.*/
-
+                if (res1 != null) {
+	                while (res1.next()) {
+	                    //Tabelle fuer Blatt generieren
+	
+	                    int sheetdraft_id = res1.getInt("id");
+	                    uploader = res1.getString("author");
+	                    %>
+	                    <tr style='margin: 10px;'>
+	                    <td >
+	                    <%
+	                    out.println("<a href='" + res1.getString("filelink")//filelink
+	                            + "' class='screenshot' rel='" + Global.convertToImageLink(res1.getString("filelink"))
+	                            + "'><i class='icon-download'></i> <i class='icon-eye-open'></i> "
+	                            + Global.extractFilename(res1.getString("filelink")) + "." + Global.extractEnding(res1.getString("filelink"))
+	                            + "</a></td>");
+	                    out.println("<td title='"+ uploader +"'>" + Global.decodeUmlauts(lecturer) + "</td>");
+	                    out.println("<td>" +course + "</td>");
+	                    out.println("<td>" + Global.decodeUmlauts(semester) + "</td>");
+	                    %>
+	                    <td>
+	                        <!-- <input name='sheetdraft_id[]' value='<%=sheetdraft_id %>' type='checkbox'/>-->
+	                        <input name='sheetdraft_filelinks[]' value='<%=filelink %>' type='checkbox'/>
+	                        <%
+	                        //Merely the lecturer of this course and the uploader/author get permission:
+				            if(lecturer.equals(session_user)/*session.getAttribute("user")*/
+				            	    || uploader.equals(session_user)) {
+			            	%>
+	                        <a href="?id=edit&filelink=<% out.print(URLEncoder.encode(filelink, "utf-8")); /*to be decoded accordingly*/%>"
+	                         class="btn btn-secondary" title="edit">
+	                            <i class="icon-edit"></i>
+	                        </a>
+	                        <a href="?id=start&q=delete_sheet&filelink=<% out.print(URLEncoder.encode(filelink, "utf-8")); /*to be decoded accordingly*/%>"
+	                        class="btn btn-danger" title="delete">
+	                            <i class="icon-trash icon-white"></i>
+	                        </a>
+	                        <%
+	                        }
+	                        %>
+	                    </td>
+	                    </tr>
+	                    <!-- EDIT FORM -INLINE VERSION -->
+	                    <!-- 
+	                    <tr>
+	                    <td colspan='5'>
+	                    <form action="edit.in.jsp" method="post">
+	                        <input type="hidden" name="filelink" value="<% out.print(filelink); %>" />
+	                        <input type="text" name="filename" value="<% out.print(Global.extractFilename(filelink)); %>" disabled="disabled" />
+	                        <input type="text" name="lecturer" value="<% out.print(lecturer); %>" disabled="disabled" />
+	                        <input type="text" name="course" value="<% out.print(lecturer); %>" disabled="disabled" />
+	                        <input type="text" name="semester" value="<% out.print(lecturer); %>" disabled="disabled" />
+	                        <input type="text" name="type" value="<% out.print(lecturer); %>" disabled="disabled" />
+	                        <button type="submit" name="q" value="edit_sheetdraft" class="submit"></button>
+	                    </form>
+	                    </td>
+	                    </tr>
+	                    -->
+	                    <%
+	                    /*The above had to be omitted because it gets into trouble because there is a global form
+	                    to index.jsp and a form in a form is not allowed.*/
+	
+	                }
+	                // tackle memory leaks by closing result set and its statement properly:
+	                res1.close();
                 }
+                                
                 
                 %>
                 </table><!-- SHEETDRAFT LISTING -END -->
                 
-               <!-- EDIT BUTTONS -->
-            <div id="edit_buttons" style="padding: 5px;">
-             <%
-             //Sheet/Draft listing only:
-             //Merely the lecturer of this course and the uploader/author get permission:
-             if(lecturer.equals(session_user)/*session.getAttribute("user")*/
-                   || uploader.equals(session_user)) {
-                %>
-               <button id="delete_btn" name="q" class="btn btn-danger"
-                   title="L&ouml;schen" value="delete_sheet">
-                   <i class="icon-trash icon-white"></i>
-               </button>
-               <!-- currently only single sheet/draft edit at a time is possible
-               <button id="edit_btn" name="id" class="btn btn-secondary" title="Bearbeiten"
-                   value="edit">
-                   <i class="icon-edit"></i>
-               </button>
-               -->
-           <%
-           }
-           %>
-           <!-- STEER THE SHIP 
-           <input type="hidden" name="id" value="drafts" />
-           -->
-           <!-- BUTTONS FOR ADDING EXERCISES TO A DRAFT -->
-           <jsp:include page="buttons.add_to_draft.jsp?session_user=<%=session_user %>" />
+                <!-- EDIT BUTTONS -->
+	            <div id="edit_buttons" style="padding: 5px;">
+		            <%
+		            //Sheet/Draft listing only:
+		            //Merely the lecturer of this course and the uploader/author get permission:
+		            if(lecturer.equals(session_user)/*session.getAttribute("user")*/
+		                    || uploader.equals(session_user)) {
+		                %>
+		                <button id="delete_btn" name="q" class="btn btn-danger"
+		                        title="L&ouml;schen" value="delete_sheet">
+		                    <i class="icon-trash icon-white"></i>
+		                </button>
+		                <!-- currently only single sheet/draft edit at a time is possible
+		                <button id="edit_btn" name="id" class="btn btn-secondary" title="Bearbeiten"
+		                        value="edit">
+		                    <i class="icon-edit"></i>
+		                </button>
+		                -->
+		            <%
+		            }
+		            %>
+		           <!-- STEER THE SHIP 
+		           <input type="hidden" name="id" value="drafts" />
+		           -->
+		           <!-- BUTTONS FOR ADDING EXERCISES TO A DRAFT -->
+		           <jsp:include page="buttons.add_to_draft.jsp">
+		               <jsp:param name="session_user" value="<%=session_user %>" />
+		           </jsp:include>
                </div>
-                
-                <%                    
-                
+               <%
 
+               
+               
                 
                 
                 
@@ -247,8 +254,7 @@
                 
                 
                 
-                
-            } else {
+         } else {
                 
                 %>
                 <!-- EXERCISE LISTING -->
@@ -256,15 +262,16 @@
                 <%
                 //EXERCISE LISTING
                 //Tabelle fuer Einzelaufgaben generieren
-                out.println("<tr>"
+                out.println("<tr onclick=\"var o = this.parentNode/*tbody*/.parentNode.parentNode/*form*/.parentNode/*div-ajax-content*/.parentNode/*div-target-container*/; o.style ? o.style.display='none' : o.setAttribute('style', 'display:none;')\">"
                           + "<th>Belongs to Sheet</th>"
                           + "<th>Origin</th>"
-                          + "<th>Filelink</th>"
+                          + "<th>Exercise/Solution</th>"
+                          //+ "<th>Corresponding Filelink (Solution to Exercise or the Exercise to the Solution)</th>"
                           + "<th>Lecturer</th>"
                           + "<th>Uploaded By</th>"
-                          + "<th>Split By</th>"
+                          + "<th>Split Pattern</th>"
                           + "</tr>"
-                );      
+                );
                 
                 
                 String lecturer = request.getParameter("lecturer");
@@ -310,7 +317,8 @@
                     out.println("<td>" + originsheetdraft_filelink + "</td>");
                     out.println("<td><a href='" + exercise_filelink
                             + "' class='screenshot' rel='" + Global.convertToImageLink(exercise_filelink)
-                            + "'><i class='icon-download'></i> <i class='icon-eye-open'></i>" + Global.extractFilename(exercise_filelink) + "." + Global.extractEnding(exercise_filelink)
+                            + "'><i class='icon-download'></i> <i class='icon-eye-open'></i>"
+                            + Global.extractExercisePartOnlyFromExerciseFilelink(exercise_filelink) /*+ "." + Global.extractEnding(exercise_filelink)*/
                             + "</a></td>");
                     out.println("<td>" + lecturer + "</td>");
                     out.println("<td>" + uploader + "</td>");
@@ -340,20 +348,32 @@
                 </table><!-- EXERCISE LISTING -END -->
                 
                 <!-- EDIT BUTTONS -->
-       <div id="edit_buttons" style="padding: 5px;">
-           <!-- STEER THE SHIP (now set in the action.add_to_draft automatically)
-           <input type="hidden" name="id" value="drafts" />
-            -->
-           <!-- BUTTONS FOR ADDING EXERCISES TO A DRAFT -->
-           <jsp:include page="buttons.add_to_draft.jsp?session_user=<%=session_user %>" />
-       </div>
+	       <div id="edit_buttons" style="padding: 5px; position: fixed; bottom: 0;">
+	           <!-- STEER THE SHIP (now set in the action.add_to_draft automatically)
+	           <input type="hidden" name="id" value="drafts" />
+	            -->
+	           <!-- BUTTONS FOR ADDING EXERCISES TO A DRAFT -->
+	           <jsp:include page="buttons.add_to_draft.jsp">
+	               <jsp:param name="session_user" value="<%=session_user %>" />
+	           </jsp:include>
+	       </div>
                 
                 <%
                 
                 
             }
+            
+         
+            
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        finally {
+            // if this happens it will likely fail before. So this is just to be safe (e.g. if it becomes null by accident).
+            if (statement1 != null) {
+                statement1.close();
+            }
+
         }
         %>
 

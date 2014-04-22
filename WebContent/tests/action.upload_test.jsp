@@ -139,7 +139,7 @@
 		out.println("<br>5. boundary = " + boundary);  
   
 		//create destination path & save file there  
-		String appPath = application.getRealPath("/");  
+		String appPath = application.getRealPath(System.getProperty("file.separator"));  
 		out.println("<br>appPath : " + appPath);  
 		String destFolder = appPath + "images/banner/";	//change this as required  
 		filename= destFolder + filename;  

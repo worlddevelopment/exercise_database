@@ -38,7 +38,7 @@
 	
     //redirect/correct target page
     request.setAttribute("id", "drafts");
-    Global.anzeige = "drafts";
+    Global.redirectTo("drafts");
 
     //initialization using a number less than 0 happens if no destination is given 
     //int destination_draft_id;
@@ -87,35 +87,54 @@
 	if (destination_draft_filelink == null || destination_draft_filelink.isEmpty()
 			   || destination_draft_filelink.equals("-1")) {
 		//CREATE NEW DRAFT.
-	    draft = new Sheetdraft(); // the garbage 
+	    draft = new Sheetdraft();
+
+        //whenever a new Sheetdraft() without arguments is created
+        //the user will be taken as the lecturer, hence changing
+        //the filelink is very likely (not only for the filename!).
+        //Without adapting the filelink this could never be an independent
+        //draft or sheet because it would always point to the other/wrong file in the filesystem.
+        
+	    //modify some attributes?
+   		//draft.setType("Uebung");
+		destination_draft_filelink = draft.getFilelinkRelative();
 		
-		//modify some attributes?
-	    //TODO
-	    //whenever a new Sheetdraft() without arguments is created
-	    //the user will be taken as the lecturer, hence changing the filelink.
-	    //Without changing the filelink this could never be an independent
-	    //draft or sheet because it would always point to the other file.
-	    
+		//INSERT THE DRAFT INTO THE DATABASE.
+		//It's not for certain that we should do this here as the sheetdraft name will change anyways:
+		//So perhaps better only have the filelink as non-foreign-key in the draftexerciseassignment table?
+		//- The problem will be then to determine to which author the draft belongs! So the following remains:
+		
+		//ResultSet result = Global.query(
+		//		Global.QUERY_INSERT_INTO_sheetdraft(
+		//				destination_draft_filelink, draft.getType(), draft.getCourse(),
+		//				draft.getSemester(), 0/*N.N.*/, draft.getDescription(),
+		//				draft.getAuthor(), 1/*is_draft*/, ""
+		//		)
+		//);
+		
 		//save it to the database
-		draft.synchronizeDatabaseToThisInstance();
+        draft.synchronizeDatabaseToThisInstance();
+		/*At this point the new sheetdraft filelink is available in the sheetdraft database table.*/
+        
+		
 	    
-	    
+		
 		new_or_latest_changed_or_other_draft = "<em>neu erstellten</em>";
 		//Global.addMessage("Created new draft with no exercises in it.", "success");
 	}
 	else {
 		//ADD TO A DRAFT THAT ALREADY EXISTS.
-		draft = new Sheetdraft();
-		//draft.synchronizeWithDatabaseLoadFromIt(destination_draft_id);
-		draft.synchronizeWithDatabaseLoadFromItBecomeIdentical(destination_draft_filelink);
-		
+		//SEMI-WORKING draft = new Sheetdraft();
+		//SEMI-WORKING draft.synchronizeWithDatabaseLoadFromItBecomeIdentical(destination_draft_filelink);
+
 		//Join the now possibly loaded exercise_filelinks with the ones
         //delivered by http request.
-		exercise_filelinks_to_add.addAll(draft.getAllExercises().keySet());
+		//SEMI-WORKING exercise_filelinks_to_add.addAll(draft.getAllExercises().keySet());
 		new_or_latest_changed_or_other_draft = "<em>bereits vorhandenen</em>";
 		
 		//Global.addMessage("Synchronized draft with another sheet or draft.", "success");
-		int exercises_count_prior_to_addition = draft.getAllExercises().keySet().size();
+		//SEMI-WORKING int exercises_count_prior_to_addition = draft.getAllExercises().keySet().size();
+		
 	}
 	
 	
@@ -134,14 +153,17 @@
 	for (int exercise_position = 0; exercise_position < exercise_filelinks_to_add_size
 			; exercise_position++) {
 		
-		if ( Global.sqlm.exist(" `draftexerciseassignment` ", " sheetdraft_filelink "
-				, "exercise_filelink = '" + exercise_filelinks_to_add.get(exercise_position) + "'")	) {
+		if ( Global.sqlm.exist(" `draftexerciseassignment` ", " * "
+				, "sheetdraft_filelink = '" + destination_draft_filelink + "'"
+				  + " AND exercise_filelink = '" + exercise_filelinks_to_add.get(exercise_position) + "'")	) {
+			System.out.println(Global.addMessage("Because this sheet/draft already contains this exercise, it was skipped: "
+				  + exercise_filelinks_to_add.get(exercise_position), "warning"));
 			continue;
 		}
 		
 	    String query = "INSERT INTO `draftexerciseassignment`"
 		   + " (sheetdraft_filelink, `position`, exercise_filelink)"
-		   + " VALUES('" + draft.getFilelinkRelative() + "'"
+		   + " VALUES('" + destination_draft_filelink/*draft.getFilelinkRelative()*/ + "'"
 		           + ", " + exercise_position
 		           + ", '" + exercise_filelinks_to_add.get(exercise_position) + "'"
 		           + ");";
@@ -214,7 +236,9 @@
                 + exercise_filelinks_to_add_size + " angefragten "
                 //+ " Aufgaben zum aktuell aktiven Entwurf hinzugefügt</p>");
                 + " Aufgaben zum " + new_or_latest_changed_or_other_draft
-                + " Entwurf (filelink: " + draft.getFilelink() + ") hinzugefügt (per Referenz).</p>"
+                + " Entwurf (filelink: " + draft.getFilelink() + ") hinzugef&uuml;gt (per Referenz).</p>"
+                + (exercise_filelinks_added_actively_count < exercise_filelinks_to_add_size
+                		? " <div class='anno'>(A guess for the missing ones: Filelink combinations that already exist are not inserted! That means, one sheet/draft can't contain one exercise more than once!)</div>" : "")
                 + "Insgesamt umfasst der Entwurf nun " + draft.getAllExercises().size()
                 + " Aufgaben.";
 		System.out.print(
@@ -265,7 +289,7 @@
         }
         draft.setBl_ids(bl_ids);
         out.print("<p>Es wurden " + draft.getBl_ids().size()
-                + " Blätter zum aktuell aktiven Entwurf hinzugefügt</p>");
+                + " Bl&auml;tter zum aktuell aktiven Entwurf hinzugef&uuml;gt</p>");
     } */
     
     

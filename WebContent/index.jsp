@@ -51,7 +51,7 @@ session.setAttribute("defaultAnzeige", "start");
 //GLOBALS - INIT
 //find the real path of the WebContent and save as new root of our apple tree
 Global.root = 
-pageContext.getServletContext().getRealPath("."/*"WebContent"*/) + "/";
+pageContext.getServletContext().getRealPath("."/*"WebContent"*/) + System.getProperty("file.separator");
 Global.session = session;
 Global.response = response;
 
@@ -81,12 +81,6 @@ if (language == null) {
 if (language != null && !language.toLowerCase().equals(Global.LANGUAGE.name().toLowerCase()) ) {
     Global.LANGUAGE = aufgaben_db.Language.getByName(language);
 }
-//USER ACTION - before ID page to show to allow for correction of the target site by actions!
-if (request.getParameter("q") != null) {
-%>
-  <jsp:include page="action.inc.jsp" />
-<%
-}
 
 
 
@@ -114,8 +108,10 @@ if (Global.anzeige != null && Global.anzeige != "") {
   if (!Global.anzeige.equals(session.getAttribute("anzeige"))) {
       System.out.println("Anzeige-Variable in der Session wurde aktualisiert.");
       session.setAttribute("previousAnzeige", Global.anzeige);
+      //session.setAttribute("anzeige", Global.anzeige);
   }
 }
+
 //DETERMINE NEW PAGE TO LOAD /ANZEIGE
 if (request.getParameter("id") != null
         && !request.getParameter("id").equals("")) {
@@ -134,6 +130,12 @@ else {
 //save for next time
 session.setAttribute("anzeige", Global.anzeige);
 
+//USER ACTION - after ID page to show is loaded into Global.anzeige to allow for correction of the target site by actions!
+if (request.getParameter("q") != null) {
+%>
+<jsp:include page="action.inc.jsp" />
+<%
+}
         
         
         
@@ -173,6 +175,7 @@ if (Global.isLoggedIn(session)) {
 
 
 <!-- ======= THE PAGE - HTML DOCUMENT ================================================ -->
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!DOCTYPE html>
 <html >
 <head>
@@ -180,27 +183,38 @@ if (Global.isLoggedIn(session)) {
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 
 <!-- COMMON SCRIPTS -->
-<!-- Bootstrap -->
-<script src="bootstrap/js/bootstrap.js"></script>
-<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css" />
-
 <!-- JQuery plugin -->
-<script src="jquery/jquery-latest.js"></script>
+<!-- <script src="jquery/jquery-latest.js"></script> -->
+<script src="jquery/tablesorter/jquery-latest.js"></script>
 <script src="jquery.treeview/lib/jquery.cookie.js" type="text/javascript"></script>
 <!-- 
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 -->
+
+<!-- Bootstrap -->
+<!-- 
+<script src="bootstrap/js/bootstrap.js"></script>
+-->
+<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css" />
+
 <!-- Autocomplete -->
 <script type='text/javascript' src='jquery/jquery.autocomplete.js'></script>
 <link rel="stylesheet" type="text/css" href="jquery/jquery.autocomplete.css" />
 
 <!-- Furthermore -->
 <script type='text/javascript' src='jquery/fairytale.js'></script>
+<script type="text/javascript" src="jquery/tablesorter/jquery.tablesorter.mod.js">
+</script>
+<script type="text/javascript" src="jquery/tablesorter/jquery.tablesorter.mod.pager.js">
+</script>
+<script type="text/javascript" src="jquery/tablesorter/jquery.tablesorter.collapsible.js">
+</script>
 
 <!-- Validate selections -->
 <script type="text/javascript" src="js/validateSelectionDependingOnButton.js"></script>
 
+ 
 <!-- ToolTip Preview -->
 <script src="jquery/toolTipPreview.js" type="text/javascript"></script>
 
@@ -211,30 +225,29 @@ if (Global.isLoggedIn(session)) {
 
 <title>DMUW - Aufgaben DB</title>
 </head>
-<body id="body" onload="document.getElementsByTagName('input')[0].focus();">
+<body id="body" onload="document.getElementsByTagName('input')[0].focus(); screenshotPreview();">
        <!-- WRAPPER -BEGIN -->
     <div id="wrapper">
     
-    <a href="index.jsp?id=start">
-    <span id="kopf" class="gestaltung" style="display:block;">
+    <a href="index.jsp?id=start"
+     id="kopf" class="gestaltung">
         <span style="/*font-variant:small-caps;*/
         display:block;font-size:2enpx;min-height:100px; width:400px; color:white; margin-left: 200px; margin-top: 20px;">
-        <%=Global.display("Exercise Database") %></span>
+        <%=Global.display("Exercise Database") + " " + Global.version %></span>
         <%
         if (Global.isLoggedIn(session)) {
         //    out.println("LOGGED IN");
         %>
             <!--Platzhalter fuer autologout  -->
-            <span id="max" style="display:block; position:absolute; top:25px;right:100px; width:200px; height:25px;color: white; font-weight: bold;">
+            <span id="max" style="display:block; position:absolute; top:25px;left:50%; margin-left:200px; width:200px; height:25px;color: white; font-weight: bold;">
             </span>
         <%
         }
         %>
             
-    </span>
     </a>
     <span id="languageForm" method="get" action=""
-            style="display:block; position:absolute;top:20px;right:40px; font-size:10pt !important; width:80px; line-height:15px !important;overflow-x:hidden; font-weight:normal;">
+            style="display:block; position:absolute;top:20px;left:50%; margin-left: 400px; font-size:10pt !important; width:80px; line-height:15px !important;overflow-x:hidden; font-weight:normal;">
         <!-- Language controls  -->
         <!-- 
         <select style="width:100px" name="lang" size="<%=aufgaben_db.Language.values().length %>" onselect="this.form.submit();">
@@ -242,7 +255,7 @@ if (Global.isLoggedIn(session)) {
         <%
         for (aufgaben_db.Language l : aufgaben_db.Language.values()) {
             //out.print("<option value='" + l.name() + "'>" + l.toString() + "</option>");
-            out.print("<a style='color:white;' href='?lang=" + l.name().toLowerCase() + "'>[" + l.toString() + "]</a>");
+            out.print("<a style='color:white;' href='?lang=" + l.name().toLowerCase() + "'>[" + Global.display(l.toString()) + "]</a>");
         }
         
         %>
@@ -337,9 +350,10 @@ if (Global.isLoggedIn(session)) {
                     <%
                 }
                 
-
         
         %>
+        <!-- INDICATOR:LOADING -->
+        <jsp:include page='indicator.loading.jsp' />
                 
     </div>
     <!-- GLOBAL MESSAGE -->
@@ -356,6 +370,13 @@ if (Global.isLoggedIn(session)) {
 //if (!request.getAttribute("q").equals("logout")) {
 if (Global.isLoggedIn(session)) {
 
+	if (request.getParameter("autologout") != null) {
+		// TODO what happens if this parameter is 0 ? => infite sessions?
+		session.setMaxInactiveInterval(Global.getInt(request.getParameter("autologout")) * 60/*min*/);
+	}
+	else {
+		session.setMaxInactiveInterval(60 * 60 /*minutes*/);
+	}
     int seconds = session.getMaxInactiveInterval();
     String hostname = request.getLocalName();
     
@@ -417,8 +438,9 @@ if (Global.isLoggedIn(session)) {
         } */
         
         //out.println(anzeige);
-         out.println(Global.version + "\t|\t" + Global.anzeige
-                 + "\t|\t<span class=\"lastModified\">"+ Global.display("last modified") +": "
+         out.println("<div style='float:right; max-width:200pt;'>" + Global.version + "</div>");
+         out.println(/*Global.version + "\t|\t" +*/ Global.anzeige
+                 + "\t|\t<span class=\"lastModified\">Template: "+ Global.display("last modified") +": "
         + Global.filemtime(session, loggedInPath
                 + Global.anzeige + loggedInAddition + ".jsp", pageContext) + "</span>");
         %>

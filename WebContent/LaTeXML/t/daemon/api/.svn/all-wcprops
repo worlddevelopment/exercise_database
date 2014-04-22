@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/api
+END
+postoverride.xml
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/api/postoverride.xml
+END
+port.status
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/api/port.status
+END
+postoverride.status
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/api/postoverride.status
+END
+port.spec
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/api/port.spec
+END
+postoverride.spec
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/api/postoverride.spec
+END
+port.xml
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/LaTeXML/!svn/ver/3392/trunk/t/daemon/api/port.xml
+END

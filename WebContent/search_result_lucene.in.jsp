@@ -5,11 +5,11 @@
 <%@page import="org.apache.lucene.index.Term"%>
 <%@page import="org.apache.lucene.queryParser.QueryParser.Operator"%>
 <%@page import="org.apache.lucene.search.WildcardQuery"%>
-<%@page import="HauptProgramm.DocType, aufgaben_db.Global"%>
+<%@page import="aufgaben_db.DocType, aufgaben_db.Global"%>
 <%@page import="java.net.URLDecoder, java.net.URLEncoder"%>
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.sql.Connection"%>
-<%@page import="swp.MysqlHelper"%>
+<%@page import="db.MysqlHelper"%>
 <%@page import="java.sql.Statement"%>
 <%@page import="java.sql.SQLException"%>
 <%@page import="org.apache.lucene.queryParser.MultiFieldQueryParser"%>
@@ -222,7 +222,9 @@
 	    </table><!-- WRAPPER TABLE -END -->
 	    
         <!-- BUTTONS FOR ADDING TO A DRAFT THAT IS ONE OUT OF A LOADED DRAFT LIST:  -->
-        <jsp:include page="buttons.add_to_draft.jsp?session_user=<%=session_user %>" />
+        <jsp:include page="buttons.add_to_draft.jsp">
+            <jsp:param name="session_user" value="<%=session_user %>" />
+        </jsp:include>
         
         <%	    
 	    

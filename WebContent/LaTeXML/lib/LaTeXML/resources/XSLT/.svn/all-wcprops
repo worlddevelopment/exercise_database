@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/LaTeXML/!svn/ver/3658/trunk/lib/LaTeXML/resources/XSLT
+END
+LaTeXML-structure-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/LaTeXML/!svn/ver/3658/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-structure-xhtml.xsl
+END
+LaTeXML-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/LaTeXML/!svn/ver/3094/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-xhtml.xsl
+END
+LaTeXML-all-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/3093/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-all-xhtml.xsl
+END
+LaTeXML-webpage-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/3312/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-webpage-xhtml.xsl
+END
+LaTeXML-html.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/LaTeXML/!svn/ver/3096/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-html.xsl
+END
+LaTeXML-picture-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/3092/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-picture-xhtml.xsl
+END
+LaTeXML-inline-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/3537/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-inline-xhtml.xsl
+END
+LaTeXML-para-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3095/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-para-xhtml.xsl
+END
+LaTeXML-meta-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3095/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-meta-xhtml.xsl
+END
+LaTeXML-math-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3091/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-math-xhtml.xsl
+END
+LaTeXML-tabular-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/3518/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-tabular-xhtml.xsl
+END
+LaTeXML-block-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/LaTeXML/!svn/ver/3590/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-block-xhtml.xsl
+END
+LaTeXML-misc-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3396/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-misc-xhtml.xsl
+END
+LaTeXML-bib-xhtml.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/3095/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-bib-xhtml.xsl
+END
+LaTeXML-common.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/LaTeXML/!svn/ver/3607/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-common.xsl
+END
+LaTeXML-html5.xsl
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/LaTeXML/!svn/ver/3097/trunk/lib/LaTeXML/resources/XSLT/LaTeXML-html5.xsl
+END

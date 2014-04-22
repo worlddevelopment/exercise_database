@@ -3,7 +3,12 @@
     <wb-module deploy-name="aufgaben_db_v15">
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
-        <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/src/docx4j_src/main/resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/src/docx4j-ImportXHTML_git/src/main/resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/src/jodconverter_svn/jodconverter-core/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/src/pdfbox/pdfbox/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/src/pdfbox/fontbox/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/src/pdfbox/examples/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/src/CSSBox/src/main/java"/>
         <property name="java-output-path" value="/aufgaben_db_v15/build/classes"/>
         <property name="context-root" value="aufgaben_db_v15"/>
     </wb-module>

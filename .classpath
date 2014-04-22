@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="WebContent/WEB-INF/src/docx4j_src/main/resources"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6">
-		<attributes>
-			<attribute name="owner.project.facets" value="java"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v6.0">
-		<attributes>
-			<attribute name="owner.project.facets" value="jst.web"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry excluding="b2xtranslator_java/CompoundFileExtractTest/|b2xtranslator_java/CompoundFileReadWriteExtractTest/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/DocFileFormat/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/DocFileFormatTest/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OfficeDrawing/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OlePropertySet/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/doc2x/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OfficeGraph/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OpenXmlLib/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OpenXmlLib/DrawingML/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OpenXmlLib/PresentationML/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OpenXmlLib/Spreadsheet/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OpenXmlLib/SpreadsheetML/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/OpenXmlLib/WordprocessingML/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/ppt2x/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/PptDump/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/PptFileFormat/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/PptFileFormat/Records/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/PresentationMLMapping/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Shell/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Spreadsheet/XlsFileFormat/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Spreadsheet/XlsFileFormat/BiffRecords/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Spreadsheet/XlsFileFormat/DataContainer/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Spreadsheet/XlsFileFormat/Ptg/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Spreadsheet/XlsFileFormat/Records/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Spreadsheet/XlsFileFormat/Structures/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Spreadsheet/XlsFileFormat/StyleData/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/SpreadsheetMLMapping/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/StructuredStorage/Common/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/StructuredStorage/Reader/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/StructuredStorage/Writer/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/Tools/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/WordprocessingMLMapping/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/xls2x/|b2xtranslator_java/DIaLOGIKa/b2xtranslator/ZipUtils/|b2xtranslator_java/DIaLOGIKa/DIaLOGIKa/b2xtranslator/CommonTranslatorLib/|b2xtranslator_java/DotZLib/|b2xtranslator_java/UnitTests/|docx2tex/|docx2tex/Library/|docx2tex/Library/Data/|docx2tex/Test/|docx2tex/UI/" kind="src" path="src"/>
+	<classpathentry kind="src" path="WebContent/WEB-INF/src/CSSBox/src/main/java"/>
+	<classpathentry kind="src" path="WebContent/WEB-INF/src/pdfbox/fontbox/src/main/java"/>
+	<classpathentry kind="src" path="WebContent/WEB-INF/src/pdfbox/pdfbox/src/main/java"/>
+	<classpathentry kind="src" path="WebContent/WEB-INF/src/pdfbox/examples/src/main/java"/>
+	<classpathentry kind="src" path="WebContent/WEB-INF/src/jodconverter_svn/jodconverter-core/src/main/java"/>
+	<classpathentry kind="src" path="WebContent/WEB-INF/src/docx4j-ImportXHTML_git/src/main/resources"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java-7-openjdk-amd64"/>
+	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v6.0"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

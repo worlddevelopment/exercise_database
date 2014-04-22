@@ -1,15 +1,8 @@
 package aufgaben_db;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.bouncycastle.util.Arrays;
-
-import HauptProgramm.Declaration;
-import HauptProgramm.DeclarationSet;
-import HauptProgramm.IndexNumber;
 
 
 
@@ -29,7 +22,7 @@ import HauptProgramm.IndexNumber;
 public class RegExFinder {
 		
 //	// Block 10: sucht nach feststehenden Ausdruecken
-//	// Hier muessen anschließend noch die 2. Worte untersucht werden
+//	// Hier muessen anschlie\u00DFend noch die 2. Worte untersucht werden
 //	
 //	// Pattern11 sucht das Wort Aufgabe
 //	public static final String p11 = "Aufgabe";
@@ -101,8 +94,9 @@ public class RegExFinder {
 	public DeclarationSet sucheMuster(String[] text, Muster muster) {
 		
 		Pattern pattern = muster.getPattern();
-		String[][] ergebnisFuerHashMap = null;
-		DeclarationSet foundDeclarations = new DeclarationSet(muster);
+		//String[][] ergebnisFuerHashMap;
+		DeclarationSet foundDeclarations;
+		foundDeclarations = new DeclarationSet(muster);
            
 			
 //		Matcher matcher;
@@ -151,7 +145,8 @@ public class RegExFinder {
 					if (woerter.length > word_index + 1) {
 						message += " \t nachfolgend: " + woerter[word_index + 1];
 					}
-					System.out.println(message);//if (wort.equals("") /*&& TODO!emptyLine_accepted_as_exercise_splitter*/) continue;
+					System.out.println(message);
+					//if (wort.equals("") /*&& TODO!emptyLine_accepted_as_exercise_splitter*/) continue;
 					gleich = RegExFinder.matches(wort, pattern);
 					// matcher = pattern.matcher(wort);
 					// gleich = matcher.matches();
@@ -170,6 +165,21 @@ public class RegExFinder {
 						// Head = Anfangswoerter der Aufgabe werden gemerkt
 						storeHeadWords(loopDeclaration, text, zeile);
 					
+						
+						// Is this a double?
+						boolean is_this_a_double = false;
+						for (Declaration foundDeclarationSoFar : foundDeclarations.declarations) {
+							if (foundDeclarationSoFar.equals(loopDeclaration)) {
+								//THIS ALREADY WORKS IF IT'S TAKEN OUT THEN IT'S FOR TESTING HEADING REMOVAL
+								is_this_a_double = true;
+							}
+						}
+						
+						if (is_this_a_double) {
+							System.out.println("Ausgelassene Deklaration, da doppelt: " + loopDeclaration.getFirstWord() + " "
+									+ loopDeclaration.getSecondWord() + " " + loopDeclaration.getThirdWord());
+							continue /*with the next word/line to examine for exercise declarations*/;
+						}
 						
 							
 						foundDeclarations.declarations.add(loopDeclaration);
@@ -199,7 +209,11 @@ public class RegExFinder {
 				int word_index = 0;
 				for (; word_index < woerter_to_analyse_maximum; word_index++) {
 					wort = woerter[word_index];
-					System.out.println("das " + word_index + ". Wort lautet: " + wort);
+					String message = "das " + word_index + ". Wort lautet: " + wort;
+					if (woerter.length > word_index + 1) {
+						message += " \t nachfolgend: " + woerter[word_index + 1];
+					}
+					System.out.println(message);
 					gleich = RegExFinder.matches(wort, pattern);
 					// matcher = pattern.matcher(wort);
 					// gleich = matcher.matches();
@@ -209,7 +223,7 @@ public class RegExFinder {
 						//die passende Zeile wird gespeichert
 						Declaration loopDeclaration = new Declaration(muster, wort, zeile, text[zeile]);
 
-						// Die Deklaration wird als Index gespeichert und dann zu den declarations hinzugef�gt
+						// Die Deklaration wird als Index gespeichert und dann zu den declarations hinzugefuegt.
 						loopDeclaration.setIndex(RegExFinder.getContainedIndexNumber(wort));
 						
 						
@@ -226,14 +240,11 @@ public class RegExFinder {
 						boolean is_this_a_double = false;
 						for (Declaration foundDeclarationSoFar : foundDeclarations.declarations) {
 							if (foundDeclarationSoFar.equals(loopDeclaration)) {
-								//is_this_a_double = true;
+								//THIS ALREADY WORKS IF IT'S TAKEN OUT THEN IT'S FOR TESTING HEADING REMOVAL
+								is_this_a_double = true;
 							}
 						}
-						if (is_this_a_double) {
-							System.out.println("Ausgelassene Deklaration, da doppelt: " + loopDeclaration.getFirstWord() + " "
-									+ loopDeclaration.getSecondWord() + " " + loopDeclaration.getThirdWord());
-							continue /*with the next word/line to examine for exercise declarations*/;
-						}
+						
 						
 						//that the loopDeclaration is added here is precondition for following header filtering
 						foundDeclarations.declarations.add(loopDeclaration);
@@ -242,14 +253,8 @@ public class RegExFinder {
 						
 						//One of the cases where the sheet's main heading (e.g. Exercisesheet xy)
 						//could be recognized as exercise?
-						if (muster.equals(Muster.INT)
-								|| muster.equals(Muster.INTDOT)
-								|| muster.equals(Muster.INTBRACKET)
-								|| muster.equals(Muster.INTCOLON)
-								|| muster.equals(Muster.INTDOTINT)
-								|| muster.equals(Muster.INTDOTINTDOT)
-								) {
-							/*A special case for that can be solved investigating the numbers of 1st and 2nd exercise:*/
+						if (!muster.isWordedPattern()) {
+							/*A solution for that is achieved by investigating the numbers of 1st and 2nd exercise:*/
 							//We start with potentially removing the total first declaration (probably '1. Uebungsblatt' at this point of time).
 							if (foundDeclarations.declarations.size() > 1) {
 								
@@ -264,6 +269,7 @@ public class RegExFinder {
 								boolean removed_declaration;
 								removed_declaration = false;
 								
+								//Is this the declaration directly following the sheetheading declaration?  
 								if (loopDeclaration.equals(foundDeclarations.declarations.get(sheetheadingDeclaration_index + 1))
 //											|| loopDeclaration.getIndex().equals(foundDeclarations.declarations.get(1).getIndex())
 //											|| loopDeclaration.getIndex().getNumber(0) == foundDeclarations.declarations.get(1).getIndex().getNumber(0)
@@ -275,20 +281,54 @@ public class RegExFinder {
 									= foundDeclarations.declarations.get(sheetheadingDeclaration_index).getWordContainingNumbering();
 									int decFoundFirst_numbering = -1;
 									decFoundFirst_numbering = Global.getInt(wordContainingNumbering);
+									//added for INTCHAR to compare by char too.
+									int word_decFoundFirst_numbering_index = wordContainingNumbering.indexOf(decFoundFirst_numbering);
+									int word_decFoundFirst_numbering_index_length = ("" + word_decFoundFirst_numbering_index).length();
+									int decFoundFirst_next_to_compare_index = word_decFoundFirst_numbering_index + word_decFoundFirst_numbering_index_length;
+									char decFoundFirst_char = 0;
+									if (decFoundFirst_next_to_compare_index < wordContainingNumbering.length()) {
+										decFoundFirst_char = wordContainingNumbering.charAt(decFoundFirst_next_to_compare_index);
+									}
+									// Seek for the first non-space character:
+									while (++word_decFoundFirst_numbering_index < wordContainingNumbering.length()
+											//continue to loop condition:
+											&& decFoundFirst_char == ' ') {
+												decFoundFirst_char = wordContainingNumbering.charAt(decFoundFirst_next_to_compare_index);
+									}
 									
 									wordContainingNumbering = loopDeclaration.getWordContainingNumbering();
 									int loopDeclaration_numbering = -1;
 									loopDeclaration_numbering = Global.getInt(wordContainingNumbering);
-									
+									//added for INTCHAR to compare by char too.
+									int word_loopDeclaration_numbering_index = wordContainingNumbering.indexOf(loopDeclaration_numbering);
+									int word_loopDeclaration_numbering_index_length = ("" + word_loopDeclaration_numbering_index).length();
+									int loopDeclaration_next_to_compare_index = word_loopDeclaration_numbering_index + word_loopDeclaration_numbering_index_length;
+									char loopDeclaration_char = 0;
+									if (loopDeclaration_next_to_compare_index < wordContainingNumbering.length()) {
+										loopDeclaration_char = wordContainingNumbering.charAt(loopDeclaration_next_to_compare_index);
+									}
+									// Seek for the first non-space character:
+									while (++loopDeclaration_next_to_compare_index < wordContainingNumbering.length()
+											//continue to loop condition:
+											&& loopDeclaration_char == ' ') {
+										loopDeclaration_char = wordContainingNumbering.charAt(loopDeclaration_next_to_compare_index);
+									}
+										
+										
 									//greater equal than because of e.g. if '1. Uebung\r\n1. Aufgabe'
 									// then 1. Uebung should be removed too.
-									if (decFoundFirst_numbering >= loopDeclaration_numbering) {
+									if (decFoundFirst_numbering >= loopDeclaration_numbering
+											// added for INTCHAR otherwise the above is always true for 1a, 1b,... .
+											&& decFoundFirst_char >= loopDeclaration_char
+											/* _.compareTo(_)  >= 0*///<-- compares lexographically, char < char wins. so "B" < "ay" because 'B' < 'a' !! but 'b' > 'a' ! 
+											) {
 										System.out.println("Die Deklaration, die zuerst gefunden"
 												+ " wurde, scheint die &Uuml;bungsblattnummer darzustellen: "
 												+ foundDeclarations.declarations.get(sheetheadingDeclaration_index).getLineContent()
 												+ " . Diese Deklaration wird entfernt.");
 										foundDeclarations.declarations.remove(sheetheadingDeclaration_index);
 										removed_declaration = true;
+										sheetheadingDeclaration_index = 0;//reset it
 									}
 									//Because it is desired to tolerate several exercises having the same enumeration number.
 									//String first_word_previous = foundDeclarations.declarations.get(index_of_previously_found_dec).getFirstWord();
@@ -299,12 +339,13 @@ public class RegExFinder {
 								}
 								
 								
-								//Now used because if after e.g. '3. Exercise' '1. Uebungsblatt' reoccurs
-								// because of multiple sheets in one document. Then we need to filter out the '1. Uebungsblatt' again:
+								//Now used because of the feature of multiple sheets in one document
+								// where after e.g. '1. Uebungsblatt', ..., '3. Exercise', '1. Uebungsblatt' reoccurs.
+								// Then we need to filter out the '1. Uebungsblatt' again:
 								if (//loopDeclaration.getIndex().compare(foundDeclarations.declarations.get(index_of_previously_found_dec).getIndex()) < 0
 										/*=> calling indexNumber is smaller => previous declaration found is smaller, e.g. 3. Exercise previously and now 1. Uebung */
 										//||
-										/*THE FOLLOWING COVERS GAPS,
+										/*THE FOLLOWING COVERS GAPS, TODO: 1.Sheet 1.Exercise 2.Exercise 3.Sheet 1.Exercise ... where there is NO GAP because of 2.Ex 3.Sheet that theoretically is possible.
 									 i.e. transition from 2. Exercise to 8. Uebungsblatt
 									 AND the other way round too e.g. transition from 8. Exercise to 2. Uebungsblatt
 									 AS WELL AS transitions e.g. from 2. Exercise to 2. Uebungsblatt.
@@ -316,14 +357,28 @@ public class RegExFinder {
 										.getNumber(0) - loopDeclaration.getIndex().getNumber(0) != -1
 										/*the above condition: if lastDeclarationIndexNumber - thisDeclarationIndexNumber not exactly apart by 1 (in ascending order, hence the minus sign)*/
 										) {
-									//Then the new exercise declaration candidate to be removed because it's a sheet heading instead potentially is:
-									sheetheadingDeclaration_index = index_of_previously_found_dec + 1;
+									/*Then the new exercise declaration candidate to be removed
+									  - because it's a sheet heading instead - potentially is: */
+									if (!is_this_a_double) {//<--If it's a double then this cannot be a candidate as it will be removed in the following steps.
+										sheetheadingDeclaration_index = index_of_previously_found_dec + 1;
+									}
 								}
 								
 							}
 							
 						}
 						
+						/*This comes after the detection of sheetheadings because we need the doubles
+						  to remain because otherwise there is no chance to detect the sheetheading
+						  for documents where there are multiple identical exercises and more sheetheadings otherwise.*/
+						if (is_this_a_double) {
+							/*In this order (after the detection and deletion of sheetheadings) 
+							  the declaration is added first -- only to be removed at this point again.*/
+							foundDeclarations.declarations.remove(loopDeclaration);
+							System.out.println("Ausgelassene Deklaration, da doppelt: " + loopDeclaration.getFirstWord() + " "
+									+ loopDeclaration.getSecondWord() + " " + loopDeclaration.getThirdWord());
+							continue /*with the next word/line to examine for exercise declarations*/;
+						}
 						
 						zaehler++;
 					}
@@ -332,7 +387,7 @@ public class RegExFinder {
 		}
 		System.out.println("Insgesamt wurden " + zaehler + " passende Ausdruecke gefunden");
 		
-		return foundDeclarations;			
+		return foundDeclarations;
 	}
 	
 	
@@ -381,7 +436,7 @@ public class RegExFinder {
 				loopDeclaration.setThirdWord(woerter[2]);
 			}
 			//Is there the exercise's index number within the following words?
-			for (Muster m : Muster.values()){
+			for (Muster m : Muster.values()) {
 				//now look for a regex index number within the following words of this declaration line
 				if (!m.isWordedPattern()) {
 					//examine second and the third word

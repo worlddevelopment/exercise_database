@@ -29,7 +29,7 @@ import java.util.ArrayList;
  * @author J.R.I.B.-W. complete overhaul.
  * 
  * Die Klasse dient als Utility-Klasse der Kategorie IO/Read&Write.
- * Textdateien können eingelesen oder zur Festplatte geschrieben werden.
+ * Textdateien k\u00F6nnen eingelesen oder zur Festplatte geschrieben werden.
  * 
  * Beim Einlesen erhaelt man als Rueckgabe jeweils String[];
  */
@@ -74,11 +74,7 @@ public class ReadWrite {
 		//MICROSOFT
 		if (ext.equals("docx")) {
 			//1) determine mother sheet to this exercise
-			String motherfilelink = exercise.filelink.replaceAll(
-					"/" + Global.extractFilename(exercise.filelink)
-					+ "." + Global.extractEnding(exercise.filelink) + "$"
-					, ""
-			);
+			String motherfilelink = Global.extractFilelinkOfMothersheet(exercise.filelink);
 			File mothersheetToExerciseFile = new File(motherfilelink);
 			if (!mothersheetToExerciseFile.exists()) {
 				Global.addMessage("Warning: No mother sheet '" + motherfilelink + "' found for the"
@@ -164,22 +160,15 @@ public class ReadWrite {
 		ArrayList<String> lines = new ArrayList<String>();
 		String[] values = null;
 		//System.out.println(zeile);
-		while(true) {
+		try {
+			while((zeile = reader.readLine()) != null) {
+			    lines.add(zeile);
+			    //System.out.println(i + ": " + zeile);
+			}
+		} catch (IOException e1) {
+			e1.printStackTrace();
 			
-			try {
-				zeile = reader.readLine();
-			} catch (IOException e) {
-				// TODO: handle exception
-				e.printStackTrace();
-				System.out.println("Fehler beim Einlesen der Zeilen.");
-			}
-			if (zeile == null) {
-				break;
-			}
-				
-            lines.add(zeile);
-            //System.out.println(i + ": " + zeile);
-        }
+		}
 		try {
 			reader.close();
 		} catch (IOException e) {
@@ -246,6 +235,7 @@ public class ReadWrite {
 	public static void copyFileUsingStream(File source, File destination) throws IOException {
 		InputStream is = null;
 		OutputStream os = null;
+		//To not write bytewise or at least keep the conversion of the string os-independent, use e.g. PrintWriter.  
 		try {
 			is = new FileInputStream(source);
 			os = new FileOutputStream(destination);
@@ -272,14 +262,14 @@ public class ReadWrite {
 	 * @param overwrite - Unless explicitely stated not to overwrite (default: true).
 	 */
 	public static void write(String[] lines, String filelink) {
-		String linesAsString = "";
-		for (String line : lines) {
-			linesAsString += line + "\r\n";
-		}
+		String linesAsString = Global.arrayToString(lines);
 		write(linesAsString, filelink);
 	}
 	
 	public static void write(String string, String filelink) {
+		write(string, filelink, false);
+	}
+	public static void write(String string, String filelink, boolean isAppended) {
 		
 //		ONLY WORKS IN JAVA 1.7 or if NEW IO (nio) package is available.
 //		Charset charset = Charset.forName("UTF-8");
@@ -291,11 +281,17 @@ public class ReadWrite {
 		
 		Writer writer = null;
 		try {
-			writer = new BufferedWriter(
-					new OutputStreamWriter(
-							new FileOutputStream(filelink), "utf-8"
-					)
-			);
+			if (isAppended) {
+				writer = new BufferedWriter(new FileWriter(filelink, isAppended));
+			}
+			else {
+				writer = new BufferedWriter(
+						new OutputStreamWriter(
+								new FileOutputStream(filelink)
+								, "utf-8"
+								)
+						);
+			}
 			writer.write(string);
 		}
 		catch (IOException e) {

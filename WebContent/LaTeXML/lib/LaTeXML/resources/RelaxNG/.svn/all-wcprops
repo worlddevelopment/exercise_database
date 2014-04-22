@@ -1,0 +1,155 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/3650/trunk/lib/LaTeXML/resources/RelaxNG
+END
+LaTeXML-picture.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3140/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-picture.rnc
+END
+LaTeXML-inline.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/3536/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-inline.rnc
+END
+LaTeXML-picture.rng
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3140/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-picture.rng
+END
+LaTeXML.model
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/LaTeXML/!svn/ver/3650/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML.model
+END
+LaTeXML-inline.rng
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/3536/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-inline.rng
+END
+LaTeXML-para.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3567/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-para.rnc
+END
+LaTeXML-meta.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3536/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-meta.rnc
+END
+LaTeXML-para.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3567/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-para.rng
+END
+LaTeXML-common.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/3078/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-common.rnc
+END
+LaTeXML-math.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3598/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-math.rnc
+END
+LaTeXML-meta.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3536/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-meta.rng
+END
+LaTeXML-block.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/3553/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-block.rnc
+END
+LaTeXML-tabular.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3575/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-tabular.rnc
+END
+LaTeXML-misc.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3368/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-misc.rnc
+END
+LaTeXML-common.rng
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/3078/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-common.rng
+END
+LaTeXML-bib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/LaTeXML/!svn/ver/3079/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-bib.rnc
+END
+LaTeXML-math.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3598/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-math.rng
+END
+LaTeXML-block.rng
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/3553/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-block.rng
+END
+LaTeXML-tabular.rng
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/3575/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-tabular.rng
+END
+LaTeXML-misc.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/3368/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-misc.rng
+END
+LaTeXML-bib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/LaTeXML/!svn/ver/3080/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-bib.rng
+END
+LaTeXML-structure.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/3650/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-structure.rnc
+END
+LaTeXML.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML.rnc
+END
+LaTeXML-structure.rng
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/3650/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML-structure.rng
+END
+LaTeXML.rng
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/LaTeXML.rng
+END

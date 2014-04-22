@@ -1,0 +1,161 @@
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/repos/LaTeXML/!svn/ver/3658/trunk/lib/LaTeXML
+END
+LaTeXML.catalog
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/LaTeXML/!svn/ver/3534/trunk/lib/LaTeXML/LaTeXML.catalog
+END
+MathParser.pm
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/LaTeXML/!svn/ver/3639/trunk/lib/LaTeXML/MathParser.pm
+END
+Font.pm
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/LaTeXML/!svn/ver/2852/trunk/lib/LaTeXML/Font.pm
+END
+Object.pm
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/LaTeXML/!svn/ver/1375/trunk/lib/LaTeXML/Object.pm
+END
+Converter.pm
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/LaTeXML/!svn/ver/3392/trunk/lib/LaTeXML/Converter.pm
+END
+Array.pm
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/3185/trunk/lib/LaTeXML/Array.pm
+END
+Document.pm
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/LaTeXML/!svn/ver/3600/trunk/lib/LaTeXML/Document.pm
+END
+Color.pm
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/3188/trunk/lib/LaTeXML/Color.pm
+END
+Version.in
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/LaTeXML/!svn/ver/3185/trunk/lib/LaTeXML/Version.in
+END
+State.pm
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/3582/trunk/lib/LaTeXML/State.pm
+END
+Token.pm
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/3185/trunk/lib/LaTeXML/Token.pm
+END
+Rewrite.pm
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/LaTeXML/!svn/ver/3286/trunk/lib/LaTeXML/Rewrite.pm
+END
+Post.pm
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/LaTeXML/!svn/ver/3628/trunk/lib/LaTeXML/Post.pm
+END
+MathGrammar
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/LaTeXML/!svn/ver/3507/trunk/lib/LaTeXML/MathGrammar
+END
+Definition.pm
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/LaTeXML/!svn/ver/3315/trunk/lib/LaTeXML/Definition.pm
+END
+Number.pm
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/LaTeXML/!svn/ver/2508/trunk/lib/LaTeXML/Number.pm
+END
+Box.pm
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/LaTeXML/!svn/ver/3187/trunk/lib/LaTeXML/Box.pm
+END
+Error.pm
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/3451/trunk/lib/LaTeXML/Error.pm
+END
+Package.pm
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/LaTeXML/!svn/ver/3606/trunk/lib/LaTeXML/Package.pm
+END
+Gullet.pm
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/LaTeXML/!svn/ver/3573/trunk/lib/LaTeXML/Gullet.pm
+END
+Bib.pm
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/LaTeXML/!svn/ver/3288/trunk/lib/LaTeXML/Bib.pm
+END
+Mouth.pm
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/3622/trunk/lib/LaTeXML/Mouth.pm
+END
+Stomach.pm
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/LaTeXML/!svn/ver/3427/trunk/lib/LaTeXML/Stomach.pm
+END
+Model.pm
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/3316/trunk/lib/LaTeXML/Model.pm
+END
+Global.pm
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/LaTeXML/!svn/ver/3605/trunk/lib/LaTeXML/Global.pm
+END
+Parameters.pm
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/LaTeXML/!svn/ver/2645/trunk/lib/LaTeXML/Parameters.pm
+END

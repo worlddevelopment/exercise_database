@@ -15,6 +15,36 @@ var getCheckedCount = function(elements_array_name) {
     
 };
 
+
+var makeNextButtonSubmit = function(event_source) {
+	
+	if (event_source == undefined) {
+		event_source = this;
+	}
+	if (typeof event_source == 'string') {
+		event_source = document.getElementById(event_source);
+	}
+	if (event_source == undefined || typeof event_source != 'object') {
+		return undefined;
+	}
+	/*it's been written for a change submit, i.e. two values, in most times old and new.*/
+	if (event_source.value != event_source.previousElementSibling.value) {
+		event_source.nextElementSibling.style.display='inline';
+		event_source.nextElementSibling.disabled=false;
+		event_source.nextElementSibling.type='submit';
+	} else {
+		event_source.nextElementSibling.style.display='none';
+		event_source.nextElementSibling.disabled=true;
+		event_source.nextElementSibling.type='button';  
+	}
+	/*
+	if (this.value == '' || this.value == this.placeholder) {
+	    this.value = this.previousElementSibling.value;
+    }
+    */
+
+};
+
 $(document).ready(function() {
 	
 	$('#delete_btn').click(function() {

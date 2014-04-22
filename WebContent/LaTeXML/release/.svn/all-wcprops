@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/repos/LaTeXML/!svn/ver/2904/trunk/release
+END
+LaTeXML.spec
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/LaTeXML/!svn/ver/2904/trunk/release/LaTeXML.spec
+END
+error-structuring.text
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/LaTeXML/!svn/ver/730/trunk/release/error-structuring.text
+END
+Portfile
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/2904/trunk/release/Portfile
+END
+LaTeXML.ppd
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/LaTeXML/!svn/ver/730/trunk/release/LaTeXML.ppd
+END
+notes
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/LaTeXML/!svn/ver/966/trunk/release/notes
+END
+uninstall
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/730/trunk/release/uninstall
+END
+checkinst
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/LaTeXML/!svn/ver/730/trunk/release/checkinst
+END

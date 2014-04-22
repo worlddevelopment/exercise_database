@@ -1,4 +1,4 @@
-<%@page import="java.sql.ResultSet,java.net.URLEncoder,swp.*,aufgaben_db.Global" %>
+<%@page import="java.sql.ResultSet,java.net.URLEncoder,db.*,aufgaben_db.Global" %>
 
 
 <%
@@ -32,8 +32,8 @@ search_string = Global.encodeUmlauts(search_string);
    		 //+ URLEncoder.encode(search_string, "utf-8") + "\"' IN BOOLEAN MODE);"
 	);
    
-   if(!res.next()) {
-	    out.print("Kein Ergebnis.");
+   if(res == null || !res.next()) {
+	    out.print("Kein Ergebnis. " + res);
    	
    }
    else {
@@ -57,7 +57,7 @@ search_string = Global.encodeUmlauts(search_string);
 			String course = res3.getString("course"); */
 			
 			ResultSet res4 = Global.query("SELECT lecturer FROM lecturer WHERE id=" + lecturer_id);
-			if (res4.next()) {
+			if (res4 != null || res4.next()) {
 				String  lecturer = res4.getString("lecturer");
 				
 				
@@ -65,7 +65,7 @@ search_string = Global.encodeUmlauts(search_string);
 				int start = content.indexOf(search_string);
 				int laenge = search_string.length();
 			   	int end = (start + laenge);
-			   	//out.print("start" + start + "End: "+ end + "länge : " + search_string.length());
+			   	//out.print("start" + start + "End: "+ end + "l&auml;nge : " + search_string.length());
 			   	
 			   	StringBuilder str_b = new StringBuilder(content);
 			   	//str_b.replace(start, end, "<b>"+search_string+"</b>");
@@ -84,8 +84,12 @@ search_string = Global.encodeUmlauts(search_string);
 			    //out.print( "<small><b>Content: </b></br></br>" + content + "</small></br><hr>");
 			    out.print( "</div>");
 			    //found = true;
-			}			    
+			}
+			// tackle memory leaks by closing result set and its statement properly:
+	        Global.queryTidyUp(res4);
 	   }
+	   // tackle memory leaks by closing result set and its statement properly:
+       Global.queryTidyUp(res);
  }
     
     

@@ -1,4 +1,4 @@
-<%@ page import="swp.*,javax.naming.directory.DirContext,javax.naming.ldap.InitialLdapContext,java.util.Properties"%>
+<%@ page import="db.*,javax.naming.directory.DirContext,javax.naming.ldap.InitialLdapContext,java.util.Properties"%>
 
 <%!
 

@@ -1,0 +1,491 @@
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg
+END
+svg-basic-text.rng
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-text.rng
+END
+svg-conditional.rng
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-conditional.rng
+END
+svg11.rng
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg11.rng
+END
+svg-container-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-container-attrib.rng
+END
+svg-marker.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-marker.rnc
+END
+svg-graphics-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-graphics-attrib.rnc
+END
+svg-marker.rng
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-marker.rng
+END
+svg-graphics-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-graphics-attrib.rng
+END
+svg11-tiny.rng
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg11-tiny.rng
+END
+svg-datatypes.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-datatypes.rnc
+END
+svg-shape.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-shape.rnc
+END
+svg-datatypes.rng
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-datatypes.rng
+END
+svg-viewport-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-viewport-attrib.rnc
+END
+svg-shape.rng
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-shape.rng
+END
+svg-basic-filter.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-filter.rnc
+END
+svg-hyperlink.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-hyperlink.rnc
+END
+svg-viewport-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-viewport-attrib.rng
+END
+svg-basic-filter.rng
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-filter.rng
+END
+svg-hyperlink.rng
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-hyperlink.rng
+END
+svg-view.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-view.rnc
+END
+svg-core-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-core-attrib.rnc
+END
+svg-cursor.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-cursor.rnc
+END
+svg-view.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-view.rng
+END
+svg-extresources-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-extresources-attrib.rnc
+END
+svg-core-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-core-attrib.rng
+END
+svg-cursor.rng
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-cursor.rng
+END
+svg-extresources-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-extresources-attrib.rng
+END
+svg-filter.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-filter.rnc
+END
+svg-clip.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-clip.rnc
+END
+svg-filter.rng
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-filter.rng
+END
+svg-clip.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-clip.rng
+END
+svg-animevents-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-animevents-attrib.rnc
+END
+svg-gradient.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-gradient.rnc
+END
+svg-animevents-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-animevents-attrib.rng
+END
+svg-style.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-style.rnc
+END
+svg-gradient.rng
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-gradient.rng
+END
+svg-style.rng
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-style.rng
+END
+svg-script.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-script.rnc
+END
+svg-font.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-font.rnc
+END
+svg-script.rng
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-script.rng
+END
+svg-graphevents-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-graphevents-attrib.rnc
+END
+svg-font.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-font.rng
+END
+svg-graphevents-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-graphevents-attrib.rng
+END
+svg-docevents-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-docevents-attrib.rnc
+END
+svg-animation.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-animation.rnc
+END
+svg-docevents-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-docevents-attrib.rng
+END
+svg-image.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-image.rnc
+END
+svg-animation.rng
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-animation.rng
+END
+svg-text.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-text.rnc
+END
+svg-image.rng
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-image.rng
+END
+svg11-basic.rng
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg11-basic.rng
+END
+svg-text.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-text.rng
+END
+svg-extensibility.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-extensibility.rnc
+END
+svg-extensibility.rng
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-extensibility.rng
+END
+svg-structure.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-structure.rnc
+END
+svg-basic-graphics-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-graphics-attrib.rnc
+END
+svg-structure.rng
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-structure.rng
+END
+svg-basic-clip.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-clip.rnc
+END
+svg-basic-graphics-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-graphics-attrib.rng
+END
+svg-xlink-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-xlink-attrib.rnc
+END
+svg-basic-clip.rng
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-clip.rng
+END
+svg-xlink-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-xlink-attrib.rng
+END
+svg-pattern.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-pattern.rnc
+END
+svg-basic-structure.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-structure.rnc
+END
+svg-pattern.rng
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-pattern.rng
+END
+svg-basic-structure.rng
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-structure.rng
+END
+svg-basic-font.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-font.rnc
+END
+svg-basic-font.rng
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-font.rng
+END
+svg-opacity-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-opacity-attrib.rnc
+END
+svg-mask.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-mask.rnc
+END
+svg-paint-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-paint-attrib.rnc
+END
+svg-opacity-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-opacity-attrib.rng
+END
+svg-mask.rng
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-mask.rng
+END
+svg-profile.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-profile.rnc
+END
+svg-paint-attrib.rng
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-paint-attrib.rng
+END
+svg-basic-text.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-basic-text.rnc
+END
+svg-conditional.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-conditional.rnc
+END
+svg11.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg11.rnc
+END
+svg-profile.rng
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-profile.rng
+END
+svg-qname.rng
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-qname.rng
+END
+svg-container-attrib.rnc
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/LaTeXML/!svn/ver/2938/trunk/lib/LaTeXML/resources/RelaxNG/svg/svg-container-attrib.rnc
+END

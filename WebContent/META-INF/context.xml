@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context path="aufgaben_db" docBase="C:\Documents and Settings\apache-tomcat\webapps\aufgaben_db.war"
+ antiResourceLocking="false" privileged="false" useHttpOnly="true">
+    <!-- no docBase attribute pointing to the .war file required if conf/server.xml unchanged. -->
+</Context>
