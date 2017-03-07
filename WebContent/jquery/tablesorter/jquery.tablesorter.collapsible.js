@@ -1,7 +1,9 @@
 /**
- * @author Dan G. Switzer II
+ * @author Dan G. Switzer II, J.R.I.B.-Wein (compatibility with grouping
+ * + dynamic content update (as events have been added after new content
+ * was created/appended))
  */
-(function ($){
+
 	/* declare defaults */
 	var defaults = {//Note: collapsed is set as default value in tablesorter.mod.js in group function.
 		selector: "td.collapsible"        // the default selector to use
@@ -17,32 +19,19 @@
 		, textCollapse: "Collapse All"    // the text to show when collase all
 	}, bHideParentRow = ($.browser.msie && ($.browser.version <= 7));
 
-	$.fn.collapsible = function (sel, options){
-		var self = this, bIsElOpt = (sel && sel.constructor == Object),
-			settings = $.extend({}, defaults, bIsElOpt ? sel : options);
-		
-		if( !bIsElOpt ) settings.selector = sel;
-		// make sure that if we're forcing to collapse, that we show the collapsed css state
-		if( settings.collapse ) settings.showCollapsed = true;
-		
-		return this.each(function (){
-			var $td = $(settings.selector, this),
-				// look for existing anchors
-				$a = $td.find("a");
-				
-				// if a "toggle all" selector has been specified, find and attach the behavior
-				if( settings.toggleAllSelector.length > 0 ) $(this).find(settings.toggleAllSelector).collapsibleToggle(this);
-			
-				// if no anchors, create them
-				if( $a.length == 0 ) $a = $td[settings.addAnchor]('<a href="#" class="' + settings[settings.showCollapsed ? "classCollapse" : "classExpand"] + '"></a>').find("a");
 
-				$a.bind("click", function (){
-					var $self = $(this), 
+
+
+
+var toggleSwitch_callback = function (el, settings, bHideParentRow){
+    settings = settings || defaults;
+					var $self = $(el), 
 						$tr = $self.parent().parent(), 
 						$trc = $tr.next(), 
 						bIsCollapsed = $self.hasClass(settings.classCollapse);
 					// change the css class
 					$self[bIsCollapsed ? "removeClass" : "addClass"](settings.classCollapse)[!bIsCollapsed ? "removeClass" : "addClass"](settings.classExpand);
+// alert('this: ' + this + '  el: ' + el + '   settings: ' + settings);
 					// iterate over all following table rows:
 					while( $trc.hasClass(settings.classChildRow) ){
 						if( bHideParentRow ){
@@ -69,7 +58,35 @@
 						$trc = $trc.next();
 					}
 					return false;
-				});
+				};
+
+
+
+
+
+(function ($){
+	$.fn.collapsible = function (sel, options){
+		var self = this, 
+                bIsElOpt = (sel && sel.constructor == Object),
+		settings = $.extend({}, defaults, bIsElOpt ? sel : options);
+		
+		if( !bIsElOpt ) settings.selector = sel;
+		// make sure that if we're forcing to collapse, that we show the collapsed css state
+		if( settings.collapse ) settings.showCollapsed = true;
+		
+		return this.each(function (){
+			var $td = $(settings.selector, this),
+			// look for existing anchors
+			$a = $td.find("a");
+			
+			// if a "toggle all" selector has been specified, find and attach the behavior
+			if( settings.toggleAllSelector.length > 0 ) $(this).find(settings.toggleAllSelector).collapsibleToggle(this);
+			
+			// if no anchors, create them
+			if( $a.length == 0 ) $a = $td[settings.addAnchor]('<a href="javascript:;" class="' + settings[settings.showCollapsed ? "classCollapse" : "classExpand"] + '"></a>').find("a");
+//alert("Now binding function to click event of toggle a-element.");
+			$a.bind("click", function () { toggleSwitch_callback(this, settings, bHideParentRow); }
+                        );
 			
 			// if not IE and we're automatically collapsing rows, collapse them now
 			if( settings.collapse && !bHideParentRow ){
