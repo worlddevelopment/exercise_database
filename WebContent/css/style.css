@@ -51,10 +51,10 @@ input[type="file"] {
 td {
   padding-top:5px;
   padding-bottom:5px;
-  padding-right:5px; 
+  padding-right:5px;
   width: 13%;
   max-width: 200px;
-  overflow: hidden;  
+  overflow: hidden;
 }
 td:first-child {
   padding-left:0px;
@@ -72,14 +72,14 @@ body {
     font-size:16px;
     background-color:#FFFFFF;
     font-family:Arial,Helvetica, sans-serif;
-}   
+}
 .gestaltung {
     padding:0.5em;
     margin-top:8px;
     max-width: 1480px;
     border:1px solid gray;
 }
-    
+
 a {
     text-decoration: none;
 }
@@ -129,21 +129,21 @@ div#wrapper {
 }
 div#wrapper > div,
 div#wrapper > a {
-	/*width: 100%;/*95%;*/ 
+	/*width: 100%;/*95%;*/
 	/*max-width: 1450px; /* because of the limited resolution of the header image */
 }
 
 #kopf {
     background-color:#C1C9CA;
-    
+
     background-image: url(../pictures/logo.png);
     height: 55px;
     display: block;
     z-index: 4;
     background-position: 0px 0px;
     background-repeat: no-repeat;
-    
-}   
+
+}
 #navi {
     /*min-height:250px;*/
     height: 70px;
@@ -154,12 +154,12 @@ div#wrapper > a {
     font-family:Arial, Helvetica, sans-serif;
     /*background-color:#39C; */
     min-height:300px;
-    
+
 }
 #fuss{
     margin-top:10px;
     clear:both;
-    
+
 }
 
 #screenshot {
@@ -169,7 +169,7 @@ div#wrapper > a {
     padding:5px;
     display:none;
     color:green;
-    
+
 }
 #screenshot_img {/*55em*/
     /*width: 100%; for smaller devices*/
@@ -263,7 +263,7 @@ div.globalMessage div:before {
     margin-left: -5px;
     text-align: center;
     content: "" counter(no, upper-roman);
-     
+
 }
 
 .messageWrapper {
@@ -349,7 +349,7 @@ div.globalMessage div:before {
 }
 #ansichtLabel {
 	line-height: 24pt;
-} 
+}
 .filterForm {
 	width: 30%;
 	float: right;
@@ -414,7 +414,7 @@ div.globalMessage div:before {
  .close:hover {
    background: transparent url("./img/css/2in1_deleteCoral.png") no-repeat center -29px;/*(-31+2)px*/
  }
- 
+
  .ava {
    margin-right: 4px;
    cursor: pointer;
@@ -444,20 +444,20 @@ div.globalMessage div:before {
    color:cornflowerblue;
    font-weight:bold;
  }
- 
+
  .icon {
    height: 25px;
    vertical-align: bottom;
    /*for now the icons are created directly as image in the html.
-   background-position: 10px; 
+   background-position: 10px;
    background-repeat: no-repeat;
    */
  }
- 
+
 
 /*icons for each file type:*/
 .docx {
-   background-image: url("../img/css/docx.svg");
+   /*background-image: url("../img/css/docx.svg");*/
 }
 .odt {
    /*background-image: url("../img/css/odt.svg");*/
@@ -472,20 +472,20 @@ div.globalMessage div:before {
 
 /*-------INDICATORY--------------------------------------------------------------*/
 .loader, #loader {
-	display: none;/*<-- default is to not display the indicators. 
+	display: none;/*<-- default is to not display the indicators.
 	       They are shown once an ajax request is dispatched.*/
 	background-image: url("../pictures/loader.gif");
 	background-repeat: no-repeat;
 	height: 70px;
 	width: 70px;
-	padding-top: 30px; 
+	padding-top: 30px;
 	/* without padding possible descriptive text in the container is hovering the background-image. */
 }
 
 tr[onclick] th {/*<-- Only those table headings that have events attached should transform the mouse into a clickable indicator. */
 	cursor: pointer;
 }
- 
+
  /*-------DRAFTS------------------------------------------------------------------*/
  .draftrow {
      margin-top: 20px;
@@ -512,10 +512,10 @@ tr[onclick] th {/*<-- Only those table headings that have events attached should
      width: 97%;
      clear: both; /*as in the bootstrap the label is assigned float:left; what will break the layout here.*/
  }
- 
- 
- 
- 
+
+
+
+
  /*-------TABLESORTER-------------------------------------------------------------*/
 tr label img,
 tr label + hr {
@@ -534,10 +534,13 @@ tr:hover label img
         width: 10px;
         padding-left: 0px;
     }
-    table.grid td:nth-child(2) {
+    table.grid tr td:nth-child(2) {
         overflow: visible;
     }
-    /*<--non-visibility is the default to avoid confusion as 
+    table.grid tr td:nth-child(3) {
+        min-width: 111px;
+    }
+    /*<--non-visibility is the default to avoid confusion as
             there is nothing being grouped by by default and then the plus/minus image is senseless.*/
     tr:not(.expand-child) ~ /*read: Those tr with the expansion class following a tr without expansion class.*/
     tr.expand-child td:first-child a {/*first-child because the action/checkbox is in this column.*/
@@ -551,7 +554,7 @@ tr:hover label img
         visibility: hidden;
     }
     */
-    
+
     /* define table skin */
     table.grid {
         margin: 0;
@@ -560,13 +563,13 @@ tr:hover label img
         border-spacing: 0;
         width: 100%;
     }
-    
+
     table.grid * {
         font: 11px Arial, Helvetica, sans-serif;
         vertical-align: top;
         text-align: left;
     }
-    
+
     /*
     table.grid thead,
     table.grid .collapsible {
@@ -574,7 +577,7 @@ tr:hover label img
     }
     */
 
-    /* use the below style below to hide the collapsed rows via CSS, you must also set the showCollapsed setting to true */     
+    /* use the below style below to hide the collapsed rows via CSS, you must also set the showCollapsed setting to true */
 /*
 */
     table.grid tr.expand-child.collapsed td { /*<-- to make 'collapsed' the default state, see tablesorter.collapsible.js*/
@@ -607,34 +610,34 @@ tr:hover label img
     }
     table.grid tbody tr:first-child td {
         padding-top: 7pt;
-    } 
-    
+    }
+
     table.grid td {
         color: #565770;
         padding: 4px 6px;
     }
-    
+
     table.grid th.headerSortUp {
         background-position: 100% -80px;
     }
-    
+
     table.grid th.headerSortUp span {
         background-position: 0 -80px;
     }
-    
+
     table.grid th.headerSortDown {
         background-position: 100% 2px;
     }
-    
+
     table.grid th.headerSortDown span {
          background-position: 0 2px;
     }
-    
+
     table.grid th span {
         padding: 4px 0 4px 6px;
         font-weight: bold;
     }
-    
+
     table.grid a:link,
     table.grid a:visited,
     table.grid a:focus,
@@ -643,16 +646,16 @@ tr:hover label img
         font-weight: bold;
         text-decoration: underline;
     }
-    
+
     table.grid a:hover {
         color: #d07c57;
     }
-    
+
     table.grid tr.even/*,
     table.grid tr:nth-of-type(2n)*/ {
         background-color: #f0f0f0;
     }
-    
+
 
     /* expand/collapse */
     table.grid .collapsible {
@@ -676,5 +679,5 @@ tr:hover label img
         /*background: url(./tablesorter_expand.png) no-repeat -24px 3px;*/
         background: url("../jquery.treeview/images/minus.gif") no-repeat;
     }
-    
-    
+
+
