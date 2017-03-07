@@ -4,7 +4,7 @@
  * Version 2.0.3
  * @requires jQuery v1.2.3
  * 
- * Copyright (c) 2007 Christian Bach
+ * @author Christian Bach, J.R.I. Fruehholz
  * Examples and docs at: http://tablesorter.com
  * Dual licensed under the MIT and GPL licenses:
  * http://www.opensource.org/licenses/mit-license.php
@@ -81,9 +81,30 @@
  * @name tablesorter
  * 
  * @cat Plugins/Tablesorter
- * 
- * @author Christian Bach/christian.bach@polyester.se
+ * @author Christian Bach (polyester.se), J.R.I. Fruehholz
  */
+var triggerEvent = function(el, eventType) {
+	eventType = eventType || 'click'; //<-- click is default
+	el = el || document.getElementById(el);
+    /*    
+    var event = new MouseEvent(eventType, {
+    		    'view': window,
+    		    'bubbles': false,
+    		    'cancelable': true
+    		  });
+    */
+    var e = document.createEvent("MouseEvents"); 
+    e.initMouseEvent(eventType, true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+
+    var notCanceled = el.dispatchEvent(e);
+    return notCanceled;
+    if (notCanceled) {
+    	// None of the handlers called preventDefault.
+    }
+    else {
+    	// A handler called preventDefault.    	
+    }
+};
 
 (function($) {
 	$.extend({
@@ -634,7 +655,7 @@
 							
 							
 							//1) Sort after column we want to group by:
-							this.click();   //sortBy(th_objId, column, 0/*ascending*/, true);
+							triggerEvent(this, 'click');//.click();   //sortBy(th_objId, column, 0/*ascending*/, true);
 							
 							
 							
@@ -667,7 +688,7 @@
 								//else add mark the row for being collapsed/expandable:
 								
 								//class set and exists?
-								if (allTrs[i].className && !allTrs[i].className.contains(CSS_CLASS_EXPANSION)) {
+								if (allTrs[i].className && !allTrs[i].className.indexOf(CSS_CLASS_EXPANSION) != -1) {
 									allTrs[i].className += " " + CSS_CLASS_EXPANSION;
 								}
 								else {
