@@ -144,6 +144,7 @@ public enum Language {
 		aMap.put("data", "Daten");
 		//N
 		aMap.put("new draft", "neuer Entwurf");
+		aMap.put("no success", "kein Erfolg");
 		//O
 		aMap.put("or", "oder");
 		aMap.put("origin", "Ursprung");
@@ -248,7 +249,7 @@ public enum Language {
 		aMap.put("unfold the whole tree", "développez l'arbre entier");
 		aMap.put("expand the whole tree", "développez l'arbre entierDen ganzen Baum ausklappen");
 
-		aMap.put("entries found", "trouvu00E9es");
+		aMap.put("entries found", "trouv\u00E9es");
 		
 		aMap.put("fileformat", "fileformat"/*format fichier"*/);
 		
@@ -261,13 +262,14 @@ public enum Language {
 		aMap.put("belongs to", "appartient \u00E0");//belongs to //TODO:grammar. 
 		aMap.put("belongs", "associ\u00E9");
 		//C
-		aMap.put("category", "Kategorie");
+		aMap.put("category", "cat\u00E9gorie");
 		aMap.put("corresponding", "correspondant");
 		aMap.put("corresponding solution", "solution correspondant");
 		//D
 		aMap.put("data", "data");
 		//N
-		aMap.put("new draft", "nouveaux \u00E9bauche");//e accente aigu <-TODO
+		aMap.put("new draft", "nouveaux \u00E9bauche");
+		aMap.put("no success", "pas de succ\u00E9s");
 		//O
 		aMap.put("or", "ou");
 		aMap.put("origin", "origine");

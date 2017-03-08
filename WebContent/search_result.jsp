@@ -32,12 +32,12 @@ search_string = Global.encodeUmlauts(search_string);
    		 //+ URLEncoder.encode(search_string, "utf-8") + "\"' IN BOOLEAN MODE);"
 	);
    
-   if(res == null || !res.next()) {
-	    out.print("Kein Ergebnis. " + res);
+   if(res == null) {// || !res.next()) {
+	    out.print(Global.display("no success") + ". res = " + res);
    	
    }
    else {
-	  	res.beforeFirst();//Because above we already increase by one!!
+// 	  	res.beforeFirst();//Because above we already increase by one!!
 	 	
 	   //################## Durchsuche Blatt content ##################################
 	   while(res.next()) {
