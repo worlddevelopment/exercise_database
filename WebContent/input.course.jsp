@@ -8,7 +8,7 @@
 	  id = request.getParameter("node_id");
   }
 
-  if (request.getParameter("default") != null) { %>      
+  if (request.getParameter("default") != null) { %>
                 <input type="hidden" name="course_old" class="required noSpecialChars"
                         id="<%= id %>" value="<% out.print(request.getParameter("default")); %>"
                         onkeyup="deactivateIfFilledOrActivateIfEmpty(this, '<%= id %>_select');"/>
@@ -32,29 +32,32 @@
                     //get length
                     int resL = 0;
                     if (res != null) {
-	                    if (res.last() /*&& res.getType() == res.TYPE_SCROLL_SENSITIVE*/) {
-	                        resL = res.getRow();
-	                        res.beforeFirst();/*because afterwards follows a next()*/
-	                    }
-                    }
-                    //generate the option fields
-                    if (resL == 0) {
-                        out.print("<option selected='selected' disabled='disabled'>-------</option>");
-                    } else {
-                        out.print("<option selected='selected' disabled='disabled'>---" + resL + " " + Global.display("entries found") + ":----</option>");
+                        //generate the option fields
+                        String output = "";
+                        boolean isOptionSelected = false;
                         while (res.next()) {
                             //add option
-                            out.print("<option ");
-                            out.print(" title='" + Global.decodeUmlauts(res.getString("course")) + "'");
+                            output += "<option ";
+                            output += " title='" + Global.decodeUmlauts(res.getString("course")) + "'";
                             if (res.getString("course").equals(request.getParameter("default"))) {
-                                out.print(" selected='selected'");
+                                output += " selected='selected'";
+                                isOptionSelected = true;
                             }
-                            out.print(" value='"+ res.getString("course") +"' ");
-                            out.print(">" + Global.decodeUmlauts(res.getString("course")) + "</option>");
+                            output += " value='"+ res.getString("course") +"' ";
+                            output += ">" + Global.decodeUmlauts(res.getString("course")) + "</option>";
+                            ++resL;
                         }
                         // tackle memory leaks by closing result set and its statement properly:
                         Global.queryTidyUp(res);
+                        // now that we now the count of the objects: prepend the default:
+                        output = "<option " + (isOptionSelected ? "" : " selected='selected' ") + " disabled='disabled'>---" + resL + " " + Global.display("entries found") + ":----</option>"
+                            + output;
+                        out.println(output);
+
+                    }
+                    else {
+                       out.print("<option selected='selected' disabled='disabled'>-------</option>");
                     }
                     %>
-                </select>         
-                        
+                </select>
+
