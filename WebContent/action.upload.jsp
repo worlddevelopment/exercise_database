@@ -135,7 +135,7 @@
         }
         
         File uploadedFile = new File(path + System.getProperty("file.separator") + filename_and_ext);
-        //String dir_for_link = dir.replaceAll("\\", System.getProperty("file.separator"));
+        //String dir_for_link = dir.replaceAll("\\\\", System.getProperty("file.separator"));
         filelink = Global.uploadTarget + dir + filename_and_ext;
         form_data.put("filelink", filelink);
         pdf_link = Global.replaceEnding(filelink, "pdf");
@@ -375,7 +375,7 @@
         if ((in_lecturer_id_select == null || in_lecturer_id_select == "") && in_lecturer == null) {
             System.out.print(
                     //Global.addMessage(
-                            "Neither existant lecturerID nor new lecturer data transmitted? => Using default lecturer: N.N."
+                            "Neither existing lecturerId nor new lecturer data transmitted? => Using default lecturer: N.N."
                     //      , "warning"
                     //)
             );
@@ -384,7 +384,7 @@
         else if (in_lecturer_id_select == null || in_lecturer_id_select == "") {
             System.out.print(
 //                  Global.addMessage(
-                            "No lecturerID transmitted by form? => It's a new lecturer."
+                            "No lecturerId transmitted by form? => It's a new lecturer."
 //                          , "info"
 //                  )
             );
@@ -439,26 +439,32 @@
         /* No or at least no valid id value been transmitted? */
         if (/*in_lecturer_id == null ||*/ in_lecturer_id == -1) { //now it can be overwritten
             //=> aha new one to be inserted
-            
+
             column_value.put("lecturer", Global.encodeUmlauts(in_lecturer));
             //Is name of potential new lecturer already in database?
             if (!Global.sqlm.exist("lecturer", "lecturer", column_value)) {
+
+                in_lecturer_id = (int)Math.round(Math.random() * 10000);
                 String query = "INSERT INTO lecturer"
-                        + "(`lecturer`) VALUES ('" + Global.encodeUmlauts(in_lecturer) + "');";
-                        //execute
+                        + "(`id`, `lecturer`) VALUES ("+ in_lecturer_id //<--For SQL-MySQL compatibility.
+						+ ", '" + Global.encodeUmlauts(in_lecturer) + "');";
+                //execute
                 Global.sqlm.executeUpdate(query);
+
             }
             else {
-                //not inserted!
-                Global.addMessage("Lecturer already exists. As long as this time-saving tool is for our DMUW-Chair only, I doubt this was intentionally. => No new one inserted.", "warning");
+                //lecturer exists. no new one was inserted.
+                Global.addMessage("Lecturer already exists. As long as this time-saving tool is for our DMUW-Chair only, I doubt this was intentional because we have few lecturers with the same name. => No new one inserted.", "warning");
                 //ATTENTION --> Btw it's really highly connected to the fishing of the lecturer id
                 //(see below). If we want to activate this feature, we have to think
                 //of a new way of fishing the ID!! <-- ATTENTION
+
+                //fetch the id of the lecturer -overwrite given one as this is now obsolete
+                in_lecturer_id = Global.sqlm.getId("lecturer", "lecturer", Global.encodeUmlauts(in_lecturer));
             }
             column_value.remove("lecturer");
-            
-            //fetch the id of the lecturer -overwrite given one as this is now obsolete
-            in_lecturer_id = Global.sqlm.getId("lecturer", "lecturer", Global.encodeUmlauts(in_lecturer));
+
+
             //make known
             column_value.put("lecturer_id", in_lecturer_id + "");//will be reconverted in getId
             
@@ -492,7 +498,7 @@
         
         column_value.put("filelink", filelink);
     
-        //Is this file already in database?
+        //Is this file already in the database?
         if (!Global.sqlm.exist("sheetdraft", "filelink", column_value)) {
             
             //=========================================================================
@@ -504,7 +510,7 @@
                     in_semester,
                     in_lecturer_id,
                     in_description,
-                    session.getAttribute("user"),
+                    request.getParameter("uploader"),//session.getAttribute("user"),
                     is_draft,
                     sheetdraft.getPlainTextAsString()
             );
@@ -517,7 +523,7 @@
             
             
             //holle sheetdraft id
-            int sheetdraft_id = Global.sqlm.getId("sheetdraft", column_value);
+//             int sheetdraft_id = Global.sqlm.getId("sheetdraft", column_value);
             //String sheetdraft_id = Global.sqlm.getId("sheetdraft", "", "");
     
             

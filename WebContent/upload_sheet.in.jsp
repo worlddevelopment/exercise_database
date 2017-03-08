@@ -21,6 +21,7 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
 
 <form class="cmxform" id="commentForm" method="post"  action="?id=upload_sheet&q=upload#add_result"
 enctype="multipart/form-data">
+   <input type="hidden" name="uploader" value="<%= Global.session.getAttribute("user") %>" />
    <!-- To steer the ship. -->
    <!--
    <input type="hidden" name="q" value="upload" />
