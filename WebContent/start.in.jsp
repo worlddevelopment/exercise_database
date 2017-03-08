@@ -388,6 +388,9 @@ if (session.getAttribute("ansicht") != null) {
 %>
 
 
+
+
+
 <!-- ANSICHT WRAPPER -->
 <div id="ansichtWrapper">
 <label id="ansichtLabel" for="ansicht"><%=Global.display("view") %>:</label><!-- Attention: time is important! Wait for ajax!! -->
@@ -416,6 +419,15 @@ if (session.getAttribute("ansicht") != null) {
 </div>
 
 
+
+
+
+<!-- Clear database + filesystem. -->
+<a class="btn btn-danger" href="?q=clear_database_partial">Clear database partially (all but lecturers).</a>
+<a class="btn btn-danger" href="?q=clear_database">Clear database + filesystem fully (Information: files also are overriden at file-upload.)</a>
+
+
+<p>&nbsp</p>
 
 <!-- Baum -->
 
