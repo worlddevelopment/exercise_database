@@ -1,7 +1,6 @@
 <%@page import="aufgaben_db.Global, aufgaben_db.Aufgaben_DB"%>
 <%@page import="java.io.File, java.net.URLDecoder"%>
 <%@page import="java.sql.ResultSet"%>
-<%@page import="aufgaben_db.Global"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
     <%
