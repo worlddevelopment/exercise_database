@@ -8,11 +8,11 @@
     import="javax.naming.NamingException"
     import="javax.naming.directory.DirContext"
     import="javax.naming.directory.InitialDirContext"
-    import="javax.naming.ldap.LdapContext" import="swp.*"
+    import="javax.naming.ldap.LdapContext"
+    import="swp.*"
     import="java.sql.Connection" import="java.sql.DriverManager"
     import="java.sql.ResultSet" import="java.sql.SQLException"
     import="java.sql.Statement" import="java.util.Enumeration"
-    import="HauptProgramm.*"
     import="aufgaben_db.Global"
     import="aufgaben_db.Aufgaben_DB"
     %>
@@ -149,6 +149,7 @@ if (Global.isLoggedIn(session)) {
     Aufgaben_DB.loadAllSheetdrafts();
 
 }
+
 %>
 
 
@@ -406,7 +407,7 @@ if (Global.isLoggedIn(session)) {
     
     /*Use these two functions to add an onclick event for preventing the timeout from
     expiring and logging out in the middle of a setup what is very undesirable.*/
-    addEvent(document, 'onclick', (function() {  zahl = <%=seconds%>;  }));
+    addEvent(document, 'click', (function() {  zahl = <%=seconds%>;  }));
     
     
     
@@ -449,3 +450,8 @@ if (Global.isLoggedIn(session)) {
     </div>
 </body>
 </html>
+<%
+if (Global.conn != null) {
+    Global.conn.close();
+}
+%>
