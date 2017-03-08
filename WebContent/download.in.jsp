@@ -24,13 +24,13 @@ if (request != null && request.getParameter("q") != null) {
 } 
  
 /* ======= LOCAL ATTRIBUTES ======= */
-String[] downloads = { "all", "apache_tomcat", "program", "data" };
+String[] downloads = { "AVSy__all", "AVSy__apache_tomcat", "aufgaben_db", "AVSy_data" };
 String archive_type = "zip";//7z;
 String[] downloadsExpanded = new String[downloads.length];
 //expand:
 int i = -1;
 while (++i < downloads.length) {
-    downloadsExpanded[i] = "AVSy--" + downloads[i] + "." + (downloads[i].contains("program") ? "war" : archive_type);
+    downloadsExpanded[i] =/* "AVSy__" + */downloads[i] + "." + (downloads[i].contains("program") || downloads[i].equals("aufgaben_db") ? "war" : archive_type);
 }
 
 
@@ -108,7 +108,7 @@ if (!allFilesStillThere || !allFilesStillUpToDate
         );
     }
     // b) zip
-    String target_filelink = Global.root + File.separator + "AVSy--data" + "." + archive_type;
+    String target_filelink = Global.root + File.separator + "AVSy__data" + "." + archive_type;
     if (converter.Zip.zip(dir,  target_filelink)) {//TODO zip multiple directories. e.g. index_data, uploads,..
         Global.addMessage("Zip file " + target_filelink + " was created successfully.", "success");
     }
@@ -145,7 +145,7 @@ for (i = 0; i < downloads.length; i++) {
     <span style=""><%= (i + 1) %></span>
     <a class="btn btn-success" style="display:inline-block; width:90%; padding:1%;" 
             href="<%=downloadsExpanded[i] %>">
-        <%= (downloads[i].equalsIgnoreCase("all") ? 
+        <%= (downloads[i].contains("all") ? 
                 "Download All (Tomcat + Aufgaben-Verwaltungs-System + Dateien)" 
                 : Global.display(downloads[i]) ) %>
     </a>
