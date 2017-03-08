@@ -131,7 +131,7 @@
                     type = new String(request.getParameter("type").getBytes("ISO-8859-1"), "UTF-8");
                     type = URLDecoder.decode(request.getParameter("type"), "utf-8");
                     
-                    selectAllSheetdraftsInThisDirectory = "SELECT filelink, sheetdraft.id"
+                    selectAllSheetdraftsInThisDirectory = "SELECT filelink"//, sheetdraft.id"
                             + ", author"
                             + " FROM sheetdraft, lecturer l "
                             + " WHERE (semester = '" + Global.encodeUmlauts(semester) + "' OR semester = '" + semester + "')"
@@ -148,7 +148,7 @@
 	                while (res1.next()) {
 	                    //Tabelle fuer Blatt generieren
 	
-	                    int sheetdraft_id = res1.getInt("id");
+	                    //int sheetdraft_id = res1.getInt("id");
 	                    uploader = res1.getString("author");
 	                    %>
 	                    <tr style='margin: 10px;'>
@@ -164,7 +164,7 @@
 	                    out.println("<td>" + Global.decodeUmlauts(semester) + "</td>");
 	                    %>
 	                    <td>
-	                        <!-- <input name='sheetdraft_id[]' value='<%=sheetdraft_id %>' type='checkbox'/>-->
+	                        <!-- <input name='sheetdraft_id[]' value='' type='checkbox'/>-->
 	                        <input name='sheetdraft_filelinks[]' value='<%=filelink %>' type='checkbox'/>
 	                        <%
 	                        //Merely the lecturer of this course and the uploader/author get permission:
