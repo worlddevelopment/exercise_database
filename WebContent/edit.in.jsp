@@ -128,7 +128,7 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
                 <jsp:include page="input.lecturer.jsp">
                     <jsp:param name="default" value="<%=lecturer_id %>"></jsp:param>
                     <jsp:param name="lecturer" value="<%=lecturer %>"></jsp:param>
-                    <jsp:param name="id" value="lecturer_edit"></jsp:param>
+                    <jsp:param name="node_id" value="lecturer_edit"></jsp:param>
                 </jsp:include>
             </td>
         </tr>
