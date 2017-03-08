@@ -86,11 +86,12 @@
 			doc.add(new Field("lecturer", lecturer,	Field.Store.YES, Field.Index.ANALYZED));
 			doc.add(new Field("type", type, Field.Store.YES, Field.Index.ANALYZED));
 // 			doc.add(new Field("author", filelink,	Field.Store.YES, Field.Index.ANALYZED));
-            if (plain_text != null) {			
+            if (description != null) {
                 doc.add(new Field("description", description, Field.Store.YES, Field.Index.ANALYZED));
             }
-			doc.add(new Field("content", plain_text, Field.Store.YES, Field.Index.ANALYZED));
-			
+            if (plain_text != null) {
+                doc.add(new Field("content", plain_text, Field.Store.YES, Field.Index.ANALYZED));
+            }
 			
 			
 			iwriter.addDocument(doc);
