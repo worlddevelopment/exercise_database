@@ -1,6 +1,10 @@
 Exercise Management System =: EMS  | Exercise Database
 ===
 
+Lizenz
+---
+CreativeCommons-Attribution-ShareAlike (CC-BY-SA)
+https://creativecommons.org/licenses/by-sa/4.0/ or newer
 
 Teacher|Lecturer Exercise Database Features
 ---
