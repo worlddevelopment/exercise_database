@@ -3,6 +3,7 @@ response.setContentType("text/html; charset=UTF-8");
 request.setCharacterEncoding("UTF-8");
 %>
 <%@page import="java.net.URLEncoder, java.sql.ResultSet"%>
+<%@page import="java.util.Map, java.util.HashMap, java.util.List, java.util.ArrayList"%>
 <%@page import="aufgaben_db.Global,aufgaben_db.DocType"%>
 
   <script type="text/javascript">
@@ -130,18 +131,23 @@ $(document).ready(function() {
                 ResultSet res = Global.query("SELECT DISTINCT `" + field + "` FROM `sheetdraft`, `lecturer`");
                 //get length
                 int resL = 0;
-                if (res.last() /*&& res.getType() == res.TYPE_SCROLL_SENSITIVE*/) {
-                    resL = res.getRow();
-                    res.beforeFirst();/*because afterwards follows a next()*/
+                List<Map<String, Object>> resRows = new ArrayList<Map<String, Object>>();
+                if (res != null) {//res.last() /*&& res.getType() == res.TYPE_SCROLL_SENSITIVE*/) {
+                    while (res.next()) {
+                        Map<String, Object> rowMap = new HashMap<String, Object>();
+                        rowMap.put(field, res.getString(field));
+                        resRows.add(rowMap);
+                    }
+                    resL = resRows.size();
                 }
                 //generate the option fields
                 if (res == null || resL == 0) {
                     out.print("<option selected='selected' disabled='disabled'>-------</option>");
                 } else {
-                    while (res.next()) {
+                   for (Map<String, Object> resRow : resRows) {
                         //add option
-                        out.print("<option value='"+ res.getString(field) +"'>"
-                                + Global.decodeUmlauts(res.getString(field))
+                        out.print("<option value='"+ ((String)resRow.get(field)) +"'>"
+                                + Global.decodeUmlauts((String)resRow.get(field))
                                 + "</option>");             
                     }
                     // tackle memory leaks by closing result set and its statement properly:
