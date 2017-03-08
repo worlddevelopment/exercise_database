@@ -1,6 +1,6 @@
 <%
-    response.setContentType("text/html; charset=UTF-8");
-    request.setCharacterEncoding("UTF-8");
+	response.setContentType("text/html; charset=UTF-8");
+	request.setCharacterEncoding("UTF-8");
 %>
 <%@page import="org.apache.lucene.search.vectorhighlight.FieldQuery"%>
 <%@page import="org.apache.lucene.search.Explanation"%>
@@ -47,35 +47,35 @@
 	<table>
 		<%
 			String fields[] = new String[] {
-			        "content", "semester", "course", "lecturer", "type"
-			        };
+					"content", "semester", "course", "lecturer", "type"
+					};
 			int treffer = 0;
 			HashMap<String, String> suchfelder = new HashMap<String, String>();
 			String search_query = "";
-			
+
 			//deal with special character (new as of v30.91) to fix that the search did not work
 			String search = Global.getParameterEncodedOrEmpty(request, "search", "search_string");
 			String semester = Global.getParameterEncoded(request, "semester");
 			String course = Global.getParameterEncoded(request, "course");
 			String lecturer = Global.getParameterEncoded(request, "lecturer");
 			String type = Global.getParameterEncoded(request, "type");
- 			//String datei_typ = request.getParameter("datei_typ");
-            //TODO:MAKE DOCTYP SEARCHABLE
-		            
+			//String datei_typ = request.getParameter("datei_typ");
+			//TODO:MAKE DOCTYP SEARCHABLE
+
 			if (search != null && !search.equals("")
-				    && (semester == null || semester.equals(""))
+					&& (semester == null || semester.equals(""))
 					&& (course == null || course.equals(""))
 					&& (lecturer == null || lecturer.equals(""))
 					&& (type == null || type.equals(""))) {
 				search_query = search;
 			} else {
 
-			            
+
 				if (!search.equals("")) {
-					//suchfelder.put("inhalt", search); 
+					//suchfelder.put("inhalt", search);
 					search_query = search + " ";
 				}
-				
+
 				if (semester != null && !semester.equals("")) {
 					suchfelder.put("semester", Global.encodeUmlauts(semester));
 				}
@@ -129,7 +129,7 @@
 				// Parse a simple query that searches for "text":
 
 				//QueryParser parser = new QueryParser(Version.LUCENE_36,"inhalt", analyzer);
-				//####	
+				//####
 				MultiFieldQueryParser parser = new MultiFieldQueryParser(
 						Version.LUCENE_36, fields, analyzer);
 				parser.setDefaultOperator(Operator.AND);
@@ -139,7 +139,7 @@
 				Query query = parser.parse(search_query);// "(+inhalt:uebung +semester:\"SoSe 12/14\")"
 				out.println("</br><strong>Query: </strong>" + Global.decodeUmlauts(search_query)
 						+ "</br><p></p>");
-				//#####			
+				//#####
 
 				TopDocs hits = isearcher.search(query, 1000);
 
@@ -171,12 +171,12 @@
 						statement1 = con.createStatement();
 
 						String str_query5 = "SELECT sheetdraft.id"
-						        + " FROM sheetdraft, lecturer l, course"
-						        + " WHERE semester = '"	+ doc3.get("semester") + "'"
-						        + " AND course = '" + doc3.get("course") + "'"
-						        + " AND type = '" + doc3.get("type") + "'"
-						        + " AND l.lecturer = '" + doc3.get("lecturer") + "'"
-						        + " AND l.id = sheetdraft.lecturer_id "
+								+ " FROM sheetdraft, lecturer l, course"
+								+ " WHERE semester = '"	+ doc3.get("semester") + "'"
+								+ " AND course = '" + doc3.get("course") + "'"
+								+ " AND type = '" + doc3.get("type") + "'"
+								+ " AND l.lecturer = '" + doc3.get("lecturer") + "'"
+								+ " AND l.id = sheetdraft.lecturer_id "
 								+ " AND sheetdraft.filelink = '" + doc3.get("filelink") + "'"
 								;
 						ResultSet res1 = statement1.executeQuery(str_query5);
@@ -184,7 +184,7 @@
 						while (res1.next()) {
 
 							sheetdraft_id = res1.getString("id");
-							
+
 						}
 						// added as of v31.13c to tackle memory leaks:
 						if (res1 != null) {
@@ -193,7 +193,7 @@
 						if (statement1 != null) {
 							statement1.close();
 						}
-						
+
 					} catch (SQLException e) {
 						e.printStackTrace();
 					} */
@@ -211,7 +211,7 @@
 							+ "' class = 'screenshot' rel='" + Global.convertToImageLink(doc3.get("filelink")) + "'>"
 							+ Global.extractFilenameAndEnding(doc3.get("filelink")) + "</a></br>");
 					out.print("<b>" + Global.display("semester") + ": </b>" + Global.decodeUmlauts(doc3.get("semester"))
-                            + "</br>");
+							+ "</br>");
 					out.print("<b>" + Global.display("lecturer") + ": </b>" + Global.decodeUmlauts(doc3.get("lecturer")) + "</br>");
 					out.print("<b>" + Global.display("course") + ": </b>" + Global.decodeUmlauts(doc3.get("course")) + "</br>");
 					out.print("<b>" + Global.display("type") + ": </b>" + Global.decodeUmlauts(doc3.get("type")) + "</br>"
@@ -230,8 +230,8 @@
 				</div>
 			</td>
 			<%
-			    out.println("<td><input name = 'sheetdraft_filelinks[]' value='" + doc3.get("filelink")
-                    + "' type='checkbox'/></td>");
+				out.println("<td><input name = 'sheetdraft_filelinks[]' value='" + doc3.get("filelink")
+					+ "' type='checkbox'/></td>");
 				//out.println("<td><input name = 'sheetdraft_id[]' value = '" + sheetdraft_id
 				//				+ "' type='checkbox'/></td>");
 			%>
@@ -257,7 +257,7 @@
 	</button>
 
 	<!-- BUTTONS FOR ADDING TO A DRAFT THAT IS ONE OUT OF A LOADED DRAFT LIST:  -->
-    <jsp:include page="buttons.add_to_draft.jsp?session_user=<%=Global.getUserURLEncoded(session) %>" />
+	<jsp:include page="buttons.add_to_draft.jsp?session_user=<%=Global.getUserURLEncoded(session) %>" />
 	<%
 		}
 	%>
