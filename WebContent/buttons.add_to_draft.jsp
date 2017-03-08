@@ -3,7 +3,7 @@
             , aufgaben_db.Aufgaben_DB, aufgaben_db.Sheetdraft" %>
             
            
-            <button id="add_to_draft_btn" name="q" value="add_to_draft" class="btn btn-primary">
+            <button id="add_to_draft_btn" name="q" value="add_to_draft" class="btn btn-primary" onclick="updateQueryString('id');updateQueryString('q')">
                 <i class="icon-plus-sign"></i>
                 <% out.print(Global.translate("add to draft")); %>:
             </button>
