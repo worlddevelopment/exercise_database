@@ -5,13 +5,17 @@ String id = "lecturer";
 if (request.getParameter("node_id") != null) {
 	id = request.getParameter("node_id");
 }
+String default_ = "";
+if (request.getParameter("default") != null) {
+	default_ = request.getParameter("default");
+%>
 
-if (request.getParameter("default") != null) { %> 
                 <input type="hidden" name="lecturer_id_old" class="required noSpecialChars"
-                    id="<%= id %>_id_old" value="<% out.print( request.getParameter("default") ); %>"
+                    id="<%= id %>_id_old" value="<% out.print( default_ ); %>"
                     onkeyup="deactivateIfFilledOrActivateIfEmpty(this, 'lecturer_id_select');"/>
 <%
-} 
+}
+
 if (request.getParameter("lecturer") != null) { %>
                 <input type="text" name="lecturer" class="required noSpecialChars" style="display:none;"
                     id="<%= id %>" value="<% out.print( Global.decodeUmlauts(request.getParameter("lecturer")) ); %>"
@@ -31,19 +35,25 @@ else {
                     <%
                     //fetch all distinct lecturer from database
                     ResultSet res = Global.query("SELECT `id`, `lecturer` FROM `lecturer`" /*LIMIT 0, 30*/);
-                    if (res == null || !res.next()) {
+                    if (res == null) {// || !res.next()) {
                         out.print("<option disabled='disabled'>---(leer)---</option>");
                     } else {
-                        res.beforeFirst();//Because above we already increase by one!!
+                        String lecturer_id;
+//                        res.beforeFirst();//Because above we already increase by one!!
+                        out.print("<option disabled='disabled'>----------</option>");
                         while (res.next()) {
                             //add option
-                            
+                            lecturer_id = res.getString("id");
+                            if (res.getString("id") == null) {
+                                System.out.println(Global.addMessage("Warning! Lecturer id is null. id: " + res.getString("id"), "warning"));
+                                lecturer_id = "0";
+                            }
                             out.print("<option ");
                             if (request.getParameter("default") != null
-                                    && (res.getString("id").equals(request.getParameter("default"))) ) {
+                                    && (lecturer_id.equals(default_)) ) {
                                 out.print(" selected='selected'");
                             }
-                            out.print("value='"+ res.getString("id") + "," + res.getString("lecturer")
+                            out.print("value='"+ lecturer_id + "," + res.getString("lecturer")
                                       +"'>");
                             out.print( Global.decodeUmlauts(res.getString("lecturer")) );
                             out.print("</option>");
@@ -53,4 +63,4 @@ else {
                     }
                     %>
                 </select>
-                
+
