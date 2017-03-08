@@ -2,7 +2,7 @@
 <script type="text/javascript" src="jquery/toolTipPreview.js"></script>
 -->
 <%@page import="aufgaben_db.DocType"%>
-<%@page import="java.util.ArrayList,java.util.List"%>
+<%@page import="java.util.ArrayList,java.util.List, java.util.Map, java.util.HashMap"%>
 <%@page import="java.sql.ResultSet,
                 java.sql.SQLException,
                 aufgaben_db.Global" %>
@@ -111,19 +111,19 @@ while (res.next()) {
                 </span>
                 <span style="display:inline-block; vertical-align:bottom;">
 	            <label for="draft_<%= res.getRow() %>_solution_position_at_end" title="TODO: insert page-break for each format."
-	                onclick="var draft_solution_index=0; var draft_solution_row; while(typeof ( draft_solution_row = document.getElementById('draft_<%= res.getRow() %>_solution_fieldset_' + (++draft_solution_index)) ) == 'object') { draft_solution_row.setAttribute('style', 'display:none;'); draft_solution_row.disabled=false; }"
+	                onclick="var draft_solution_index=-1; var draft_solution_row; while(typeof ( draft_solution_row = document.getElementById('draft_<%= res.getRow() %>_solution_fieldset_' + (++draft_solution_index)) ) == 'object') { draft_solution_row.setAttribute('style', 'display:none;'); draft_solution_row.disabled=false; }"
 	            >Jointly at end.</label>
 	            </span>
             </span>
             <span style="display:inline-block;">
                 <span style="display:inline-block;">
 	            <input id="draft_<%= res.getRow() %>_solution_position_after_exercise" type="radio" name="solution_position" value="after exercise"
-	                onclick="var draft_solution_index=0; var draft_solution_row; while(typeof ( draft_solution_row = document.getElementById('draft_<%= res.getRow() %>_solution_fieldset_' + (++draft_solution_index)) ) == 'object') { draft_solution_row.setAttribute('style', 'display:inline;'); draft_solution_row.disabled=false; }"
+	                onclick="var draft_solution_index=-1; var draft_solution_row; while(typeof ( draft_solution_row = document.getElementById('draft_<%= res.getRow() %>_solution_fieldset_' + (++draft_solution_index)) ) == 'object') { draft_solution_row.setAttribute('style', 'display:inline;'); draft_solution_row.disabled=false; }"
 	                />
                 </span>
                 <span style="display:inline-block; vertical-align:bottom;">
 	            <label for="draft_<%= res.getRow() %>_solution_position_after_exercise"
-	                onclick="var draft_solution_index=0; var draft_solution_row; while(typeof ( draft_solution_row = document.getElementById('draft_<%= res.getRow() %>_solution_fieldset_' + (++draft_solution_index)) ) == 'object') { draft_solution_row.setAttribute('style', 'display:inline;'); draft_solution_row.disabled=false; }"
+	                onclick="var draft_solution_index=-1; var draft_solution_row; while(typeof ( draft_solution_row = document.getElementById('draft_<%= res.getRow() %>_solution_fieldset_' + (++draft_solution_index)) ) == 'object') { draft_solution_row.setAttribute('style', 'display:inline;'); draft_solution_row.disabled=false; }"
 	            >Directly after exercise.</label>
 	            </span>
             </span>
@@ -153,17 +153,28 @@ while (res.next()) {
                    + " AND exercise.filelink = dea.exercise_filelink"//join remaining
                    + " ORDER BY position";
         ResultSet res1 = Global.query(str_query);
-        res1.last();
+//         res1.last();
+        List<Map<String, Object>> res1Rows = new ArrayList<Map<String, Object>>();
+        while (res1.next()) {
+            Map<String, Object> resMap = new HashMap<String, Object>();
+            resMap.put("filelink", res1.getString("filelink"));
+            resMap.put("position", res1.getString("position"));
+            res1Rows.add(resMap);
+        }
         int count = res1.getRow();
+        count = res1Rows.size();
         if (count == 0) {
             out.print("- no exercises contained in this draft -");
             //continue ;Continuing makes trouble here as the HTML markup will not be closed properly.
         }
         else {
-            res1.beforeFirst();
-            while (res1.next()) {
-                String draft_exercise_filelink = res1.getString("filelink");//stored filelinks are relative filelinks!
-                String exercise_position = res1.getString("position");
+//             res1.beforeFirst();
+//             while (res1.next()) {
+	       int res1Rows_index = -1;
+	       while (++res1Rows_index < res1Rows.size()) {
+                Map<String, Object> res1Row =  res1Rows.get(res1Rows_index);
+                String draft_exercise_filelink = (String)res1Row.get("filelink");//stored filelinks are relative filelinks!
+                String exercise_position = (String)res1Row.get("position");
                 %>
                 <!-- DRAFT EXERCISE ROW -->
                 <div class="draft_exercise_row">
@@ -186,14 +197,14 @@ while (res.next()) {
                     </button>
                     <div style="display:inline-block;">
 	                    <!-- ACTION: DELETE -->
-	                    <label class="btn btn-danger" for="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1.getRow()%>">
+	                    <label class="btn btn-danger" for="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1Rows_index/*res1.getRow()*/%>">
 	                       <%=Global.display("Remove") + " " + Global.display("multiple") %>?
 	                    </label>
-	                    <input id="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1.getRow() %>" type="checkbox"
+	                    <input id="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1Rows_index/*res1.getRow()*/ %>" type="checkbox"
 	                        name="draft_exercise_to_be_removed[]" value="<%=draft_exercise_filelink %>" />
                     </div>
                     <button type="button" name="q" value="remove_draft_exercises" class="btn btn-danger" title="remove this and update all"
-                        onclick="this.previousElementSibling.checked=true; this.type='submit';">
+                        onclick="this.previousElementSibling.lastElementChild.checked=true; this.type='submit';">
                       &larr;<i class="icon-trash icon-white"></i>&nbsp;&amp;&nbsp;<i class="icon-ok icon-white"></i>all
                     </button>
                     <!-- actualize 
@@ -205,7 +216,7 @@ while (res.next()) {
                 </div>
                 <!-- IMAGE -->
                 <div class='draft_exercise_img'>
-                <label class="btn btn-danger" for="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1.getRow()%>">
+                <label class="btn btn-danger" for="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1Rows_index/*res1.getRow()*/%>">
                   <img src="<% out.print(Global.convertToImageLink(draft_exercise_filelink)); %>"
                       alt="<% out.print(draft_exercise_filelink); %>" title="<% out.print(draft_exercise_filelink); %>" />
                 </label>
@@ -227,7 +238,7 @@ while (res.next()) {
                 	}
                     %>
                     <!-- DRAFT EXERCISE ROW -->
-                    <fieldset id="draft_<%= res.getRow() %>_solution_fieldset_<%= res1.getRow() %>" class="draft_exercise_row" style="display:none;" disabled="disabled">
+                    <fieldset id="draft_<%= res.getRow() %>_solution_fieldset_<%=res1Rows_index/*res1.getRow()*/ %>" class="draft_exercise_row" style="display:none;" disabled="disabled">
                         <div>
                         <!-- DRAFT EXERCISE FILELINK -->
                         <input type="hidden" name="draft_solution_filelink[]" value="<% out.print(draft_solution_filelink); %>" />
@@ -239,20 +250,20 @@ while (res.next()) {
                         </button>
                         <!-- ACTION: ADD TO DRAFTEXERCISEASSIGNMENT FOR ALLOWING TO POSITION IT FREELY. -->
                         <div style="display:inline-block;">
-	                        <label class="btn btn-info" for="draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1.getRow()%>">
+	                        <label class="btn btn-info" for="draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1Rows_index/*res1.getRow()*/%>">
 	                           <%=Global.display("Assign") + " " + Global.display("directly") %>?
 	                        </label>
-	                        <input id="draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1.getRow() %>" type="checkbox"
+	                        <input id="draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1Rows_index/*res1.getRow()*/ %>" type="checkbox"
 	                            name="draft_solution_to_be_assigned[]" value="<%=draft_solution_filelink %>" />
 	                    </div>
                         <button type="button" name="q" value="assign_solution_directly" class="btn btn-danger" title="deactivate"
-                            onclick="document.getElementById('draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1.getRow() %>').checked=true; this.type='submit'; this.form.submit();">
+                            onclick="document.getElementById('draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1Rows_index/*res1.getRow()*/ %>').checked=true; this.type='submit'; this.form.submit();">
                           &larr;<i class="icon-trash icon-white"></i>&nbsp;&amp;&nbsp;<i class="icon-ok icon-white"></i>all
                         </button>
                         </div>
 	                    <!-- IMAGE -->
 	                    <div class='draft_exercise_img'>
-	                    <label class="btn btn-info" for="draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1.getRow()%>">
+	                    <label class="btn btn-info" for="draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1Rows_index/*res1.getRow()*/%>">
 	                      <img src="<% out.print(Global.convertToImageLink(draft_solution_filelink)); %>"
 	                          alt="<% out.print(draft_solution_filelink); %>" title="<% out.print(draft_solution_filelink); %>" />
 	                    </label>
