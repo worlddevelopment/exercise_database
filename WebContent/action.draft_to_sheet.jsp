@@ -63,8 +63,12 @@
 
         	}
         }
-        filelinks_solution = (String[]) l.toArray()
-        		;
+		// now that we have the size of the filtered items:
+		filelinks_solution = new String[l.size()];
+		int lL = l.size();
+		for (int i = 0; i < lL; ++i) {
+			filelinks_solution[i] = l.get(i);
+		}
     }
 
     if (filelinks_solution != null && filelinks_solution.length > 0) {
