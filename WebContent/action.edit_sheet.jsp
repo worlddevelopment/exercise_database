@@ -11,7 +11,7 @@
 	String course_new = "";//The path to the files of this sheet will change on these changed too!
 	String semester_new = "";
 	String lecturer_new = "";
-	int lecturer_new_id = -1;
+	int lecturer_id_new = -1;
 	
 	String description_new = "";
 	
@@ -25,6 +25,7 @@
 	form_data.put("semester", request.getParameter("semester"));
 	form_data.put("course", request.getParameter("course"));
 	form_data.put("lecturer", request.getParameter("lecturer"));
+	form_data.put("lectuer_id", request.getParameter("lecturer_id"));//if the id is set,then it's an existing lecturer, else it could be a new one.
 	form_data.put("type", request.getParameter("type"));
 	
 	form_data.put("description", request.getParameter("description"));
@@ -94,6 +95,7 @@
 	semester_new = form_data.get("semester");
 	course_new = form_data.get("course");
 	lecturer_new = Global.decodeUmlauts(form_data.get("lecturer"));
+	lecturer_id_new = Global.getInt(form_data.get("lecturer_id"));
 	type_new = form_data.get("type");
 	
 	
@@ -140,26 +142,26 @@
 	//-------UPDATE LECTURER ------
 	//aendere wenn Eintrag in der DB ex und neuer Dozent ist unterschiedlich von altem.
 	//anderfalls fuege neuen Eintarg in Dozent Tabelle
-	if (lecturer_new != null) {
+	if (lecturer_new != null || lecturer_id_new > -1) {
 		hm.put("lecturer", lecturer_new);
 		
 		// lecturer exists in database?
 		if (!Global.sqlm.exist("lecturer", "lecturer", hm)) {
-			Global.sqlm.executeUpdate("INSERT INTO lecturer(lecturer) VALUES('" + lecturer_new + "');");
+			Global.sqlm.executeUpdate("INSERT INTO lecturer(id, lecturer) VALUES("+ (int)Math.round(Math.random() * Integer.MAX_VALUE) +", '" + lecturer_new + "');");
 			System.out.println(Global.addMessage("Neuer Dozent eingefuegt.", "success"));
 		}
-		
+	
 		if (lecturer_new != "") { 
-			lecturer_new_id = Global.sqlm.getId("lecturer", "lecturer", lecturer_new);
-		} //else nothing to change
-		
+			lecturer_id_new = Global.sqlm.getId("lecturer", "lecturer", lecturer_new);
+		} 
+		//else use old one (nothing to change) 
 	
 		// Now the lecturer's id is available and has changed?
-		if (lecturer_new_id != -1 /*&& lecturer_new_id != sheetdraft.getLecturerId()*/) {
+		if (lecturer_id_new != -1 /*&& lecturer_new_id != sheetdraft.getLecturerId()*/) {
 			
-			Global.sqlm.executeUpdate("UPDATE sheetdraft SET lecturer_id=" + lecturer_new_id
+			Global.sqlm.executeUpdate("UPDATE sheetdraft SET lecturer_id=" + lecturer_id_new
 				    + " WHERE filelink='" + sheetdraft_filelink + "' ");
-			System.out.println(Global.addMessage("Dozent zum Blatt erneuert.", " success "));
+			System.out.println("\n" + Global.addMessage("Dozent zum Blatt " + sheetdraft_filelink + " erneuert: " + lecturer_new, " success "));
 			
 			verschieben = true;
 		}
