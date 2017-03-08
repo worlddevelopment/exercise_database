@@ -27,11 +27,18 @@
 	}
     //CLEAR DATABASE PARTIAL
     else if (q.equals("clear_database_partial")) {
-    	 Aufgaben_DB.clearDatabaseAllButLecturer();
+		String[] exceptions = new String[1];
+		exceptions[0] = Global.msqh.sqlite_db_filelink;
+		Aufgaben_DB.clearDatabaseAllButLecturer();
+		Global.deleteDirRecursively(new File(Global.root + File.separator + Global.uploadTarget), exceptions);
     }
     //CLEAR DATABASE COMPLETELY
    	else if (q.equals("clear_database")) {
-    	Aufgaben_DB.clearDatabase();
+		Aufgaben_DB.clearDatabase(); //<-- especially for MySQL. (SQLite is within uploadTarget therefore gets deleted with the filesystem files)
+		/* TODO Filesystem? (files generally get overriden at file-upload.
+		   the only problem is that files remain which are no longer generated at upload.)
+		*/
+		Global.deleteDirRecursively(new File(Global.root + File.separator + Global.uploadTarget));
     }
     
     
@@ -135,11 +142,15 @@
 		            res = Global.query(sql_base
 		            		+ " AND `exercise_filelink` = '" + draft_exercise_to_be_removed_filelink + "'"
 	           		);
-		            
+
 		            if (res != null) {
-			            res.last();           // For achieving correct row/result count.
-			            resL = res.getRow();  // <-- row/result count.
-			            res.beforeFirst();    // Necessary for loops starting correctly.
+//			            res.last();           // For achieving correct row/result count.
+//			            resL = res.getRow();  // <-- row/result count.
+//			            res.beforeFirst();    // Necessary for loops starting correctly.
+						resL = 0;
+						while (res.next()) {
+							++resL;
+						}
 	                    if (resL < 1) {
 	                    	draft_exercise_filelinks_not_successful.add(draft_exercise_to_be_removed_filelink);
 	                        all_draft_exercises_to_be_removed_deleted = false;
@@ -196,9 +207,9 @@
                     Global.addMessage("Resource ResultSet = " + res + " was null or result length = " + resL + " was zero.", "nosuccess");
                 }
                 else {
-	                res.last();           // For achieving correct row/result count.
-	                resL = res.getRow();  // <-- row/result count.
-	                res.beforeFirst();    // Necessary for loops starting correctly.
+// 	                res.last();           // For achieving correct row/result count.
+// 	                resL = res.getRow();  // <-- row/result count.
+// 	                res.beforeFirst();    // Necessary for loops starting correctly.
                     Global.addMessage("Alle Aufgaben des Entwurfs erfolgreich gel&ouml;scht.", "success");
                 }
                 // tackle memory leaks by closing result set and its statement properly:
@@ -232,9 +243,9 @@
                 	sql = "DELETE FROM `sheetdraft` WHERE `filelink` = '" + draft_filelink + "'";
 	                res = Global.query(sql);
 	                if (res != null) {
-	                    res.last();               // For achieving correct row/result count.
-	                    resL = res.getRow();  // <-- row/result count.
-	                    res.beforeFirst();        // Necessary for loops starting correctly.
+// 	                    res.last();               // For achieving correct row/result count.
+// 	                    resL = res.getRow();  // <-- row/result count.
+// 	                    res.beforeFirst();        // Necessary for loops starting correctly.
 	                    Global.addMessage("Entwurf erfolgreich gel&ouml;scht.", "success");
 	                }
 	                else {// (res == null || resL == 0) {
