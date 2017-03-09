@@ -179,7 +179,7 @@ see also http://stackoverflow.com/questions/2422468/how-to-upload-files-to-serve
 //if (request.getParameter("form") != null
 //&& request.getParameter("form").equals("multi")) {
 %>
-	<!--jsp:include page='action.upload.jsp' /-->
+	<!--jsp:include page='action.edit.jsp' /-->
 <%
 //}
 %>
