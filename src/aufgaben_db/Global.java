@@ -137,7 +137,7 @@ public class Global {
 	
 	//======= GLOBALS - ATTRIBUTES ===============================================//
 	//GLOBALS - DECLARE
-	public static String version = "v31.14";//TODO EXERCISES -> SHEET ?
+	public static String version = "v31.15";//TODO EXERCISES -> SHEET ?
 	public static enum SheetTypes { EXERCISES/*_SHEET*/, EXERCISES_SOLUTION, EXAM, EXAM_SOLUTION };
 	//public static enum SUPPORTED_FILETYPES { DOCX, DOC, /*HTML,*/ ODT, PDF, RTF, TEX, TXT };
 	
