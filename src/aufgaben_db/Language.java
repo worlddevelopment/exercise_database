@@ -142,24 +142,39 @@ public enum Language {
 		aMap.put("corresponding solution", "zugeh\u00F6rige L\u00F6sung");
 		//D
 		aMap.put("data", "Daten");
+		//E
+		aMap.put("enter a search term", "geben Sie ein Suchwort ein");
+		//L
+		aMap.put("log in with your user data", "loggen Sie sich mit Ihren Benutzerdaten ein");
+
 		//N
 		aMap.put("new draft", "neuer Entwurf");
 		aMap.put("no success", "kein Erfolg");
+		aMap.put("no result", "kein Ergebnis");
+		aMap.put("no index data found", "keine Index-Daten gefunden");
 		//O
 		aMap.put("or", "oder");
 		aMap.put("origin", "Ursprung");
 		//P
 		aMap.put("program", "Programm");
+		aMap.put("please", "bitte");
+
+		//R
+		aMap.put("relevance", "Relevanz");
 		//S
 		//aMap.put("settings", "Einstellungen");//"Sonnenunterg\u00E4nge");
+		aMap.put("search term", "Suchwort");
+
 		//T
 		aMap.put("tag", "Begriff");
 		aMap.put("tags", "Begriffe");
+		aMap.put("this page is under construction", "diese Seite befindet sich im Aufbau");
 		aMap.put("to", "zu");
 		//U
 		aMap.put("upload date", "Hochlade-Datum");
 		//V
 		//W
+		aMap.put("without", "ohne");
 		//X
 		//Y
 		//Z
