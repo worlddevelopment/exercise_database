@@ -1,4 +1,4 @@
+<%@page import="aufgaben_db.Global" %>
 
 
-
-<div>Bitte loggen Sie sich mit Ihren Benutzerdaten in unsere Aufgaben-Datenbank ein.</div>
+<div><%=(Global.display("please") + Global.translate("log in with your user data"))%>.</div>

@@ -1,9 +1,9 @@
+<%@page import="aufgaben_db.Global" %>
 
 
-
-<div>Diese Seite existiert leider noch nicht.</div>
+<div><%=Global.display("this page is under construction")%>.</div>
 <p>&nbsp;</p>
-<p>Hier soll sp&auml;ter eine &Uuml;bersicht zur Verwendung von
+<p>Hier soll eine &Uuml;bersicht zur Verwendung von
  einzelnen &Uuml;bungsbl&auml;ttern (Fusion) und - falls m&ouml;glich - Aufgaben erscheinen.
 </p>
 <p>
