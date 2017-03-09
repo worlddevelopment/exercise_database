@@ -194,14 +194,17 @@ public class Global {
 			System.out.println(
 					Global.addMessage("Found no translation for " + english + " .", "danger")
 			);//prevents the server of a null pointer exception and prevents showing emtpy fields.
-			return english.substring(0, 1).toUpperCase() + english.substring(1).replace("_", " ");
+			return english.trim().substring(0, 1).toUpperCase() + english.trim().substring(1).replace("_", " ");
 		}
 		//If it's not english and a translation was found then it could contain an encoded Umlaut.
 		translated = Global.decodeUmlauts(translated);
-		return translated.substring(0, 1).toUpperCase() + translated.substring(1).replace("_", " ");
+		return translated.trim().substring(0, 1).toUpperCase() + translated.trim().substring(1).replace("_", " ");
 	}
 	public static String translate(String english) {
-		return Global.LANGUAGE.getTranslation(english);
+		String translation = Global.LANGUAGE.getTranslation(english);
+		if (translatation == null)
+			return null;
+		return " " + translation + " ";
 		//return Language.translations[Global.LANGUAGE.ordinal()].get(english);
 	}
 	public static boolean isLoggedIn(HttpSession session) {
