@@ -1,7 +1,8 @@
+<%@page import="aufgaben_db.Global" %>
 <div class="loader" id="loader" style="">
-      <!--
-      <img src="pictures/loader.gif" alt="Please wait..." />
-      -->
-     Bitte warten...
+	<!--
+	<img src="pictures/loader.gif" alt="Please wait..." />
+	-->
+	<%=Global.display("please") + Global.translate("wait")%>
 </div>
 
