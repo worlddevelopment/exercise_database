@@ -146,6 +146,7 @@ public enum Language {
 		aMap.put("enter a search term", "geben Sie ein Suchwort ein");
 		//L
 		aMap.put("log in with your user data", "loggen Sie sich mit Ihren Benutzerdaten ein");
+		aMap.put("last sheet that has been added to", "Der letzte Entwurf zu dem etwas hinzugef\u00FCgt wurde");
 
 		//N
 		aMap.put("new draft", "neuer Entwurf");
