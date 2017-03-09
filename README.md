@@ -6,6 +6,8 @@ Lizenz
 CreativeCommons-Attribution-ShareAlike (CC-BY-SA)
 https://creativecommons.org/licenses/by-sa/4.0/ or newer
 
+
+
 Teacher|Lecturer Exercise Database Features
 ---
 * upload DOCX|ODT|TEX|... sheet, split automatically into exercises
@@ -24,6 +26,27 @@ Capable of converting, splitting sheets into exercises in all common file format
 These are then stored in a database and can be chosen and joined into a new sheet draft which can be modified at any time and is ready for download to print it for your class.
 Your own uploads as well as those referencing your name are shown when filtering the tree by your own exercises.
 <img src="present/Exercise_DB__sheet_preview_and_download.jpg" alt="screenshot of sheet preview, download"/>
+
+
+
+Tech
+---
+
+* Apache Tomcat (local or online)
+* JavaServerPages, Beans; Java, JavaScript, CSS; (among others)
+
+
+
+Dependencies
+---
+
+* TODO
+
+
+
+Credits
+---
+
 Code by J.R.I.Frühholz aka J.R.I.Balzer at service of Dr. Wolfgang Weigel, Prof. Dr. Hans-Georg Weigand of the University of Wuerzburg and later also under Prof. Dr. Frank Puppe, Information technology, Artificial Intelligence, also University of Wuerzburg.
 
 Initial code capable to split TXT, TEX files with basic user interface and preview generation has been developed by a team around Artiom K. at a Software Practice Semester and during an employment at the Chair of Mathematics for Didactics.
@@ -48,7 +71,9 @@ Finally one single almost exmatriculated bad university student had the luck to 
 
 At this point I'd like to thank W. Weigel from the bottom of my heart as he stood by my side to defend me till the end. I do not deserve such great support! Thank you, Wolfgang!
 
-Also I'd like to thank Prof. Puppe with his many wishes of things to be changed and features to be added which due to my last minute change of thesis topic was just a few weeks before hand-in time. It made the tool better! A lot of fierce random crashes were fixed under this strain that may never have been fixed otherwise.
+Also I'd like to thank Prof. Puppe with his many wishes of things to be changed and features to be added (like local usage of this originally merely web tool or cross platform support for this originally Linux program, both goals were achieved within limitations) which - due to my last minute change of thesis topic - was just a few weeks before hand-in time.
+
+It made the tool better! A lot of features were added (like SQLite, cross platform local execution support) and some fierce random crashes were fixed under this strain that may never have happened otherwise.
 
 It was due to his final very generous decision to accept and let my thesis pass that chances to get the aerospace degree were kept up and finally succeeded thanks to periodically recurring easier exam at my last possible chance to let bad students like me pass.
 
