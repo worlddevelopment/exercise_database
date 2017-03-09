@@ -133,17 +133,26 @@ public enum Language {
 		aMap.put("remove", "entfernen");
 		aMap.put("remove multiple", "Mehrere entfernen");
 		aMap.put("multiple", "mehrere");
+
+		//A
+		aMap.put("are not distinguished on search", "werden bei der Suche nicht unterschieden");
 		//B
 		aMap.put("belongs to", "geh\u00F6rt zu");
 		aMap.put("belongs", "geh\u00F6rt");
 		//C
 		aMap.put("category", "Kategorie");
+		aMap.put("combination", "Kombination");
 		aMap.put("corresponding", "zugeh\u00F6rig");
 		aMap.put("corresponding solution", "zugeh\u00F6rige L\u00F6sung");
 		//D
 		aMap.put("data", "Daten");
 		//E
 		aMap.put("enter a search term", "geben Sie ein Suchwort ein");
+		//F
+		aMap.put("field(s)", "Feld(er)");
+		//G
+		aMap.put("upper and lower case", "Gross- und Kleinschreibung");
+		//K
 		//L
 		aMap.put("log in with your user data", "loggen Sie sich mit Ihren Benutzerdaten ein");
 		aMap.put("last sheet that has been added to", "Der letzte Entwurf zu dem etwas hinzugef\u00FCgt wurde");
@@ -162,6 +171,9 @@ public enum Language {
 
 		//R
 		aMap.put("relevance", "Relevanz");
+		aMap.put("replaces exactly one character", "ersetzt genau ein Zeichen");
+		aMap.put("replaces zero or more characters", "ersetzt beliebig viele Zeichen");
+		aMap.put("required information", "ben\u00F6tigte Information");
 		//S
 		//aMap.put("settings", "Einstellungen");//"Sonnenunterg\u00E4nge");
 		aMap.put("search term", "Suchwort");
@@ -169,6 +181,8 @@ public enum Language {
 		//T
 		aMap.put("tag", "Begriff");
 		aMap.put("tags", "Begriffe");
+		aMap.put("terms surrounded by quotation marks are searched exactly as entered", "Begriffe in Anf\u00FChrungszeichen werden genau wie eingegeben gesucht");
+		aMap.put("the search is conducted within the contents of the file as well as in the database value of the corresponding field(s).", "Es wird sowohl im Inhalt der Datei als auch beim jeweiligen Datenbankeintrag des|r Feldes|r gesucht.");
 		aMap.put("this page is under construction", "diese Seite befindet sich im Aufbau");
 		aMap.put("to", "zu");
 		//U

@@ -98,7 +98,7 @@ $(document).ready(function() {
 <form id="ext_search_form" method="get" action="?id=ext_search&view=ext_search_result">
 	<table >
 		<tr id="hide0">
-			<td ><label for="search">Suchbegriff: </label></td>
+			<td ><label for="search"><%=Global.display("search term")%>: </label></td>
 			<td style="width: 500px"><input name="search" id="search" type="text"
 				style="min-width: 200px;font-size : 16px;" value ='<%
 				//deal with special character (new as of v30.91) to fix that the search did not work
@@ -127,9 +127,9 @@ $(document).ready(function() {
 			<select name="<%=field %>" class="" id="<%=field %>"
 					onchange="document.getElementById('<%=field %>').value=this.value">
 				<%
-				//fetch all distinct entries of this field from database
+				// fetch all distinct entries of this field from database
 				ResultSet res = Global.query("SELECT DISTINCT `" + field + "` FROM `sheetdraft`, `lecturer`");
-				//get length
+				// get length
 				int resL = 0;
 				List<Map<String, Object>> resRows = new ArrayList<Map<String, Object>>();
 				if (res != null) {//res.last() /*&& res.getType() == res.TYPE_SCROLL_SENSITIVE*/) {
@@ -140,17 +140,17 @@ $(document).ready(function() {
 					}
 					resL = resRows.size();
 				}
-				//generate the option fields
+				// generate the option fields
 				if (res == null || resL == 0) {
 					out.print("<option selected='selected' disabled='disabled'>-------</option>");
 				} else {
 					for (Map<String, Object> resRow : resRows) {
-						//add option
+						// add option
 						out.print("<option value='"+ ((String)resRow.get(field)) +"'>"
 								+ Global.decodeUmlauts((String)resRow.get(field))
 								+ "</option>");
 					}
-					// tackle memory leaks by closing result set and its statement properly:
+					// Tackle memory leaks by closing result set and its statement properly:
 					Global.queryTidyUp(res);
 				}
 
@@ -165,7 +165,7 @@ $(document).ready(function() {
 		out.println("<input name='" + Global.indexedFields[i] + "' id='"
 				+ Global.indexedFields[i] + "' type='text' style='min-width:200px;font-size:16px;' value='");
 
-		//deal with special character (new as of v30.91) to fix that the search did not work
+		// Deal with special character (new as of v30.91) to fix that the search did not work
 		String parameter = Global.getParameterEncoded(request, Global.indexedFields[i]);
 		if (parameter != null) {
 			// reprint the query if is sent
@@ -217,14 +217,15 @@ $(document).ready(function() {
 	</div>
 	<div style="font-size: 0.7em;border: 1px solid #49AFCD;padding: 0.4em">
 		<p></p>
-		<strong>Gro&szlig;- und Kleinschreibung</strong> werden bei der Suche nicht unterschieden.
+		<strong><%=Global.display("upper and lower case")%></strong><%=Global.translate("are not distinguished at search")%>.
 		<p></p>
-		<strong>*</strong> ersetzt beliebig viele Zeichen<br />
-		<strong>?</strong> ersetzt genau ein Zeichen
+		<strong>*</strong><%=Global.translate("replaces zero or more characters")%><br />
+		<strong>?</strong><%=Global.translate("replaces exactly one character")%>
 		<p></p>
-		<strong>genaue Suche</strong> : Begriffe in Anführungszeichen werden genau wie eingegeben gesucht
+		<strong>&lt;&gt;</strong>: <%=Global.translate("terms surrounded by quotation marks are searched exactly as entered")%>
 		<p></p>
-		<strong>Kombination Suchbegriff + Feld/er</strong> : In diesem Fall wird sowohl im Inhalt der Datei und beim jeweiligen Datenbankeintrag des Feldes bzw. der Felder gesucht.
+		<strong><%=Global.display("combination") + Global.translate("search term") + "+" + Global.translate("field(s)")%></strong>:
+		<%=Global.display("the search is conducted within the contents of the file as well as in the database value of the corresponding field(s).")%>
 
 	</div>
 </div>
