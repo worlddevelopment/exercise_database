@@ -150,6 +150,8 @@ public enum Language {
 		aMap.put("enter a search term", "geben Sie ein Suchwort ein");
 		//F
 		aMap.put("field(s)", "Feld(er)");
+		aMap.put("format not permitted", "Format nicht erlaubt");
+
 		//G
 		aMap.put("upper and lower case", "Gross- und Kleinschreibung");
 		//K
@@ -177,6 +179,7 @@ public enum Language {
 		//S
 		//aMap.put("settings", "Einstellungen");//"Sonnenunterg\u00E4nge");
 		aMap.put("search term", "Suchwort");
+		aMap.put("supported types", "unterst\u00FCtzte Typen");
 
 		//T
 		aMap.put("tag", "Begriff");
