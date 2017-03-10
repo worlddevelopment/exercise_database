@@ -327,4 +327,15 @@ public class MysqlHelper {
 		return null;
 	}
 
+
+
+	/**
+	 * Whether the currently active connection is SQLite.
+	 *
+	 * @return True if the current connection is of type SQLite.
+	 */
+	public boolean isConnSQLite() {
+		return this.connSQLite != null;
+	}
+
 }

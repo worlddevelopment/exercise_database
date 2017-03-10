@@ -850,9 +850,9 @@ public class Aufgaben_DB {
 
 
 	/**
-	 * Clears the database tables using TRUNCATE for MySQL.
+	 * Clears the database tables using TRUNCATE for MySQL,
+	 * DELETE without a WHERE clause for SQLite.
 	 *
-	 * TODO SQLite uses DELETE without a WHERE to clear a table.
 	 * @throws IOException
 	 */
 	public static void clearDatabaseAllButLecturer() throws IOException {
@@ -869,13 +869,18 @@ public class Aufgaben_DB {
 
 
 	/**
-	 * Clears the table using TRUNCATE for MySQL.
+	 * Clears the table using TRUNCATE for MySQL,
+	 * DELETE without a WHERE clause for SQLite.
 	 *
-	 * TODO SQLite uses DELETE without a WHERE to clear a table.
 	 * @throws IOException
 	 */
 	public static void clearTable(String table) throws IOException {
-		String sql = "TRUNCATE `" + table + "`";//DELETE FROM
+		String sql = "TRUNCATE `" + table + "`";
+		if (Global.msqh.isConnSQLite()) {
+			System.out.println(
+					"Aufgaben_DB: Clear table: Connection is SQLite.");
+			sql = "DELETE FROM `" + table + "`";
+		}
 		Global.query(sql);
 	}
 
