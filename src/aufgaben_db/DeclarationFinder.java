@@ -90,7 +90,7 @@ public class DeclarationFinder {
 	 * Find the fittest set of declarations.
 	 *
 	 * @param plainText An array of lines of plain text.
-	 * @return The most matching DeclarationSet.
+	 * @return The most matching DeclarationSet. Null if none was found.
 	 */
 	public static DeclarationSet findeDeklarationen(
 			String[] plainText) {
@@ -248,9 +248,14 @@ public class DeclarationFinder {
 		}
 
 
+		// Check if neither exercise nor solution have been found.
+		if (!(setWithHighestScore != null
+					|| setWithHighestScoreSolution != null)) {
+			System.out.println("Neither exercise nor solution found.");
+			return null;
+		}
 		// No solution declarations exist/ were found?
-		// TODO Check if neither exercise nor solution have been found.
-		if (setWithHighestScoreSolution == null) {
+		else if (setWithHighestScoreSolution == null) {
 			// => Then there is nothing to merge and we can return:
 			System.out.println("Exercise score: " + setWithHighestScore
 					.getScore() + setWithHighestScore.getPattern());
