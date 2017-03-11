@@ -341,9 +341,9 @@ public class DeclarationSet {
 			declarationcountweight = 0.1;
 		}
 
+		// Only 1 declaration (worst case) can not be out of order:
 		// Negative influence if one|more declarations are out of order:
-		// TODO Convert to else if because one declaration is worst.
-		if (!this.isInOrder()) {//TODO Besides it entirely isIndexLess()
+		else if (!this.isInOrder()) {//TODO Besides it entirely isIndexLess()
 			declarationcountweight = 1;
 		}
 
