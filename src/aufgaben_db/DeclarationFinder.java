@@ -1,151 +1,209 @@
-/**
- * 
- */
 package aufgaben_db;
+
 
 import java.util.ArrayList;
 import java.util.List;
 
 import Verwaltung.HashMapVerwaltung;
 
+
 /**
- * "Unterprogramm" welches Methoden zum finden von Aufgabendeklarationen einer Uwbungsaufgabe bereitstellt.
- * 
- * @author Schweiner
+ * Serves to find a exercise and solution declarations within a sheet.
+ *
+ * @author Schweiner, J.R.I.B.-Wein, worlddevelopment
  *
  */
 public class DeclarationFinder {
-	
+
 	private static RegExFinder regExFinder = new RegExFinder();
-	
+
 	/**
-	 * Untersucht das uebergebene Sheetdraft mit regulaeren Ausdruecken (siehe Muster.java) auf 
-	 * Aufgabendeklarationen und gibt den passendsten Satz an Aufgabendeklarationen aus. (1 and only 1)
-	 * Prerequisite: Requires the sheetdraft's plain text to be extracted at this point!
-	 * 
-	 * @param sheet	zu untersuchendes Sheetdraft
-	 * @return DeclarationSet, fall eine passender Satz an Deklarationen gefunden wurde <br>
-	 * null , falls keine passenden Deklarationen gefunden wurden.
+	 * Searches the given sheetdraft using regular expressions (see
+	 * also Muster.java) for exercise declarations and puts them into
+	 * a the corresponding set of declarations (the possible candidates).
+	 *
+	 * Prerequisite:
+	 * Requires the sheetdraft's plain text to be extracted at this point!
+	 *
+	 * @param sheet Sheetdraft
+	 * @param isToBeFiltered If true then the returned list only
+	 * contains the most matching set.
+	 * @return List of determined declaration sets containing either all
+	 * or only 1 DeclarationSet depending on {@param isToBeFiltered}
+	 * or null if no matching set of declarations was found.
 	 */
-	public static List<DeclarationSet> findDeclarationSets(String[] plainText, boolean isToBeFiltered) {
+	public static List<DeclarationSet> findDeclarationSets(
+			String[] plainText, boolean isToBeFiltered) {
 		if (/*filter == null ||*/ !isToBeFiltered) {
 			return findeAlleDeklarationen(plainText);
 		}
-		List<DeclarationSet> foundDeclarationSets = new ArrayList<DeclarationSet>();
-		foundDeclarationSets.add( findeDeklarationen(plainText) );
+		List<DeclarationSet> foundDeclarationSets
+			= new ArrayList<DeclarationSet>();
+		foundDeclarationSets.add(findeDeklarationen(plainText));
 		return foundDeclarationSets;
 	}
-	
+
+
+
+	/**
+	 * Only the most optimal fit set is returned.
+	 *
+	 * @param sheet Sheetdraft
+	 * @return The most matching set of declarations.
+	 */
 	public static DeclarationSet findeDeklarationen(Sheetdraft sheet) {
 		return findeDeklarationen(sheet.getPlainText());
 	}
-	
-	public static List<DeclarationSet> findeAlleDeklarationen(String[] plainText) {
-		// SpeicherOrt fuer alle zu findenden Deklarationssets wird angelegt	
+
+
+
+	/**
+	 * Searches the given sheetdraft using regular expressions (see
+	 * also Muster.java) for exercise declarations and puts them into
+	 * a the corresponding set of declarations (the possible candidates).
+	 *
+	 * Prerequisite:
+	 * Requires the sheetdraft's plain text to be extracted at this point!
+	 *
+	 * @param plainText Array of lines of plain text.
+	 * @return List of all determined declaration sets.
+	 */
+	public static List<DeclarationSet> findeAlleDeklarationen(
+			String[] plainText) {
 		List<DeclarationSet> foundDeclarationSets = new ArrayList<DeclarationSet>();
-		
-		// Es wird nach allen bekannten Deklarationsmustern gesucht und abgelegt
+
+		// Search for all known declaration patterns and store them:
 		for (Muster m : Muster.values()) {
 			if (Global.debug) {
 				System.out.println(m.toString());
 			}
 			foundDeclarationSets.add(regExFinder.sucheMuster(plainText, m));
 		}
-		
-		return foundDeclarationSets;
-		
-	}
-	public static DeclarationSet findeDeklarationen(String[] plainText) {
 
-		List<DeclarationSet> foundDeclarationSets = new ArrayList<DeclarationSet>();
-		
-		foundDeclarationSets = findeAlleDeklarationen(plainText);   //<- filter all out but one by default.
-		
-		
-		System.out.println("Der folgende Schritt ist eventuell kritisch: (declaration aus declarationSet wird geloescht)");
-		// Nun wird verglichen, gefiltert und ein Score erstellt, am Ende wird die sinnvollste Deklaration genommen
-		
+		return foundDeclarationSets;
+
+	}
+
+
+
+	/**
+	 * Find the fittest set of declarations.
+	 *
+	 * @param plainText An array of lines of plain text.
+	 * @return The most matching DeclarationSet.
+	 */
+	public static DeclarationSet findeDeklarationen(
+			String[] plainText) {
+
+		List<DeclarationSet> foundDeclarationSets
+			= new ArrayList<DeclarationSet>();
+
+		// Filter all out but one by default:
+		foundDeclarationSets = findeAlleDeklarationen(plainText);
+
+		System.out.println("Attention: Potentially critical step:"
+				+ "Declarations are removed from declaration set!");
+		// Compare, filter and create a score:
+		// In the end the most sensible declaration is taken.
+
 //		for (DeclarationSet set : foundDeclarationSets){
 //			if(set.declarations.size() == 0) {
 //				foundDeclarationSets.remove(set);
 //			}
 //		}
-		
-		// Leere Sets (kein Match aufgetreten) werden geloescht.
-		boolean[] removeEmptyDeclarations = new boolean[foundDeclarationSets.size()];
+
+		// Mark empty sets (where no match occurred) for removal:
+		boolean[] removeEmptyDeclarations
+			= new boolean[foundDeclarationSets.size()];
+		// Initialize:
 		for (int i = 0; i < removeEmptyDeclarations.length; i ++) {
 			removeEmptyDeclarations[i] = false;
 		}
-		for (int i = 0; i < foundDeclarationSets.size(); i++) {//TODO Prevent empty declarations being added.
+		for (int i = 0; i < foundDeclarationSets.size(); i++) {
+			//TODO Prevent empty declarations from being added.
 			if (foundDeclarationSets.get(i).declarations.size() == 0) {
 				removeEmptyDeclarations[i] = true;
 			}
 		}
-		// Because in a list the indices are shifted if an element is removed the operation is split across several loops.
+		// Because in a list the indices are shifted if an element is
+		// removed, the operation is split across several loops.
+		// It is important to start at the end to keep indices valid:
 		for (int i = foundDeclarationSets.size() - 1; i >= 0; i--) {
 			if (removeEmptyDeclarations[i] == true) {
 				foundDeclarationSets.remove(i);
 			}
 		}
-		
-		System.out.println("Es wurden " + foundDeclarationSets.size() + " moegliche DeklarationsSets gefunden.");
-		
+
+		System.out.println("Found " + foundDeclarationSets.size()
+				+ " possible DeclarationSets.");
+
 		for (DeclarationSet set : foundDeclarationSets) {
-			System.out.println("\r\nDeclarations within Set: " + set.toString());
+			System.out.println("\r\nDeclarations within Set: "
+					+ set.toString());
 			for (Declaration dec : set.declarations) {
 				System.out.println(dec.toString());
 			}
 		}
-		
-		// Bei allen Sets, die als erstes Wort einen Wort-Match haben, wird ueberprueft, ob Sie auch von 
-		// einem Index gefolgt werden, wie es sich fuer brave Aufgaben gehoert.
-		// (Also so etwas wie Aufgabe 1, Aufgabe 2 oder Aufgabe 3.5 etc....)
+
+		// With all sets that feature a word match with the first word
+		// it is checked whether they are also followed by an index
+		// as it is expected for many gentle exercises.
+		// (i.e. something like Aufgabe 1, Aufgabe 2 or Aufgabe 3.5 etc)
 //		for (DeclarationSet set: foundDeclarationSets) {
 //			set.clearWordedDeclarationsWithoutIndices();
-//		}	
-		
-				
-		// Es wird ueberprueft, ob die Indices der Deklarationen (sowohl bei "Aufgabe 4..." als auch bei "4..)
-		// In der richtigen Reihenfolge stehen. Falls das nicht der Fall ist, steht wahrscheinlich 
-		// im Dokument irgendwo am Zeilenfang im Text eine Aufgabenstellung, die keine Aufgabe deklariert.
-		// Es wird nacheinander eine steigende Anzahl von Aufgabendeklarationen weggelassen und ueberprueft, 
-		// ob die uebrigen Deklarationen Sinn machen (die Zahlen in der richtigen Reihenfolge sind).		
+//		}
+
+
+		// It is checked whether the indices of the declarations
+		// (for "Aufgabe 4..." as well as for "4..")
+		// are in the correct sort order.
+		// Important: If not, then likely somewhere at the beginning of
+		// a line in the document there is a false candidate, e.g.
+		// an index that does not declare an exercise despite looking
+		// as if it would.
+		// To mitigate it, a progressively increasing number of
+		// declarations is left out to check if the remaining
+		// declarations make more sense then (the numbers are ordered
+		// correctly).
 //		for (DeclarationSet set: foundDeclarationSets) {
 //			set.removeDeclarationsNotInOrder();
-//		}		
-		
-		
-		// ------------------------------------------DEPRECATED----------------------------------------------//
-		// -------------------------------- Altlasten von Sabine --------------------------------------------//
-		// Infos ueber gestrichene Aufgaben etc.  werden jetzt initialisiert
-		// dies ist notwendig, damit spaeter keine nullPointerException auftaucht, wenn spaeter ev. nach der Information gefragt wird
-		
-		// Info zu: Falls eine Aufgabe gestrichen wurde: welche?
-		// Hier wird die Aufgabennummer verwendet, also default 0 bedeutet: keine Aufgabe gestrichen
-		HashMapVerwaltung.erweitereHashmapInt(HashMapVerwaltung.gestricheneAufgabe, 0);
-		
-		
-		
-		//Info zu: Wurde im Verlauf des Programms eine Aufgabe gestrichen?
-		HashMapVerwaltung.erweitereHashmapBoolean(HashMapVerwaltung.eineAufgabeZuviel, false);
-		//Info zu: Wurde nur eine Aufgabe gefunden?
-		HashMapVerwaltung.erweitereHashmapBoolean(HashMapVerwaltung.genauEineAufgabe, false);
-		//Info zu: Wurden im Verlauf des Programms zwar Deklarationen gefunden, es war aber unmoeglich
-		// diese in eine Reihenfolge zu bringen? 
+//		}
+
+
+		// ------------------------------------------DEPRECATED
+		// -------------------------------- @author +Sabine
+		// Initialize information about removed exercises, etc.
+		// This is required to avoid a later nullPointerException
+		// for example when it is asked for the information.
+
+		// Which exercises have been deleted if any?
+		// The exercise number (deprecated, TODO use index) is used:
+		// i.e. default 0 means: no exercise has been removed
+		HashMapVerwaltung.erweitereHashmapInt(
+				HashMapVerwaltung.gestricheneAufgabe, 0);
+		// Had a surplus exercise to be removed in the course of the
+		// function(s)?
+		HashMapVerwaltung.erweitereHashmapBoolean(
+				HashMapVerwaltung.eineAufgabeZuviel, false);
+		// Has only 1 exercise been found?
+		HashMapVerwaltung.erweitereHashmapBoolean(
+				HashMapVerwaltung.genauEineAufgabe, false);
+		// Found declarations but it was impossible to sort these?
 		HashMapVerwaltung.erweitereHashmapBoolean(HashMapVerwaltung.keineOrdnungDeklarationen, false);
-		
-		
-		// -------------------------------------------------------------------------------------------------//
-		// -------------------------------------------------------------------------------------------------//
-		
-		
+		// ----------------------------------------------------
+		// ----------------------------------------------------
+
+
 		if (foundDeclarationSets.isEmpty()){
 			return null;
 		}
-		
-		
-		DeclarationSet setWithHighestScoreSolution = null;// = foundDeclarationSets.get(0); <-- null by default, hence only exercise declarations are expected by default.
-		DeclarationSet setWithHighestScore = null;// = foundDeclarationSets.get(0);
+
+
+		DeclarationSet setWithHighestScoreSolution = null;
+		/* = foundDeclarationSets.get(0); <-- null by default
+		Hence only exercise declarations are expected by default.*/
+		DeclarationSet setWithHighestScore = null;
+		// = foundDeclarationSets.get(0);
 		double score = 0;
 //		for (int i = 0; i < foundDeclarationSets.size(); i++) {
 //			score = foundDeclarationSets.get(i).calculateScore();
@@ -154,176 +212,224 @@ public class DeclarationFinder {
 //				highestScore = score;
 //			}
 //		}
-		
-		
-		
 		for (DeclarationSet set : foundDeclarationSets) {
 			score = set.calculateScore();
-			System.out.println("Score der Deklarationen, die mit dem Pattern "+ set.getPattern() + " gefunden wurden : " + score );
+			System.out.println("Score of the declarations found with"
+					+ " the pattern '" + set.getPattern() + "': "
+					+ score );
 		}
 		for (int i = 0; i < foundDeclarationSets.size(); i++) {
-			if (foundDeclarationSets.get(i).getPattern().isSolutionPattern()) {
-				
-				// solution declaration set:
-				if (setWithHighestScoreSolution == null//<-this ensures we only have non-null set if there exist solution sets.
-						|| foundDeclarationSets.get(i).getScore() > setWithHighestScoreSolution.getScore()) {
-					
+			if (foundDeclarationSets.get(i)
+					.getPattern().isSolutionPattern()) {
+
+				// set of solution declarations:
+				if (setWithHighestScoreSolution == null /*<-This ensures
+				we only have nonnull set if there exist solution sets.*/
+						|| foundDeclarationSets.get(i).getScore()
+						> setWithHighestScoreSolution.getScore()) {
+
 					setWithHighestScoreSolution = foundDeclarationSets.get(i);
-					
+
 				}
-				
+
 			}
 			else {
-				
-				// exercise declaration set:
+
+				// set of exercise declarations:
 				if (setWithHighestScore == null
-						|| foundDeclarationSets.get(i).getScore() > setWithHighestScore.getScore()) {
-					
+						|| foundDeclarationSets.get(i).getScore()
+						> setWithHighestScore.getScore()) {
+
 					setWithHighestScore = foundDeclarationSets.get(i);
-					
+
 				}
-				
+
 			}
 		}
-		
-		
-		// no solution declarations exist/ were found?
+
+
+		// No solution declarations exist/ were found?
+		// TODO Check if neither exercise nor solution have been found.
 		if (setWithHighestScoreSolution == null) {
-			// => Then there is nothing to merge and we can give back the result immediately:
-			System.out.println("Score wurde erstellt: " + setWithHighestScore.getScore() + setWithHighestScore.getPattern());
+			// => Then there is nothing to merge and we can return:
+			System.out.println("Exercise score: " + setWithHighestScore
+					.getScore() + setWithHighestScore.getPattern());
 			return setWithHighestScore;
-			
 		}
-		// no exercise declarations found?
+		// No exercise declarations found?
 		else if (setWithHighestScore == null) {
-			System.out.println("Score fuer Loesungen wurde erstellt: " + setWithHighestScoreSolution.getScore() + setWithHighestScoreSolution.getPattern());
+			System.out.println("Solution score: "
+					+ setWithHighestScoreSolution.getScore()
+					+ setWithHighestScoreSolution.getPattern());
 			return setWithHighestScoreSolution;
 		}
 		//else
-		
-		// both solutions and exercises exist. => we have to merge.
-		System.out.println("Score wurde erstellt: " + setWithHighestScore.getScore() + setWithHighestScore.getPattern());
-		System.out.println("Score fuer Loesungen wurde erstellt: " + setWithHighestScoreSolution.getScore() + setWithHighestScoreSolution.getPattern());
-		
-		
-		/* Merge both the exercise declarations and those for the solutions according to the line number
-		   where they were found. If that's equal then the word count will be compared.
-		   An earlier found declaration should come earlier in the merged declaration list to keep order.
-		*/
-		DeclarationSet mergedExerciseAndSolutionDeclarationSet = new DeclarationSet();
-		int setWithHighestScoreExercises_count = 0;
-		int setWithHighestScoreSolutions_start_index = 0;//at the end this must be equal to the set's size!
-		
-		//Note: Here we use that each set's declarations are already sorted by occurrence, i.e. line number!
-		for (Declaration exercise_dec : setWithHighestScore.declarations) {
-			
-			// Examine the not-yet-stored-in-merged-set solutions' occurences: 
-			//for (Declaration solution_dec : setWithHighestScoreSolution.declarations) {
-			int setWithHighestScoreSolutions_index = setWithHighestScoreSolutions_start_index - 1;
-			while (++setWithHighestScoreSolutions_index < setWithHighestScoreSolution.declarations.size()) {
 
-				Declaration solution_dec = setWithHighestScoreSolution.declarations
-						.get(setWithHighestScoreSolutions_index);
-				
-				// Is this solution occurring earlier in the text than the exercise declaration?
-				// if it's equal we have to examine the word count. (important if all decs were found in one line).
-				if (solution_dec.getLineNumber() < exercise_dec.getLineNumber()
-						/*TODO first let's check if we can go without this word prior to dec count...
-						  || solution_dec.getWordPriorToDeclarationCount() < exercise_dec.getWordPriorToDeclarationCount()*/) {
-					
-					// then add/store the solution declaration.
-					mergedExerciseAndSolutionDeclarationSet.declarations.add(solution_dec);
-					// increase the start index as this Declaration is now out/already stored.   
-					++setWithHighestScoreSolutions_start_index; // == dec_index + 1
-					
-					//break;<-- check next exercise solution too.
-											
-				    /* Too early to tell that the next solution is not earlier too! (the occurrence 
-					should be followed strictly no matter if each exercise has a solution in the 
-					end or not.) */
-				}
-				// if instead the exercise occurred prior to this solution dec then we can stop examining solution decs as they are already sorted by occurrence.
-				else /*TODO if (solution_dec.getLineNumber() > exercise_dec.getLineNumber())*/ {
-					break; // only if the exercise is earlier than the solution, we stop to store the exercise.
-					// if both line numbers, i.e. occurrences, are equal, then we prefer the exercise. TODO determine if this is rigid enough or if we need to examine the word count too.
-				}
-				
-				
-			}
-			
-			
-			// => At this point all (solutions') declarations that occurred earlier are already stored.
-			
-			/* Then now the earliest still available/non-stored declaration is this exercise declaration,
-			   so we add/store it in the merged set:*/
-			mergedExerciseAndSolutionDeclarationSet.declarations.add(exercise_dec);
-			
-			
-		}
-		
-		
-		/* Add missing solution declarations that have occurred later than the last exercise (hence 
-		the loop stopped with some or all the solution declarations still not having been added.):
+		// both solutions and exercises exist. => we have to merge.
+		System.out.println("Exercise score: "
+				+ setWithHighestScore.getScore()
+				+ setWithHighestScore.getPattern());
+		System.out.println("Solution score: "
+				+ setWithHighestScoreSolution.getScore()
+				+ setWithHighestScoreSolution.getPattern());
+
+
+		/*
+		Merge both the exercise declarations and those for the solutions
+		according to the line number where they were found.
+		If that's equal then the word count will be compared.
+		An earlier found declaration should come earlier in the merged
+		declaration list to keep order.
 		*/
-		int solution_declarations_index = setWithHighestScoreSolutions_start_index - 1;//because we increment instantly below in the while loop condition:
+		DeclarationSet mergedExerciseAndSolutionDeclarationSet
+			= new DeclarationSet();
+		int setWithHighestScoreExercises_count = 0;
+		int setWithHighestScoreSolutions_start_index = 0;
+		// In the end this must be equal to the set's size!
+
+		// Note: Here we use that each set's declarations are already
+		// sorted by occurrence, i.e. line number!
+		for (Declaration exercise_dec : setWithHighestScore
+				.declarations) {
+
+			// Examine the not-yet-stored-in-merged-set solutions'
+			// occurences:
+			//for (Declaration solution_dec
+			//		: setWithHighestScoreSolution.declarations) {
+			int setWithHighestScoreSolutions_index
+				= setWithHighestScoreSolutions_start_index - 1;
+			while (++setWithHighestScoreSolutions_index
+					< setWithHighestScoreSolution.declarations.size()) {
+
+				Declaration solution_dec = setWithHighestScoreSolution
+					.declarations
+					.get(setWithHighestScoreSolutions_index);
+
+				// Is this solution occurring earlier in the text
+				// than the exercise declaration?
+				// If it's equal then we have to examine the word count.
+				// (important if all decs were found in one single line)
+				if (solution_dec.getLineNumber()
+						< exercise_dec.getLineNumber()
+						/*TODO Add if required for all in a signle line:
+						  || solution_dec.getWordPriorToDeclarationCount() < exercise_dec.getWordPriorToDeclarationCount()*/) {
+
+					// Then add/store the solution declaration.
+					mergedExerciseAndSolutionDeclarationSet.declarations.add(solution_dec);
+					// Increase the start index as this Declaration is
+					// now out/already stored:
+					++setWithHighestScoreSolutions_start_index;
+					// == dec_index + 1
+
+					//break;<-- check next exercise solution too.
+
+					/*
+					Too early to tell that the next solution is not
+					earlier too! (the occurrence should be followed
+					strictly no matter whether each exercise has a
+					solution in the end or not.)
+					*/
+				}
+				// If instead the exercise occurred prior to this
+				// solution dec then we can stop examining solution
+				// decs as they are already sorted by occurrence.
+				else /*TODO if (solution_dec.getLineNumber()
+						> exercise_dec.getLineNumber())*/ {
+					break; // Only if the exercise is earlier than the
+					// solution, we stop to store the exercise.
+					// If both line numbers, i.e. occurrences, are equal
+					// then we prefer the exercise. TODO determine if
+					// this is rigid enough or whether we need to
+					// examine the word count too.
+				}
+
+			}
+
+			// => At this point all (solutions') declarations that
+			// occurred earlier are already stored.
+
+			/*
+			Then now the earliest still available/non-stored
+			declaration is this exercise declaration,
+			so we add/store it in the merged set:
+			*/
+			mergedExerciseAndSolutionDeclarationSet.declarations.add(exercise_dec);
+
+		}
+
+
+		/*
+		Add missing solution declarations that have occurred later
+		than the last exercise (hence the loop stopped with some or all
+		the solution declarations still not having been added.):
+		*/
+		int solution_declarations_index
+		= setWithHighestScoreSolutions_start_index - 1; /* because we
+		increment instantly below in the while loop condition: */
 		while (++solution_declarations_index < setWithHighestScoreSolution.declarations.size()) {
 			mergedExerciseAndSolutionDeclarationSet.declarations.add(
 					setWithHighestScoreSolution.declarations.get(solution_declarations_index)
 			);
 		}
-		
-		
-		
-		/* At this point the merged Exercise And Solution Declaration Set should contain
-		 * all declarations in the order of occurrence in the plain text.
-		 */
-		
-		
-		
 
-		
-		// ------------------------------------------DEPRECATED----------------------------------------------//
-		// -------------------------------- Altlasten von Sabine --------------------------------------------//
+
+		/*
+		At this point the merged Exercise And Solution Declaration Set
+		should contain
+		all declarations in the order of occurrence in the plain text.
+		 */
+
+		// ------------------------------------------DEPRECATED
+		// -------------------------------- @author +Sabine
 //		int anzahl = setWithHighestScore.declarations.size();
-////		Muster muster = setWithHighestScore.getPattern();
+//		//Muster muster = setWithHighestScore.getPattern();
 //		if (anzahl == 1) {
-//			HashMapVerwaltung.erweitereHashmapBoolean(HashMapVerwaltung.genauEineAufgabe, true);
-//		}	
-//		HashMapVerwaltung.erweitereHashmapInt(HashMapVerwaltung.keyAnzahl, anzahl);
-//		System.out.println("Es wurden " + HashMapVerwaltung.getAufgabenzahlAusHashmap() + " Aufgabendeklarationen gefunden");
-////		HashMapVerwaltung.erweitereHashmapMuster(HashMapVerwaltung.keyDeklaration, muster);
+//			HashMapVerwaltung.erweitereHashmapBoolean(
+//					HashMapVerwaltung.genauEineAufgabe, true);
+//		}
+//		HashMapVerwaltung.erweitereHashmapInt(
+//				HashMapVerwaltung.keyAnzahl, anzahl);
+//		System.out.println("Es wurden "
+//				+ HashMapVerwaltung.getAufgabenzahlAusHashmap()
+//				+ " Aufgabendeklarationen gefunden");
+//		//HashMapVerwaltung.erweitereHashmapMuster(
+//				HashMapVerwaltung.keyDeklaration, muster);
 //		for (int i = 0; i < anzahl; i++) {
 //			String key = "Aufgabe" + (i + 1);
-//			int zeile = setWithHighestScore.declarations.get(i).getLineNumber();
-//			String schluesselWort = setWithHighestScore.declarations.get(i).getFirstWord();
-//			String aufgabenBezeichnung = setWithHighestScore.declarations.get(i).getSecondWord();
-//			HashMapVerwaltung.erweitereHashmap(key, schluesselWort,	aufgabenBezeichnung, zeile);
+//			int zeile = setWithHighestScore.declarations
+//				.get(i).getLineNumber();
+//			String schluesselWort = setWithHighestScore.declarations
+//				.get(i).getFirstWord();
+//			String aufgabenBezeichnung = setWithHighestScore
+//				.declarations.get(i).getSecondWord();
+//			HashMapVerwaltung.erweitereHashmap(
+//					key, schluesselWort, aufgabenBezeichnung, zeile);
 //		}
-		// -------------------------------------------------------------------------------------------------//
-		// -------------------------------------------------------------------------------------------------//
-	
-		return mergedExerciseAndSolutionDeclarationSet;//setWithHighestScore;
-		
+		// ----------------------------------------------------
+		// ----------------------------------------------------
+
+		return mergedExerciseAndSolutionDeclarationSet;
+
 	}
 
-	
+
+
 	/**
-	 * Filtert das uebergebene String-Array, sodass nur noch Zahlen in dem Array enthalten bleiben.
-	 * Entfernt alle nicht zu Integer parsebaren Zeichen aus dem String-Array
-	 * 
-	 * 
-	 * @param string String[]
-	 * @return int[], welches alles zu Integers parsebaren Zeichen aus dem String[] enthaelt 
+	 * Filters the given array of strings such that only numbers remain.
+	 *
+	 * Removes all characters that are not Integer from the strings.
+	 *
+	 * @param string Array of string that contains integers to extract.
+	 * @return array of int that contain all Integer chars from String[]
 	 */
 	public static int[] extrahiereZahlen(String[] string) {
-		
+
 		String wort = "";
 		int neu[] = new int[string.length];
 		String test = "";
 		char c = ' ';
-		
-		// filtert den String, so dass nur die
-		// Zahlen uebrigbleiben
+
+		// Filter string such that only numbers prevail:
 		for (int i = 0; i < string.length; i++) {
 			wort = string[i];
 			//default: 0
@@ -338,25 +444,27 @@ public class DeclarationFinder {
 					neuZahl = neuZahl + test;
 				}
 			}
-			// falls jetzt eine Zahl dabei rauskommt:
+			// Is it a number?
 			if (isInt(neuZahl)) {
 				neu[i] = Integer.parseInt(neuZahl);
-				System.out.println("Alt: "+ wort + "; Neu: " + neu[i]);
+				System.out.println("Old: "+ wort + "; New: " + neu[i]);
 			}
 		}
 		return neu;
 	}
-	
+
+
+
 	/**
-	 * Ueberprueft, ob das uebergebene int-array Zahlen einer fortlaufenden, unmittelbar aufsteigenden Reihenfolge (z.B. 4, 5, 6, 7 )
-	 * enthuelt
-	 * 
-	 * @param zahlen int-Array
-	 * @return true, falls eine Fortlaufende Reihenfolge exisitert
+	 * Checks whether the given array of integer contains directly
+	 * ascending numbers (e.g. 4, 5, 6, 7).
+	 *
+	 * @param zahlen Numbers to determine whether its a direct series.
+	 * @return true if all numbers shape a direct series.
 	 */
 	@SuppressWarnings("unused")
 	private static boolean richtigeReihenfolge(int[] zahlen) {
-		
+
 		// ueberprueft, ob die uebergebenen Zahlen fortlaufend sind
 		boolean stimmts = true;
 		int falsch = 0;
@@ -371,16 +479,17 @@ public class DeclarationFinder {
 		System.out.println("Es kam zu " + falsch + " Fehlern!");
 		return stimmts;
 	}
-	
+
+
+
 	/**
-	 * Ueberprueft, ob der uebergeben String gueltig zu einem Integer geparsed werden kann.
-	 * 
-	 * @param i Zu ueberpruefender String
-	 * @return true, falls er geparsed werden kann, false, falls nicht
+	 * Checks whether the given string can be parsed to an integer.
+	 *
+	 * @param i String to check.
+	 * @return true if it can be parsed to integer successfully.
 	 */
 	private static boolean isInt(String i) {
-		
-		// ueberprueft, ob der Wert im String ein Integerwert ist
+
 		try {
 			Integer.parseInt(i);
 			return true;
@@ -389,13 +498,16 @@ public class DeclarationFinder {
 			return false;
 		}
 	}
-	
+
+
+
 //	/**
-//	 * Bestimmt die erste Im String enthaltene Zahl (auch mehrere Ziffern) und gibt diese aus.
-//	 * Gibt null aus, falls der String keine Zahl enthaelt.
-//	 * 
-//	 * @param string zu ueberpruefender String
-//	 * @return die erste gefundene Zahl
+//	 * Determines the first in the string contained number (may be more
+//	 * characters than one) and returns it.
+//	 * Returns null if the string did not contain numbers.
+//	 *
+//	 * @param string A string to check.
+//	 * @return The first found number or null if there was no number.
 //	 */
 //	public Integer getFirstContainedNumber(String string) {
 //		Integer i = null;
@@ -418,4 +530,7 @@ public class DeclarationFinder {
 //			}
 //		return i;
 //	}
+
+
+
 }
