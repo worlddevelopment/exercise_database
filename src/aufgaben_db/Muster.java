@@ -673,6 +673,12 @@ public enum Muster {
 		return this.patternType.equals(PatternType.SOLUTION);
 	}
 
+	/**
+	  * If this pattern is solution specific or not.
+	  */
+	public boolean isGenericPattern() {
+		return this.patternType.equals(PatternType.GENERIC);
+	}
 
 
 
@@ -759,6 +765,8 @@ public enum Muster {
 		Muster only are the default repository of patterns.
 		*/
 	}
+
+
 
 	/**
 	 *
