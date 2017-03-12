@@ -153,6 +153,25 @@ public class DeclarationSet {
 		return true;
 	}
 
+
+
+	/**
+	 * Whether no declaration has an index assigned to it.
+	 * @return true if this set is entirely index less.
+	 */
+	public boolean isIndexLess() {
+		if (this.pattern != null && this.pattern.isIndexLessPattern()) {
+			return true;
+		}
+		//else merged|mixed pattern pool
+		//for (Declaration dec : this.declarations) {
+		//TODO
+		//
+		//}
+	}
+
+
+
 	/**
 	 * Checks whether the declarations of this DeclarationSet
 	 * have monotonely ascending Index numbers
@@ -180,7 +199,8 @@ public class DeclarationSet {
 	 */
 	public boolean isInOrder() {
 		boolean correctOrder = true;
-		if (this.declarations.size() > 2) {
+		// If it is entirely indexless, then order can be varied:
+		if (this.declarations.size() > 2 && !this.isIndexLess()) {
 			for (int i = 0; i < this.declarations.size() - 1; i++) {
 				if (this.declarations.get(i).hasIndex()
 						&& this.declarations.get(i + 1).hasIndex()) {
@@ -199,23 +219,19 @@ public class DeclarationSet {
 	}
 
 
-	// TODO Add public boolean isIndexLess() {
-	//	if (this.pattern != null && this.pattern.isWorded()) {
-	//		return true;
-	//	}
-	//}
-
 
 	/**
 	 * Checks whether the given declarations have monotonously rising
-	 * index numbers.
+	 * index numbers if any.
+	 * If it is a set without any declaration with indices it is
+	 * defined to be in order and thus returns true.
 	 *
 	 * @param set TODO rename to declarations,reduce function redundancy
 	 * @return true, if in (ascending) order, otherwise false
 	 */
 	private static boolean isInOrder(ArrayList<Declaration> set) {
 		boolean correctOrder = true;
-		if (set.size() >= 2) {
+		if (set.size() >= 2 && !this.isIndexLess()) {
 			for (int i = 0; i <= set.size() - 2; i++) {
 				if (set.get(i).hasIndex()
 						&& set.get(i + 1).hasIndex()) {
@@ -231,6 +247,8 @@ public class DeclarationSet {
 		}
 		return correctOrder;
 	}
+
+
 
 	/**
 	 * Removes declarations that do not fit into the order of the
@@ -342,9 +360,10 @@ public class DeclarationSet {
 		}
 
 		// Only 1 declaration (worst case) can not be out of order:
-		// Negative influence if one|more declarations are out of order:
-		else if (!this.isInOrder()) {//TODO Besides it entirely isIndexLess()
-			declarationcountweight = 1;
+		else if (!this.isInOrder()) {
+			// Negative influence if 1|more declarations out of order
+				declarationcountweight = 1;
+			}
 		}
 
 		// Count of declarations is considered: the more the better
