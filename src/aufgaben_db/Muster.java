@@ -20,7 +20,7 @@ public enum Muster {
 
 	/**
 	 * Patterns used for determining content part declarations of type:
-	 * SOLUTION
+	 * SOLUTION (paired with EXERCISE)
 	 *
 	 * This is specific to sheets containing both exercise, solution
 	 * declarations mixed. If there are only solution declarations
@@ -52,7 +52,8 @@ public enum Muster {
 
 
 	/**
-	 * EXERCISE SPECIFIC:
+	 * EXERCISE (Paired with SOLUTION):
+	 * TODO Support more pairs or allow extension without overriding all
 	 */
 	AUFGABE("Aufgabe", PatternType.EXERCISE),
 	EXERCISE("Exercise", PatternType.EXERCISE),
@@ -62,7 +63,7 @@ public enum Muster {
 
 
 	/**
-	 * GENERIC
+	 * GENERIC WITH INDEX
 	 * TODO Structure into per word and per sentence and per line.
 	 * white space afterwards => lower score!
 	 */
@@ -84,10 +85,38 @@ public enum Muster {
 
 
 
+	/**
+	 * GENERIC WITHOUT INDEX (indexless)
+	 */
+	CAMELCASEWORDCOLON("[A-Z][\\S]*[\\:]"),
+	//NONWHITESPACECOLON("[\\S]+[\\:]"),
+	HASHSENTENCE("^[#]+([ _->+,.]*[\\w]+)+[\\:]?$", PatternType.MD), //<-- e.g. #A.bC  #Header, ## Heading,...
+	LEADERTERMCOLON("^([_-+,.*/~#][\\w]+)+[\\:]"), //<-- e.g. *Header_:, +Heading.Footer:,...
+	LEADERSENTENCECOLON("^[_-+,.*]([ ]*[\\w]+)+[\\:]"), //<-- e.g. *Header:, ## Heading:,...
+	SENTENCECOLON("([\\w]+[ _-+,.*]*){2,}[\\:]"), //<-- e.g. Header is:
+	EQUALSIGNORDASH("[=-][=-]+"), //<-- e.g.  ==+, --+
+
+
+
 
 	// ======= ATTRIBUTES
 	private String patternString;
-	public enum PatternType { EXERCISE, SOLUTION, GENERIC };
+	public enum PatternType {
+		// # Target specific content parts:
+		// Pairs
+		EXERCISE,
+		SOLUTION,
+
+		// # Target leaf content parts in general series:
+		GENERIC, // e.g. Text:,text:,Text:,...;1,2,3,4,...
+
+		// # Hierarchical per document content type:
+		MD, // e.g. #,#,...; ##;##;...; ---,---,...;
+		ODT,
+		DOCX,
+		TEX,
+		HTML// e.g. h1,h1,...;h2,h2,...;(section,section,..<-no context)
+	};
 	private PatternType/*SheetTypes*/ patternType;
 
 
@@ -603,10 +632,18 @@ public enum Muster {
 		return patternString;
 	}
 
-	// TODO Add isIndexLessPattern() {}
+	public boolean isIndexLessPattern() {
+		int i = Global.getInt(this.pattern);
+		return !i || i == ""
+			|| this.patternString.contains("\\d");
+		//return this.patternType != PatternType.INDEXLESS;
+	}
+
+	// TODO Consider the new patterns.
 	public boolean isWordedPattern() {
 //		if ( this.equals(AUFGABE | EXERCISE | CHARUFGABE | LOESUNG | SOLUTION) ) {
-		return this.patternString.toLowerCase().contains(this.name().toLowerCase())
+		return this.patternString.toLowerCase().contains(
+				this.name().toLowerCase())
 				|| this.equals(CHARUFGABE);
 	}
 
