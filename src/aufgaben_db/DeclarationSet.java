@@ -200,22 +200,11 @@ public class DeclarationSet {
 	public boolean isInOrder() {
 		boolean correctOrder = true;
 		// If it is entirely indexless, then order can be varied:
-		if (this.declarations.size() > 2 && !this.isIndexLess()) {
-			for (int i = 0; i < this.declarations.size() - 1; i++) {
-				if (this.declarations.get(i).hasIndex()
-						&& this.declarations.get(i + 1).hasIndex()) {
-					if (this.declarations.get(i).getIndex()
-							.compare(this.declarations.get(i + 1)
-								.getIndex()) == -1) {
-						correctOrder = false;
-					}
-				}
-				else {
-					correctOrder = false;
-				}
-			}
+		if (this.isIndexLess()) {
+			return true;
 		}
-		return correctOrder;
+		return DeclarationSet.isInOrder(this.declarations);
+
 	}
 
 
@@ -229,15 +218,15 @@ public class DeclarationSet {
 	 * @param set TODO rename to declarations,reduce function redundancy
 	 * @return true, if in (ascending) order, otherwise false
 	 */
-	private static boolean isInOrder(ArrayList<Declaration> set) {
-		boolean correctOrder = true;
-		if (set.size() >= 2 && !this.isIndexLess()) {
-			for (int i = 0; i <= set.size() - 2; i++) {
-				if (set.get(i).hasIndex()
-						&& set.get(i + 1).hasIndex()) {
-					if (set.get(i).getIndex()
-							.compare(set.get(i + 1).getIndex()) == -1) {
-						correctOrder = false;
+	private static boolean isInOrder(ArrayList<Declaration> declarations) {
+		if (declarations.size() > 1) {
+			for (int i = 0; i < declarations.size() - 1; i++) {
+				if (declarations.get(i).hasIndex()
+						&& declarations.get(i + 1).hasIndex()) {
+					if (declarations.get(i).getIndex()
+							.compare(declarations.get(i + 1)
+								.getIndex()) == -1) {
+						return false;
 					}
 				}
 				else {
@@ -245,7 +234,7 @@ public class DeclarationSet {
 				}
 			}
 		}
-		return correctOrder;
+		return true;
 	}
 
 
