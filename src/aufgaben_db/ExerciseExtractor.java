@@ -1,8 +1,8 @@
 package aufgaben_db;
 
-//wenn man was testet braucht man die importe manchmal wieder
-//daher hab ich sie drin gelassen
-/*import java.io.BufferedReader;
+// When testing these imports may be required again
+/*
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -23,28 +23,27 @@ import org.apache.poi.hssf.usermodel.examples.NewSheet;
 
 
 /**
- * dient nur zum Testen und zum Aufruf des eigentlichen Programms
- * 
- * desweiteren werden hier die Dokumente uebergeben
- * 
- * @author sabine
- * 
+ * Only for testing and starting of the real program.
+ *
+ * Also the documents are given here.
+ *
+ * @author sabine, J.R.I.B.-Wein, worlddevelopment
+ *
  */
 
 public class ExerciseExtractor {
 
-	
+
 	/**
-	 * In String[] args k�nnen soetwas sein wie:
-	 * - Pfad zur Datei
-	 * 
-	 * @param args
+	 * Main | starting point
+	 *
+	 * @param args Params, e.g. from command line, e.g. path to file.
 	 */
 //	public static void main(String[] args) {
-//		
+//
 //		Program Programm = new Program();
 //		// soetwas wie: Programm.erstelleAufgaben(String Pathname);
-//		
+//
 ////		DocType sheetType = null;
 ////		for(DocType type : DocType.values()) {
 ////			if ("05-SWT-Uebung.docx".endsWith(type.getCode())) {
@@ -52,14 +51,14 @@ public class ExerciseExtractor {
 ////			}
 ////		}
 ////		System.out.println(sheetType);
-//		
+//
 ////		Muster m = Muster.AUFGABE;
 ////		System.out.println();
 ////		int[] bla = {0, 3, 5, 7, 11};
 ////		for (int i = 0; i <= bla.length - 1; i++) {
 ////			System.out.println(bla[i]);
 ////		}
-//		
+//
 //		//Beispiele mit und ohne Schluesselwort:
 ////		int i = 3;
 ////		System.out.println(i);
@@ -73,7 +72,7 @@ public class ExerciseExtractor {
 //			System.out.println("Fehler beim Lesen oder schreiben");
 //			e.printStackTrace();
 //		}
-//		
+//
 //		System.out.println("Es wurden " + newSheet.getExcercises().size() + " Aufgaben gefunden");
 //		int k = 1;
 //		for (Excercise Ex : newSheet.getExcercises()) {
@@ -83,7 +82,7 @@ public class ExerciseExtractor {
 //			}
 //			k++;
 //		}
-////		
+////
 //		//Programm.erstelleAufgaben("05-SWT-Uebung.doc");//SWT Bsp.docX
 //		//Programm.erstelleAufgaben("08-swt-uebungpdf.pdf"); //SWT Bsp.doc
 //		//Programm.erstelleAufgaben("03-SWT-Uebung.pdf"); //SWT SS 09
@@ -104,8 +103,8 @@ public class ExerciseExtractor {
 //		//Programm.erstelleAufgaben("Ü12 Angabe (Probeklausur).pdf"); //Betriebssysteme Albert WS 1011
 //		//Programm.erstelleAufgaben("ADS09_uebung12.pdf"); //AlgoDat, Wolff, WS 1011
 //		//Programm.erstelleAufgaben("06-SWT-Uebung.rtf");//SWT Bsp.rtf
-//		
+//
 //		//Programm.erstelleAufgaben("Uebung_8.pdf"); //DB
-//		
+//
 //	}
 }
