@@ -1,68 +1,70 @@
-/**
- * 
- */
 package aufgaben_db;
+
 
 import java.util.ArrayList;
 
+
 /**
- * Klasse die einen Index, wie er bei Aufgabenstellung vorkommt, beschreibt.
- * speichert und vergleicht durch ein beliebiges Zeichen getrennte Zahlen (z.B. 2.5 oder 7.12.3)
- * 
- * @author Schweiner
+ * Represents a numbering index of typical outlines.
+ * (e.g. 2.5, 7.12.3, 1a, 2-1, B), 3a), ...)
+ *
+ * @author Schweiner, Jan R.I.B.-Wein, worlddevelopment
  *
  */
 public class IndexNumber {
-	
+
 	private ArrayList<Integer> index = new ArrayList<Integer>();
-	
-	public IndexNumber(){		
+
+	public IndexNumber() {
 	}
 
-	public IndexNumber(int[] intArray){
-		for (int i : intArray){
+	public IndexNumber(int[] intArray) {
+		for (int i : intArray) {
 			index.add(i);
 		}
 	}
-	
-	public IndexNumber(ArrayList<Integer> intList){
-		for (int i : intList){
+
+	public IndexNumber(ArrayList<Integer> intList) {
+		for (int i : intList) {
 			index.add(i);
 		}
 	}
-	
+
 	/**
-	 * Appends a number to the Index (x = neue Zahl, aus 4.1 wird 4.1.x)
+	 * Appends a number to the Index (x = new number, e.g. 4.1 -> 4.1.x)
 	 *
-	 * @param i int, die an den Index angefügt werden soll.
+	 * @param i integer that shall be appended to the index.
 	 */
 	public void addNumber(int i) {
 		index.add(i);
 	}
-	
+
 	/**
-	 * Liefert die Anzahl, der durch Zeichen getrennten Integer zurück.
+	 * Delivers the count of integers.
+	 *
 	 * @return int
 	 */
-	public int getSize(){
+	public int getSize() {
 		return this.index.size();
 	}
-	
+
 	/**
-	 * Gibt den Index zurueck
-	 * @return Index als Integer-ArrayList
+	 * Delivers the index.
+	 *
+	 * @return Index as arraylist of Integer
 	 */
-	public ArrayList<Integer> getIndex(){
+	public ArrayList<Integer> getIndex() {
 		return this.index;
 	}
-	
+
 	/**
-	 * Gibt die Indexzahl an der Stelle i zurueck
-	 * Bsp: Index = 4.2.5, i = 1; Zurueckgegeben wird 2 
-	 * @param i Stelle, dessen Zahl ausgegeben werden soll
-	 * @return int an der Stelle i
+	 * Returns the number at position i within the index (numbers).
+	 *
+	 * e.g. index := 4.2.5, i = 1 => returns 1
+	 * @param i position to be returned.
+	 * @return int at position i
 	 */
-	public int getNumber(int i){
+	public int getNumber(int i) {
 		int out = 0;
 		try {
 			out = this.index.get(i);
@@ -70,43 +72,47 @@ public class IndexNumber {
 		}
 		return out;
 	}
-	
+
 	/**
-	 * Gibt eine String-Repraesentation des Indexes aus.
-	 * 
+	 * The index data encoded into a string.
+	 *
 	 */
 	public String toString() {
 		String output = "";
 		for (int i : this.index) {
 			output = output + i + ".";
 		}
-		
+
 		return output;
 	}
 
-	
+
 	/**
-	 * Compares two IndexNumber Objects
-	 * 
+	 * Compares two IndexNumber objects
+	 *
 	 * @param givenIndex
-	 * @return 1 if calling IndexNumber is greater <br>
-	 * 0 if both are equal <br>
-	 * -1 if calling IndexNumber is smaller <br>
-	 * null if at least one of them contains null (e.g. hasnt been initialisiert) 
+	 * @return 1 if calling IndexNumber is greater <br/>
+	 * 0 if both are equal <br/>
+	 * -1 if calling IndexNumber is smaller <br/>
+	 * null if at least one of them contains null
+	 * (e.g. has not been initialized)
 	 */
-	public Integer compare(IndexNumber givenIndex){
+	public Integer compare(IndexNumber givenIndex) {
 		int maxBound = Math.min(this.index.size(), givenIndex.index.size());
 		try {
-			for(int i = 0; i <= maxBound - 1; i++) {
+			for (int i = 0; i < maxBound; i++) {
 				if (this.index.get(i) > givenIndex.getNumber(i)) {
 					return 1;
-				} else if(this.index.get(i) < givenIndex.getNumber(i)) {
+				}
+				else if (this.index.get(i) < givenIndex.getNumber(i)) {
 					return -1;
-				} else {				
+				}
+				else {
 				}
 			}
 		} catch (IndexOutOfBoundsException e) {
-			System.out.println("Beim IndexVergleich ist ein Fehler aufgetreten.");
+			System.out.println(
+					"An error occurred when comparing index numbers.");
 			return null;
 		}
 		return 0;
