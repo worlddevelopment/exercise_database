@@ -157,17 +157,51 @@ public class DeclarationSet {
 
 	/**
 	 * Whether no declaration has an index assigned to it.
+	 *
+	 * Only generic patterns (regex, wildcard,...) can produce indexed
+	 * results.
+	 * An index is a series of numbers, i.e. a numbering scheme.
+	 * A pattern is index less if:
+	 * * Not all found declaration entries contain at least one number.
+	 * * If the numbering is not solely ascending or has gaps.
+	 * Else a set of declarations is indexed.
+	 * Thus a generic pattern can lead to both indexed,indexless result.
+	 * Specific patterns can not result in a declaration with index,
+	 * however specific (and generic) markup patterns could lead to a
+	 * content part that contains a hard coded text based index.
 	 * @return true if this set is entirely index less.
 	 */
-	public boolean isIndexLess() {
-		if (this.pattern != null && this.pattern.isIndexLessPattern()) {
-			return true;
+	public boolean isIndexed() {
+		if (this.pattern != null && !this.pattern.canMatchIndex()) {
+			return false;
+		}
+		if (this.declarations.size() < 1) {
+			return false;
 		}
 		//else merged|mixed pattern pool
-		//for (Declaration dec : this.declarations) {
-		//TODO
-		//
-		//}
+		for (Declaration dec : this.declarations) {
+			Pattern dec_pattern = dec.getMatchedPattern();
+			// As soon as one declaration pattern can not match an index
+			// there is no longer the possibility of a continuous index:
+			// TODO Use canResultContainPattern instead once an index
+			// is set when splitting by markup type patterns!
+			if (dec_pattern && !dec_pattern.canMatchIndex()) {
+				return false;
+			}
+		}
+		// Every pattern could have matched an index.
+		// => Check the declaration (and maybe even content part head)
+		// in detail:
+		for (Declaration dec : this.declarations) {
+			Pattern dec_pattern = dec.getMatchedPattern();
+			// As soon as one declaration,content part head has no index
+			// there is no longer the possibility of a continuous index:
+			if (!dec.hasIndex()) {
+				return false;
+			}
+		}
+		// All have an index:
+		return true;
 	}
 
 
@@ -178,33 +212,43 @@ public class DeclarationSet {
 	 * and whether there all of the declarations have an index.
 	 *
 	 * Declarations without index are assumed to be not in order.
-	 * TODO In the case of a mixed set, when there is just one
+	 * Edge case:
+	 * In the case of a mixed set, when there is just one
 	 * declaration without index and it comes first, then it could
-	 * still be in order, e.g. listing teachers:
+	 * still be in order (TODO questionable?), e.g. listing teachers:
 	 * Teacher:
 	 * Teacher specific1:
 	 * Teacher specific2:
 	 * ...
+	 * Working code for this can be found within comments in isInOrder.
 	 *
-	 * Note: Lists without the index already allow it:
+	 * Note: Lists without the index already allow it and are considered
+	 * in order, e.g.
 	 * Teacher:
 	 * Teacher astronomy:
 	 * ...
-	 * TODO Add keyword repetition detection, especially with upper case
+	 *
+	 * TODO The above edge case (side effect prone and maybe
+	 * superfluous because if such decs are matched, then the pattern
+	 * is either indexless with the special case 'Teacher:' or
+	 * indexed but without 'Teacher:')
+	 * is rendered void by the following approach:
+	 * Add keyword repetition detection, especially with upper case
 	 * first letter to get rid of common words like 'in', 'and'. This
 	 * could solve both cases as instead of the index|numbering series
 	 * detection, Teacher would be detected which would be correct.
+	 * Note: Rigidity of matching a single word is questionable unless
+	 * it also contains a supplement like a colon.
 	 *
 	 * @return true, if indices are in (ascending) order, else false.
 	 */
 	public boolean isInOrder() {
-		boolean correctOrder = true;
-		// If it is entirely indexless, then order can be varied:
-		if (this.isIndexLess()) {
+		// Is entirely indexless? (save costly detail check)
+		if (!this.isIndexed()) {
+			// Then order can be varied freely.
 			return true;
 		}
 		return DeclarationSet.isInOrder(this.declarations);
-
 	}
 
 
@@ -215,25 +259,57 @@ public class DeclarationSet {
 	 * If it is a set without any declaration with indices it is
 	 * defined to be in order and thus returns true.
 	 *
-	 * @param set TODO rename to declarations,reduce function redundancy
+	 * @param delarations The declarations to check.
 	 * @return true, if in (ascending) order, otherwise false
 	 */
 	private static boolean isInOrder(ArrayList<Declaration> declarations) {
-		if (declarations.size() > 1) {
-			for (int i = 0; i < declarations.size() - 1; i++) {
-				if (declarations.get(i).hasIndex()
-						&& declarations.get(i + 1).hasIndex()) {
-					if (declarations.get(i).getIndex()
-							.compare(declarations.get(i + 1)
-								.getIndex()) == -1) {
-						return false;
-					}
-				}
-				else {
+		// The caller must check this:
+		//if (this.declarations.size() < 1) {
+		if (this.declarations.size() < 2) {
+			return true;
+		}
+		// Detail check if its order is ascending:
+		/*
+		To make the edge case: Teacher:, Teacher 1, Teacher 2,...
+		work, i.e. reach this function, the function isIndexed must
+		return true even when the first declaration has no index!
+		*/
+		//boolean has1stDecAnIndex = declarations.get(0).hasIndex();
+		//boolean has2ndDecAnIndex = declarations.get(1).hasIndex();
+		//boolean areFirstAndSecondInOrder = false;
+		//if (has1stDecAnIndex) {
+		//	if (!has2ndDecAnIndex) {
+		//		return false;
+		//	}
+		//	if (declarations.get(0).getIndex()
+		//			.compare(declarations.get(1).getIndex())
+		//			== -1) {
+		//		return false;
+		//	}
+		//	areFirstAndSecondInOrder = true;
+		//}
+		//else first has no index.
+
+		// Check all others
+		for (int i = 0; i < declarations.size() - 1; i++) {
+			if (declarations.get(i).hasIndex()
+					&& declarations.get(i + 1).hasIndex()) {
+				if (declarations.get(i).getIndex()
+						.compare(declarations.get(i + 1).getIndex())
+						== -1) {
 					return false;
 				}
 			}
+			else {
+				return false;
+			}
 		}
+		// All others are in order.
+
+		//if (!has1stAnIndex || areFirstAndSecondInOrder) {
+		//	return true;
+		//}
+		//return false;
 		return true;
 	}
 
