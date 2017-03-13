@@ -684,21 +684,67 @@ public enum Muster {
 
 
 
-	public boolean isIndexLessPattern() {
+	public boolean isMarkupPhraseFilter() {
+		return this.patternType.name().toLowerCase().contains("markup");
+	}
+
+
+
+	public boolean isGeneric() {
+		return this.patternType.name().toLowerCase().contains("generic");
+	}
+
+
+
+	public boolean isSpecific() { // explicit
+		return this.patternType.name().toLowerCase().contains("specific");
+	}
+
+
+
+	// Useful for skipping costly check if a set of decs is indexed.
+	// Note: A markup pattern can not exclude that there is a text based
+	// index in the content.
+	// Attention: Use this only if there is index detection that takes
+	// content part head (first words) into account. TODO
+	public boolean canResultBeIndexed() {
+		return this.isMarkupPhraseFilter()
+			// It is not a markup phrase filter:
+			|| this.canMatchIndex();
+	}
+
+
+
+	// Use instead of canResultBeIndexed when ignoring a potential text
+	// based (e.g. manually hard-coded) index in the content part.
+	public boolean canMatchIndex() {
+		return this.isGeneric()
+			// A single integer is the minimum required for an index:
+			&& this.patternString.contains("\\d")//TODO <- matches?
+		;
+	}
+
+
+
+	public boolean canResultContainNumber() {
 		int i = Global.getInt(this.pattern);
-		return !i || i == ""
-			|| this.patternString.contains("\\d");
-		//return this.patternType != PatternType.INDEXLESS;
+		return (!i || i == "") && (
+				!this.patternType.name().toLowerCase().contains("generic")
+				|| !this.patternString.contains("\\d")//TODO works?
+		);
 	}
 
 
 
 	// TODO Consider the new patterns.
+	// TODO Rename to isContentPatternGuaranteedIndexless or
+	// isContentPhraseFilterGuaranteedIndexless see also:
+	// https://github.com/worlddevelopment/exercise_database/issues/1
 	public boolean isWordedPattern() {
 //		if ( this.equals(AUFGABE | EXERCISE | CHARUFGABE | LOESUNG | SOLUTION) ) {
 		return this.patternString.toLowerCase().contains(
 				this.name().toLowerCase())
-				|| this.equals(CHARUFGABE);
+			|| this.equals(CHARUFGABE);
 	}
 
 	public int getScoreOfPattern() {
