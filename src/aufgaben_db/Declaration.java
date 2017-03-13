@@ -247,16 +247,19 @@ public class Declaration {
 	 * @return true if there is an index. Else false.
 	 */
 	public boolean hasIndex() {
-		try {
-			if (this.index.getIndex().size() >= 1) {
+		if (this.index != null) {
+			if (this.index.getIndex().size() > 0) {
 				return true;
 			}
-			else {
-				return false;
-			}
-		} catch (Exception e) {
-			return false;
+			System.out.println("Declar. has index, but length is < 1.");
+			//return false; TODO reenable when content check below fails
 		}
+		// Search the head for an index:
+		// TODO For avoiding user confusion by being able to remove it,
+		// it may be useful to check for a hard coded index.
+		// e.g. with a markup pattern it is possible the content part
+		// still harbors such an undesired index.
+		return false;
 	}
 
 	/**
