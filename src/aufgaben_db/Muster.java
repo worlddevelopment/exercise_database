@@ -33,8 +33,8 @@ public enum Muster {
 	 * <-> solution is a paired content part.
 	 * TODO Model content part pairs into the existing design,generalize
 	 */
-	LOESUNG("L(oe|\u00F6)sung", PatternType.SOLUTION),
-	SOLUTION("Solution", PatternType.SOLUTION),
+	LOESUNG("L(oe|\u00F6)sung", PatternType.SOLUTION, "aufgabe"),
+	SOLUTION("Solution", PatternType.SOLUTION, "exercise"),
 	//CHARLOESUNG("[\\S]*loesung[\\S]*", /*kind*/0),// allow a prefix
 
 	LOESCOLON("^[Ll](oe|\u00F6)s[\\S]*[ ]*[\\d]*[:]"
@@ -52,13 +52,26 @@ public enum Muster {
 
 
 	/**
-	 * EXERCISE (Paired with SOLUTION):
-	 * TODO Support more pairs or allow extension without overriding all
+	 * EXERCISE (Paired|complemented with SOLUTION):
+	 *
+	 * TODO Allow more complements|tuple members.
+	 * TODO Allow extension without overriding using properties|interface?
 	 */
-	AUFGABE("Aufgabe", PatternType.EXERCISE),
-	EXERCISE("Exercise", PatternType.EXERCISE),
+	AUFGABE("Aufgabe", PatternType.EXERCISE, "loesung"),
+	EXERCISE("Exercise", PatternType.EXERCISE, "solution"),
 	// Allow prefix, e.g. Uebungsaufgabe, Aufgabenteil, ...:
 	CHARUFGABE("[\\S]*ufgabe[\\S]*", PatternType.EXERCISE),
+
+
+
+	/**
+	 * Question, Answer tuple in several languages.
+	FRAGE("Frage", PatternType.CONTENT, "antwort"),
+	QUESTION("Question", PatternType.CONTENT, "answer"),
+
+	ANTWORT("Antwort", PatternType.CONTENT, "frage"),
+	ANSWER("Answer", PatternType.CONTENT, "question"),
+	*/
 
 
 
@@ -102,15 +115,26 @@ public enum Muster {
 	// ======= ATTRIBUTES
 	private String patternString;
 	public enum PatternType {
-		// # Target specific content parts:
-		// Pairs
-		EXERCISE,
-		SOLUTION,
+		/* CONTENT CODED (text, media, ...) */
+		// Target specific content parts:
+		//@DEPRECATED
+		EXERCISE, // TODO Allow replacing it with CONTENT_SPECIFIC_*
+		SOLUTION, // TODO Allow replacing it with CONTENT_SPECIFIC_*
+
+		// Note: hierarchical|markup (e.g. MD,ODT,DOCX,...) can also
+		// filter by content, i.e. target specific content, in theory.
+		// In practice it is easier to postprocess the content part head
+		CONTENT,//SPECIFIC, This is why CONTENT as Type is still useful.
+		// e.g. Text:,text:,Text:,...;1,2,3,4,...
+		CONTENT_SPECIFIC_INDEXLESS,
 
 		// # Target leaf content parts in general series:
-		GENERIC, // e.g. Text:,text:,Text:,...;1,2,3,4,...
+		CONTENT_GENERIC_INDEXED,
 
-		// # Hierarchical per document content type:
+		/* MARKUP CODED */
+		MARKUP_SPECIFIC_INDEXLESS,
+		MARKUP_GENERIC,
+		// # Hierarchy sensitive per document format.markup type:
 		MD, // e.g. #,#,...; ##;##;...; ---,---,...;
 		ODT,
 		DOCX,
@@ -118,6 +142,7 @@ public enum Muster {
 		HTML// e.g. h1,h1,...;h2,h2,...;(section,section,..<-no context)
 	};
 	private PatternType/*SheetTypes*/ patternType;
+	private PatternType/*SheetTypes*/ patternTypeComplement;
 
 
 
@@ -142,8 +167,33 @@ public enum Muster {
 	 * @param patternType The pattern type to use
 	 */
 	private Muster(String c, PatternType patternType) {
-	   this.patternString = c;
-	   this.patternType = patternType;
+		this(c, patternType, null);
+	}
+
+
+
+	/**
+	 * Constructor creating a pattern of given type.
+	 *
+	 * @param c regular expression string
+	 * @param patternType The pattern type to use
+	 * @param patternTypeComplement The pattern type tuple counterpart.
+	 */
+	private Muster(String c, PatternType patternType
+			, String patternTypeComplementName) {
+		this.patternString = c;
+		this.patternType = patternType;
+		this.patternTypeComplement
+			= Muster.getByName(patternTypeComplementName);
+		String complementName = "null";
+		if (patternTypeComplement != null)
+			complementName = patternTypeComplement.name();
+		System.out.println("Muster: Constructor: Assigned tuple: ("
+				+ this.patternType.name() + ", "
+				+ complementName
+				+ ") | patternTypeComplementName: "
+				+ patternTypeComplementName
+				);
 	}
 
 
@@ -632,12 +682,16 @@ public enum Muster {
 		return patternString;
 	}
 
+
+
 	public boolean isIndexLessPattern() {
 		int i = Global.getInt(this.pattern);
 		return !i || i == ""
 			|| this.patternString.contains("\\d");
 		//return this.patternType != PatternType.INDEXLESS;
 	}
+
+
 
 	// TODO Consider the new patterns.
 	public boolean isWordedPattern() {
