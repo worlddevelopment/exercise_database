@@ -34,7 +34,6 @@ public class LatexCutter {
  * and \begin | \end{document}, and in theory directly compilable.
  * @throws IOException
  */
-//	public boolean cutExercises(String pathname, String head, String tail) {
 	public static ArrayList<Exercise> cutExercises(Sheetdraft sheetdraft) throws IOException {
 
 		System.out.println("LatexCutter was called.");
@@ -191,88 +190,6 @@ public class LatexCutter {
 
 
 
-
-//			// Suchen des "head"
-//			// ueberpruefe, ob die Zeile AnfangsWort oder Endwort enthaelt
-//			if (singleLine.contains(head)) {
-//				indexOfFirstIdentifier = allLines.size() - 1; // Ort der Zeile, die das Anfangswort enthaelt.
-//				System.out.println("FirstIdentifier gefunden in Zeile " + indexOfFirstIdentifier);
-//				indexOfFirstCut = indexOfFirstIdentifier;
-//
-//				while (!allLines.get(indexOfFirstCut).startsWith("\\begin")) {
-//					indexOfFirstCut--;
-//				}
-//				System.out.println("Cut in Zeile " + indexOfFirstCut);
-//			}
-////			if (singleLine.startsWith("\\begin")) {
-////				System.out.println("begin gefunden");
-////			}
-//			if (singleLine.contains(tail)) {
-//				indexOfLastIdentifier = allLines.size() - 1; // Ort der Zeile, dies Endwort enthaelt.
-//				System.out.println("LastIdentifier gefunden in Zeile " + indexOfLastIdentifier);
-//				indexOfLastCut = indexOfLastIdentifier;
-//				lastIdentifierFound = true;
-//			}
-//
-//			if (lastIdentifierFound && singleLine.startsWith("\\end")) {
-//				indexOfLastCut = allLines.size() - 1;
-//				System.out.println("Cut in Zeile " + indexOfLastCut);
-//				lastIdentifierFound = false;
-//			}
-//
-//
-//		cutExercise = new File("E:/Studium/Semester/SS2011/Softwarepraktikum/TestDokumente/testOutputLatexCut2.txt");
-//
-//		try {
-//			fileWriter = new BufferedWriter(new FileWriter(cutExercise));
-//			System.out.println("BufferedWriter ge�ffnet");
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//			System.out.println("Kann File nicht schreiben");
-//		}
-//
-//		for (int i = 0; i <= allLines.size(); i++) {
-//			try {
-//				if (i <= indexOfBeginDoc) {
-//					fileWriter.newLine();
-//					fileWriter.write(allLines.get(i));
-//					System.out.println("Schreibe Zeile " + i + " : \" " + allLines.get(i) + " \" ");
-//				}
-//
-//				if (i >= indexOfFirstCut && i <= indexOfLastCut){
-//					fileWriter.newLine();
-//					fileWriter.write(allLines.get(i));
-//					System.out.println("Schreibe Zeile " + i + " : \" " + allLines.get(i) + " \" ");
-//				}
-//
-////				fileWriter.write(allLines.get(i));
-////				System.out.println("Schreibe Zeile " + i + " : \" " + allLines.get(i) + " \" ");
-//
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//				System.out.println("Kann Zeile nicht schreiben");
-//			}
-//
-//		}
-//		try {
-//			fileWriter.newLine();
-//			fileWriter.write("\\end{document}");
-//			fileWriter.close();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			System.out.println("cant close");
-//			e.printStackTrace();
-//		}
-//
-//
-//		return true;
-//
-//	}
-
-
-
 	/**
 	 * Replaces all Umlauts and \u00DF with their latex representation.
 	 * e.g. &Ouml; -> \"O, etc.
@@ -298,23 +215,6 @@ public class LatexCutter {
 		ergebnis = ergebnis.replaceAll("\u00DF", "sz");
 		return ergebnis;
 	}
-
-
-
-
-//	/**
-//	 * @param args
-//	 */
-//	public static void main(String[] args) {
-//
-//		LatexCutMain myLCM = new LatexCutMain();
-//		myLCM.cutExercise(
-//				"path/to/testfile.tex"
-//				, ""
-//				, "Vorkurses ist"
-//				);
-//
-//	}
 
 
 
