@@ -3872,6 +3872,7 @@ public class Global {
 			}
 
 
+
 		}
 		// TEX SOURCE -----------------------------------
 		else if (source_ending.equalsIgnoreCase("tex")) {
@@ -3915,8 +3916,16 @@ public class Global {
 //			}
 			// TXT
 			else if (target_type.equalsIgnoreCase("TXT")) {
+				// --- Via PDF:
+				// Convert file to PDF.
+				// TODO
+				// Extract plain text from the PDF file.
+				// TODO
+
+				// --- Via removing all tex-related tags.
 				// using opendetex:
 				Converter.tex2txt(filelink, target_flavour_filelink);
+
 			}
 
 
@@ -5494,7 +5503,7 @@ public class Global {
 						, "");
 			// Nothing has changed? So there was no
 			// lsg loesung solution, ... appended?
-			if (mothersheetFilename.equals(correspondingFilelinkGuess) 
+			if (mothersheetFilename.equals(correspondingFilelinkGuess)
 					) {
 				sql += " sheetdraft_filelink LIKE '%"
 					+ mothersheetFilename + "-Lsg%'"

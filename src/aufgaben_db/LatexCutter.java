@@ -1,6 +1,3 @@
-/**
- * 
- */
 package aufgaben_db;
 
 import java.awt.Insets;
@@ -12,7 +9,7 @@ import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
-//TODO use JEuclid instead. (scilab jlatexmath was introduced by me (J.R.I.B.) only temporarily).
+// TODO use JEuclid instead. (scilab jlatexmath was introduced only temporarily).
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
@@ -21,26 +18,28 @@ import converter.Converter;
 
 
 /**
- * Klasse, die Methoden zum schneiden eines .tex-files bereitstellt.
- * 
- * @author Schweiner, Artijom, J.R.I.B.
+ * Utility for processing LaTeX files.
+ *
+ * @author Schweiner, Artijom, J.R.I.B., worlddevelopment
  *
  */
 public class LatexCutter {
 
 /**
- * Schneidet das uebergenene LAtexSheet Objekt anhand der in diesem gespeicherten DeclarationSet und 
- * gibt die geschnittenen Aufgaben als Exercise-ArrayList auf
- * @param sheetdraft zu untersuchenden LatexSheet
- * @return ArrayList der geschnittenen Exercises (mit header und \begin / \end{document}, also theoretisch direkt komplierbar.
- * @throws IOException 
+ * Cuts the given LaTeX sheetdraft with the help of a stored
+ * DeclarationSet.
+ *
+ * @param sheetdraft
+ * @return ArrayList of the split result (exercises) with header
+ * and \begin | \end{document}, and in theory directly compilable.
+ * @throws IOException
  */
-//	public boolean cutExercise(String pathname, String head, String tail) {
-	public static ArrayList<Exercise> cutExercises(Sheetdraft sheetdraft) throws IOException {	
-		
-		System.out.println("LatexCutter wurde aufgerufen.");
-		
-		String headermixture = ""; //to be determined
+//	public boolean cutExercises(String pathname, String head, String tail) {
+	public static ArrayList<Exercise> cutExercises(Sheetdraft sheetdraft) throws IOException {
+
+		System.out.println("LatexCutter was called.");
+
+		String headermixture = ""; // to be determined
 //		ArrayList<String> allLines = new ArrayList<String>();
 		String[] allTexLines = sheetdraft.getRawContent();//getTexText();
 		int indexOfFirstIdentifier = 0;
@@ -50,133 +49,148 @@ public class LatexCutter {
 		int indexOfFirstCut = 0;
 		int indexOfLastCut = 0;
 		boolean lastIdentifierFound = false;
-		
-		
+
+
 		// ArrayList der zu schneidenen Aufgaben
 		ArrayList<Exercise> outputTexExercises = new ArrayList<Exercise>();
-		
-		// Sheets, in denen keine Deklarationen gefunden wurden, abfangen.
+
+		// Have no declarations been found in the sheet?.
 		if (sheetdraft.getDeclarationSet().declarations.size() == 0) {
 			return outputTexExercises;
 		}
-		
-		// Anhand der heads, ArrayList mit den Zeilennummern, an denen geschnitten
-		// werden soll, erstellen.
+
+		// Using the content part heads create a list with the line
+		// numbers at which to cut.
 		ArrayList<Integer> linesToCut = new ArrayList<Integer>();
-		
-		HashMap<Integer, Declaration> lineDecReference = new HashMap<Integer, Declaration>();
+
+		HashMap<Integer, Declaration> lineDecReference
+			= new HashMap<Integer, Declaration>();
 		int ex_count_and_pos = 0;
 		for (int i = 0; i < allTexLines.length; i++) {
 			String singleLine = allTexLines[i];
-				for (Declaration dec: sheetdraft.getDeclarationSet().declarations) {
-					if (dec.hasHead()) {
-						if (dec.getHead() != null && singleLine != null) {				
-							System.out.println("Untersuchter Head lautet" + dec.getHead().toString());
-							if ((singleLine.contains(dec.getHead()[0]) && singleLine.contains(dec.getHead()[1]) && singleLine.contains(dec.getHead()[2]))
-									|| (singleLine.contains(dec.getHead()[0]) && singleLine.contains(dec.getHead()[1]) && singleLine.contains(dec.getHead()[3]))
-									|| (singleLine.contains(dec.getHead()[0]) && singleLine.contains(dec.getHead()[2]) && singleLine.contains(dec.getHead()[3]))	
-									|| (singleLine.contains(dec.getHead()[1]) && singleLine.contains(dec.getHead()[2]) && singleLine.contains(dec.getHead()[3]))) {
-								System.out.println("Head " + dec.getHead() + "gefunden!");
-								Integer indexOfCut = i;
-								while (!allTexLines[indexOfCut].startsWith("\\begin")) {
-									indexOfCut--;
-								}
-								System.out.println("Cut in Zeile " + indexOfCut);
-								linesToCut.add(indexOfCut);
-								lineDecReference.put(indexOfCut, dec);
-						}
+				for (Declaration dec
+						: sheetdraft.getDeclarationSet().declarations) {
+
+					if (!dec.hasHead()) {
+						continue;
+					}
+					//else
+
+					if (dec.getHead() != null && singleLine != null) {
+						System.out.println("Examining head: "
+								+ dec.getHead().toString());
+
+						if (singleLine.contains(dec.getHead()[0])
+								&& singleLine.contains(dec.getHead()[1])
+								&& singleLine.contains(dec.getHead()[2])
+								||
+								singleLine.contains(dec.getHead()[0])
+								&& singleLine.contains(dec.getHead()[1])
+								&& singleLine.contains(dec.getHead()[3])
+								||
+								singleLine.contains(dec.getHead()[0])
+								&& singleLine.contains(dec.getHead()[2])
+								&& singleLine.contains(dec.getHead()[3])
+								||
+								singleLine.contains(dec.getHead()[1])
+								&& singleLine.contains(dec.getHead()[2])
+								&& singleLine.contains(dec.getHead()[3])
+								) {
+
+							System.out.println("Found head: " + dec.getHead());
+							Integer indexOfCut = i;
+							while (!allTexLines[indexOfCut]
+									.startsWith("\\begin")) {
+								indexOfCut--;
+							}
+							System.out.println("Cut at line " + indexOfCut);
+							linesToCut.add(indexOfCut);
+							lineDecReference.put(indexOfCut, dec);
 					}
 				}
 			}
 		}
-		
-		//Zeile mit "\begin{document}" auslesen
+
+		// Read line with "\begin{document}"
 		for (int i = 0; i < allTexLines.length; i++) {
 			String singleLine = allTexLines[i];
 			if (singleLine.startsWith("\\begin{docum")) {
 				indexOfBeginDoc = i;
-				System.out.println("begindoc gefunden in Zeile " + indexOfBeginDoc);
-			}	
+				System.out.println("begin{docum... found at line: "
+						+ indexOfBeginDoc);
+			}
 		}
-		// Und den Header Speichern
+		// And store the header: (inclusive begin document)
 		ArrayList<String> header = new ArrayList<String>();
-		for (int i = 0; i <= indexOfBeginDoc; i++) {
+		for (int i = 0; i < indexOfBeginDoc + 1; i++) {
 			header.add(allTexLines[i]);
 		}
-		
-		
-		// Erzeugt fuer jeden Abschnitt zwischen 2 Heads eine Aufgabe, fügt den Header vorn
-		// und enddocument hinten an, erzeugt eine neue Aufgabe und schreibt diese Weg.
+
+
+		// Create an exercise from the content inbetween two heads.
+		// Prepends and appends the header to every found exercise.
+		// Store the found content parts.
 		for (int i = 0; i < linesToCut.size() - 1; i++) {
-			// ArrayList für eine geschnittene Aufgabe erzeugen
 			ArrayList<String> cutExercise = new ArrayList<String>();
-			// von der Zeile des derzeigen Cut-indices bis zur Zeile des n\u00E4chsten cut-indices
-			// schneiden und speichern
+			// cut from current cut index to the next cut index.
 			for (int j = linesToCut.get(i); j < linesToCut.get(i + 1); j++ ) {
 				cutExercise.add(allTexLines[j]);
 			}
-			// Header noch davor
-			for (int j = header.size()-1; j >= 0; j--) {
+			// Prepend header to each TODO for performance add it first.
+			for (int j = header.size() - 1; j > -1; j--) {
 				cutExercise.add(0, header.get(j));
 			}
-			// und enddocument noch dahinter
+			// Append end
 			cutExercise.add(new String("\\end{document}"));
-			// Zum Array umwandeln
+
+			// Convert to an array
 			String[] exerciseText = new String[cutExercise.size()];
 			for (int j = 0; j < exerciseText.length; j++) {
-				exerciseText[j] = cutExercise.get(j);
-				exerciseText[j] = ersetzeUmlaute(exerciseText[j]);
+				exerciseText[j] = ersetzeUmlaute(cutExercise.get(j));
 			}
 			Declaration dec = lineDecReference.get(linesToCut.get(i));
-			//creation of file for exercise on harddrive done in writeToHarddisk
-			ex_count_and_pos++; //increment here because we start with 1 instead of 0
-			
-			//write to filesystem 
-			String new_ex_filelink = sheetdraft.getFilelinkForExerciseFromPosWithoutEnding(
-					ex_count_and_pos, ex_count_and_pos) + sheetdraft.getFileEnding();
+			// Creating file for it on harddrive in writeToHarddisk.
+
+			// Increment here because we start with 1 instead of 0
+			ex_count_and_pos++;
+
+			// write to filesystem
+			String new_ex_filelink = sheetdraft
+				.getFilelinkForExerciseFromPosWithoutEnding(
+					ex_count_and_pos, ex_count_and_pos)
+				+ sheetdraft.getFileEnding();
 			ReadWrite.write(exerciseText, new_ex_filelink);
-			
-			/*METHOD 1 via pdf*/
-			//Convert file to pdf.
-			//TODO
-			
-			//Extract plain text of this tex's pdf file.
-			//TODO
-			
-			/*METHOD 2 via removing all tex-related tags.*/
-			//TODO
-			
-			//Create Exercise instance for eventual further handling.
+
+			// Create Exercise instance for eventual further handling.
 //			Exercise loopExercise = new Exercise(
 //					new_ex_filelink
 //					, dec
 //					, exercisePlainText
 //					//, exerciseText
 //					, headermixture
-//			); 
+//			);
 //			outputTexExercises.add(loopExercise);
-			
+
 		}
-		
-		System.out.println("LatexCutter Beendet");
+
+		System.out.println("*done* LatexCutter: cutExercises");
 		return outputTexExercises;
-	}		
-	
-	
+	}
+
+
+
 	static void createImagesForExercises(Sheetdraft sheetdraft) throws FileNotFoundException {
 		createImagesForExercises(sheetdraft.getAllExercises().values());
 	}
+
 	static void createImagesForExercises(Collection<Exercise> exercises) throws FileNotFoundException {
 		for (Exercise exercise : exercises) {
 			Converter.tex2image(exercise.filelink);
 		}
 	}
-	
-	
 
 
-		
-		
+
 
 //			// Suchen des "head"
 //			// ueberpruefe, ob die Zeile AnfangsWort oder Endwort enthaelt
@@ -184,7 +198,7 @@ public class LatexCutter {
 //				indexOfFirstIdentifier = allLines.size() - 1; // Ort der Zeile, die das Anfangswort enthaelt.
 //				System.out.println("FirstIdentifier gefunden in Zeile " + indexOfFirstIdentifier);
 //				indexOfFirstCut = indexOfFirstIdentifier;
-//				
+//
 //				while (!allLines.get(indexOfFirstCut).startsWith("\\begin")) {
 //					indexOfFirstCut--;
 //				}
@@ -199,16 +213,16 @@ public class LatexCutter {
 //				indexOfLastCut = indexOfLastIdentifier;
 //				lastIdentifierFound = true;
 //			}
-//			
+//
 //			if (lastIdentifierFound && singleLine.startsWith("\\end")) {
 //				indexOfLastCut = allLines.size() - 1;
 //				System.out.println("Cut in Zeile " + indexOfLastCut);
 //				lastIdentifierFound = false;
 //			}
-//		
-//			
+//
+//
 //		cutExercise = new File("E:/Studium/Semester/SS2011/Softwarepraktikum/TestDokumente/testOutputLatexCut2.txt");
-//	
+//
 //		try {
 //			fileWriter = new BufferedWriter(new FileWriter(cutExercise));
 //			System.out.println("BufferedWriter ge�ffnet");
@@ -217,15 +231,15 @@ public class LatexCutter {
 //			e.printStackTrace();
 //			System.out.println("Kann File nicht schreiben");
 //		}
-//		
-//		for (int i = 0; i <= allLines.size(); i++) {	
+//
+//		for (int i = 0; i <= allLines.size(); i++) {
 //			try {
 //				if (i <= indexOfBeginDoc) {
 //					fileWriter.newLine();
 //					fileWriter.write(allLines.get(i));
 //					System.out.println("Schreibe Zeile " + i + " : \" " + allLines.get(i) + " \" ");
 //				}
-//				
+//
 //				if (i >= indexOfFirstCut && i <= indexOfLastCut){
 //					fileWriter.newLine();
 //					fileWriter.write(allLines.get(i));
@@ -234,7 +248,7 @@ public class LatexCutter {
 //
 ////				fileWriter.write(allLines.get(i));
 ////				System.out.println("Schreibe Zeile " + i + " : \" " + allLines.get(i) + " \" ");
-//				
+//
 //			} catch (IOException e) {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
@@ -251,23 +265,25 @@ public class LatexCutter {
 //			System.out.println("cant close");
 //			e.printStackTrace();
 //		}
-//		
-//		
+//
+//
 //		return true;
-//		
+//
 //	}
 
+
+
 	/**
-	 * Ersetzt alle Umlate und \u00DF in der ensprechenden Zeile durch Ersatzzeichen
-	 * und gibt den veraenderten String wieder aus. 
-	 * 
-	 * @changelog JRIBW changed Oe -> \"O, etc. It's latex, to be tested! TODO
-	 * @param zeile
-	 * @return veraenderter String
+	 * Replaces all Umlauts and \u00DF with their latex representation.
+	 * e.g. &Ouml; -> \"O, etc.
+	 * TODO Add support for more languages (currently FRENCH).
+	 *
+	 * @param line
+	 * @return The line with umlauts in LaTeX representation.
 	 */
-	private static String ersetzeUmlaute(String zeile) {
-		
-		String ergebnis = zeile.replaceAll("\u00D6", "\\\"O");
+	private static String ersetzeUmlaute(String line) {
+
+		String ergebnis = line.replaceAll("\u00D6", "\\\"O");
 		//System.out.println(ergebnis);
 		ergebnis = ergebnis.replaceAll("\u00F6", "\\\"o");
 		//System.out.println(ergebnis);
@@ -282,16 +298,24 @@ public class LatexCutter {
 		ergebnis = ergebnis.replaceAll("\u00DF", "sz");
 		return ergebnis;
 	}
-}	
-	
+
+
+
+
 //	/**
 //	 * @param args
 //	 */
 //	public static void main(String[] args) {
-//		
+//
 //		LatexCutMain myLCM = new LatexCutMain();
-//		myLCM.cutExercise("E:/Studium/Semester/SS2011/Softwarepraktikum/Tex/VK-WS1011-B1.tex", "Melden", "Vorkurses ist");
+//		myLCM.cutExercise(
+//				"path/to/testfile.tex"
+//				, ""
+//				, "Vorkurses ist"
+//				);
 //
 //	}
-//
 
+
+
+}
