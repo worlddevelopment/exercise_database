@@ -32,23 +32,11 @@ public class RegExFinder {
 
 	/**
 	 * Search content part declarations in the given text array of String.
-	 * And return a higher performance (random access) result than a Map.
-	 * TODO The return value is the up to date DeclarationSet, the docs
-	 * here are entirely wrong|outdated!
 	 *
 	 * @param text lines of text to evaluate
-	 * @param zahl id for pattern: (11,12,21,22,31,32)
-	 * @return null if no such pattern id, else array with first dimension
-	 * denoting the index of the declaration. The second dimension being
-	 * one of 4 entries (0..3):<ul>
-	 * <li>String[x][0]: "zahl", pattern id</li>
-	 * <li>String[x][1]: the pattern string that matched</li>
-	 * <li>String[x][2]: line number (required to know where in the plain
-	 * text version of the document the subsequent lines can be found if
-	 * this information should be needed)</li>
-	 * <li>String[x][3]: The 2nd word of the declaration if the line contains it.</li>
+	 * @param muster a declaration pattern
+	 * @return DeclarationSet: empty if no declarations are found.
 	 */
-	// public static String[][] sucheMuster(String[] filename, int zahl) {
 	public DeclarationSet sucheMuster(String[] text, Muster muster) {
 
 		Pattern pattern = muster.getPattern();
