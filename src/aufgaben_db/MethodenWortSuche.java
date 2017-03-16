@@ -74,7 +74,7 @@ public class MethodenWortSuche {
 			String zeile = ersetzeSzUndUmLeer(filename[i]);
 			System.out.println(zeile);
 			// Split into words|word chunks:
-			String[] array = zeile.split("\\s");
+			String[] array = zeile.split("\\s+");
 
 			// First word fragment made of > 3 connected chars:
 			for (int j = 0; j < array.length; j++) {
@@ -111,7 +111,7 @@ public class MethodenWortSuche {
 
 			String zeile = ersetzeSzUndUmLeer(line);
 			// Split into words|word chunks:
-			String[] array = zeile.split("\\s");
+			String[] array = zeile.split("\\s+");
 
 			for (int j = array.length - 1; j > -1; j--) {
 				String w = array[j];
