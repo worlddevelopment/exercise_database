@@ -290,8 +290,7 @@ public class RegExFinder {
 		// => nothing is skipped anymore, all lines are exermined
 		try {
 			zeile++;
-			headWords = MethodenWortSuche
-				.teileZeileInWoerter(text[zeile]);
+			headWords = text[zeile].split("\\s+");
 			if (headWords != null) {
 				loopDeclaration.setHead(headWords);
 			}
