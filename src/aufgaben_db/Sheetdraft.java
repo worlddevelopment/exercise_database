@@ -3323,7 +3323,10 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 		// TODO Add more writing to disk code depending on
 		// filetype/ending. Unless it is the native filetype as then
 		// the file exists on the disk already.
-		if (filelink.endsWith("docx") && !filelink.endsWith(".docx.docx")) {
+		if (filelink.endsWith("docx")) {
+			if (filelink.endsWith(".docx.docx")) {
+				return ;
+			}
 			// If it is the original filetype then it would be load,
 			// change and save.
 			// Because here is nothing to change, the original filetype
@@ -3334,17 +3337,32 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 			//3) delete unnecessary parts.
 
 		}
-		else if (filelink.endsWith("tex") && !filelink.endsWith(".tex.tex")) {
+		else if (filelink.endsWith("tex")) {
+			if (filelink.endsWith(".tex.tex")) {
+				return ;
+			}
+			// TODO
 
 		}
-		else if (filelink.endsWith("txt") && !filelink.endsWith(".txt.txt")) {
+		else if (filelink.endsWith("txt")) {
+			if (filelink.endsWith(".txt.txt")) {
+				return ;
+			}
 			// Has not to be written as txt is also raw at same time.
 		}
-		else if (filelink.endsWith("php") && !filelink.endsWith(".php.php")) {
+		else if (filelink.endsWith("php")) {
+			if (filelink.endsWith(".php.php")) {
+				return ;
+			}
+			// TODO
 
 		}
-		else if (filelink.endsWith("html") && !filelink.endsWith(".html.html")
-				|| filelink.endsWith("htm") && !filelink.endsWith(".htm.htm")) {
+		else if (filelink.endsWith("html") || filelink.endsWith("htm")) {
+			if (filelink.endsWith(".htm.htm")
+					|| filelink.endsWith(".html.html")) {
+				return ;
+			}
+			// TODO
 
 		}
 
