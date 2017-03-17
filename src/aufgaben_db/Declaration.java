@@ -44,6 +44,19 @@ public class Declaration {
 	 * Line in which the declaration has been found.
 	 */
 	private int lineNumber;
+
+	/**
+	 * To allow proper initial position values when (post)processing
+	 * text based markup formats like MD,RST,RTF, ...
+	 * Otherwise for long lines another match search had to be repeated
+	 * including all postprocessing! Very redundant, error prone, costly
+	 * Thus the matcher.start(), .end(), .group() are stored.
+	 */
+	private int matchStart;
+	private int matchEnd;
+	private String matchGroup;
+
+
 	/**
 	 * Store declaration preceding words to assist with allIn1Line docs.
 	 * TODO Reevaluate whether lineNumbers, succeding words suffice.
@@ -54,6 +67,7 @@ public class Declaration {
 	 * Index, this declaration can be assigned to.
 	 */
 	private IndexNumber index;
+
 
 
 
@@ -70,21 +84,38 @@ public class Declaration {
 
 	public Declaration(Pattern p, String firstWord, int lineNumber
 			, String lineContent) {
-		this(Muster.getMusterFromPattern(p)//.getPattern()
-				, firstWord, lineNumber, lineContent);
+		this(Muster.getMusterFromPattern(p)
+				, firstWord, lineNumber, lineContent, -1, -1, null);
 	}
 
-	public Declaration(/*Pattern*/Muster pattern, String firstWord
+	public Declaration(Pattern p, String firstWord, int lineNumber
+			, String lineContent, int start, int end, String group) {
+		this(Muster.getMusterFromPattern(p)
+				, firstWord, lineNumber, lineContent, start, end, group);
+	}
+
+
+	public Declaration(Muster pattern, String firstWord
 			, int lineNumber) {
 		this(pattern, firstWord, lineNumber, "");
 	}
 
-	public Declaration(/*Pattern*/Muster pattern, String firstWord
+	public Declaration(Muster pattern, String firstWord
 			, int lineNumber, String lineContent) {
+		this(pattern, firstWord, lineNumber, lineContent, -1, -1, null);
+	}
+
+	public Declaration(Muster pattern, String firstWord
+			, int lineNumber, String lineContent
+			, int start, int end, String group
+			) {
 		this.setMatchedPattern(pattern);
 		this.setFirstWord(firstWord);
 		this.setLineNumber(lineNumber);
 		this.lineContent = lineContent;
+		this.matchStart = start;
+		this.matchEnd = end;
+		this.matchGroup = group;
 	}
 
 
@@ -215,6 +246,28 @@ public class Declaration {
 	 */
 	public void setLineNumber(int lineNumber) {
 		this.lineNumber = lineNumber;
+	}
+
+	/**
+	 * @return start index of the match within the line at lineNumber
+	 */
+	public int getMatchStart() {
+		return matchStart;
+	}
+
+	/**
+	 * @return end index of the match within the line at lineNumber
+	 */
+	public int getMatchEnd() {
+		return matchEnd;
+	}
+
+	/**
+	 * @return The string within the line at lineNumber that matched
+	 * the pattern.
+	 */
+	public String getMatchGroup() {
+		return matchGroup;
 	}
 
 	/**
