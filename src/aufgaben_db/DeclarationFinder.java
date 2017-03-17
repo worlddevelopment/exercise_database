@@ -4,8 +4,6 @@ package aufgaben_db;
 import java.util.ArrayList;
 import java.util.List;
 
-import Verwaltung.HashMapVerwaltung;
-
 
 /**
  * Serves to find a exercise and solution declarations within a sheet.
@@ -170,31 +168,7 @@ public class DeclarationFinder {
 //		}
 
 
-		// ------------------------------------------DEPRECATED
-		// -------------------------------- @author +Sabine
-		// Initialize information about removed exercises, etc.
-		// This is required to avoid a later nullPointerException
-		// for example when it is asked for the information.
-
-		// Which exercises have been deleted if any?
-		// The exercise number (deprecated, TODO use index) is used:
-		// i.e. default 0 means: no exercise has been removed
-		HashMapVerwaltung.erweitereHashmapInt(
-				HashMapVerwaltung.gestricheneAufgabe, 0);
-		// Had a surplus exercise to be removed in the course of the
-		// function(s)?
-		HashMapVerwaltung.erweitereHashmapBoolean(
-				HashMapVerwaltung.eineAufgabeZuviel, false);
-		// Has only 1 exercise been found?
-		HashMapVerwaltung.erweitereHashmapBoolean(
-				HashMapVerwaltung.genauEineAufgabe, false);
-		// Found declarations but it was impossible to sort these?
-		HashMapVerwaltung.erweitereHashmapBoolean(HashMapVerwaltung.keineOrdnungDeklarationen, false);
-		// ----------------------------------------------------
-		// ----------------------------------------------------
-
-
-		if (foundDeclarationSets.isEmpty()){
+		if (foundDeclarationSets.isEmpty()) {
 			return null;
 		}
 
@@ -383,35 +357,6 @@ public class DeclarationFinder {
 		should contain
 		all declarations in the order of occurrence in the plain text.
 		 */
-
-		// ------------------------------------------DEPRECATED
-		// -------------------------------- @author +Sabine
-//		int anzahl = setWithHighestScore.declarations.size();
-//		//Muster muster = setWithHighestScore.getPattern();
-//		if (anzahl == 1) {
-//			HashMapVerwaltung.erweitereHashmapBoolean(
-//					HashMapVerwaltung.genauEineAufgabe, true);
-//		}
-//		HashMapVerwaltung.erweitereHashmapInt(
-//				HashMapVerwaltung.keyAnzahl, anzahl);
-//		System.out.println("Es wurden "
-//				+ HashMapVerwaltung.getAufgabenzahlAusHashmap()
-//				+ " Aufgabendeklarationen gefunden");
-//		//HashMapVerwaltung.erweitereHashmapMuster(
-//				HashMapVerwaltung.keyDeklaration, muster);
-//		for (int i = 0; i < anzahl; i++) {
-//			String key = "Aufgabe" + (i + 1);
-//			int zeile = setWithHighestScore.declarations
-//				.get(i).getLineNumber();
-//			String schluesselWort = setWithHighestScore.declarations
-//				.get(i).getFirstWord();
-//			String aufgabenBezeichnung = setWithHighestScore
-//				.declarations.get(i).getSecondWord();
-//			HashMapVerwaltung.erweitereHashmap(
-//					key, schluesselWort, aufgabenBezeichnung, zeile);
-//		}
-		// ----------------------------------------------------
-		// ----------------------------------------------------
 
 		return mergedExerciseAndSolutionDeclarationSet;
 
