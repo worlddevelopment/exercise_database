@@ -71,7 +71,6 @@ public class Aufgaben_DB {
 //	}
 	//private static Sheetdraft processUploadedSheetdraft()
 			throws Exception {
-		//HashLog.initialisiereLogFile(); <-- out as of version 31.01
 
 		// ------- superfluous?
 		// Check file ending using the DocType enum.

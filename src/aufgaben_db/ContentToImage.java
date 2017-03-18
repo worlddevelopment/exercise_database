@@ -26,9 +26,6 @@ import docx4j_library.ConvertOutPDF;
 
 
 
-import Verwaltung.HashLog;
-
-
 
 /**
  * This class is to be extended. Its heritage provides a function
@@ -423,10 +420,8 @@ public /*abstract*/ class ContentToImage {
 		// Raw content
 		//TODO Investigate if really necessary to keep a copy in objects
 		// By the way this is done in the method extractRawContent().
-		HashLog.erweitereLogFile(
-					"File: " + filelink + ".\nHint: Save as RTF for a"
-					+ " better quality plain text extraction."
-					);
+		System.out.println("File: " + filelink);
+
 		// DOC
 		if (ending.equals("doc")) {
 			this.plainText = DocConverter.erstelleTextausDoc(filelink);
