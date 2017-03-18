@@ -236,12 +236,12 @@ public class TextMarkupProcessor {
 	 * TODO Always ensure the cache is valid.
 	 */
 	public String findPlainTextFirstWord(String plainText) {
-		return MethodenWortSuche
+		return WordSearch
 			.sucheErstesWortImDoc(plainText);
 	}
 
 	public String findPlainTextLastWord(String plainText) {
-		return MethodenWortSuche
+		return WordSearch
 			.sucheLetztesWortImDoc(textdoc);
 	}
 

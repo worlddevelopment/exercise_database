@@ -8,7 +8,7 @@ package aufgaben_db;
  *
  * @author sabine, J.R.I.Balzer-Wein, worlddevelopment
  */
-public class MethodenWortSuche {
+public class WordSearch {
 
 
 
