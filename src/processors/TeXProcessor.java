@@ -23,7 +23,7 @@ import converter.Converter;
  * @author Schweiner, Artijom, J.R.I.B., worlddevelopment
  *
  */
-public class LatexCutter {
+public class TeXProcessor {
 
 /**
  * Cuts the given LaTeX sheetdraft with the help of a stored
@@ -36,7 +36,7 @@ public class LatexCutter {
  */
 	public static ArrayList<Part> cutParts(Sheetdraft sheetdraft) throws IOException {
 
-		System.out.println("LatexCutter was called.");
+		System.out.println("TeXProcessor was called.");
 
 		String headermixture = ""; // to be determined
 //		ArrayList<String> allLines = new ArrayList<String>();
@@ -172,7 +172,7 @@ public class LatexCutter {
 
 		}
 
-		System.out.println("*done* LatexCutter: cutParts");
+		System.out.println("*done* TeXProcessor: cutParts");
 		return outputTexParts;
 	}
 

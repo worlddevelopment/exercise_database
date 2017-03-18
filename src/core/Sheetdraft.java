@@ -67,7 +67,7 @@ import org.junit.Assert;
 import org.jvnet.jaxb2_commons.ppp.Child;
 
 import core.Part.Docx4JTravelCallback;
-import core.LatexCutter;
+import processors.TeXProcessor;
 
 import org.odftoolkit.odfdom.pkg.OdfPackage;
 import org.odftoolkit.odfdom.pkg.OdfPackageDocument;
@@ -872,11 +872,11 @@ public class Sheetdraft extends ContentToImage {
 			// At this point a pdf file has to be generated again? TODO
 			// Similar to the plain text version, but look for begin
 			// and end tags.
-			this.setParts(LatexCutter.cutParts(this));
+			this.setParts(TeXProcessor.cutParts(this));
 			// Method 1) Generate PDFs out of the parts. Then create image from these PDFs.
 			// TODO
 			// Method 2) Create an image out of the chunk of LaTex using e.g. JLatexMath/SnuggleTex,JEuclid
-			LatexCutter.createImagesForParts(this);
+			TeXProcessor.createImagesForParts(this);
 
 		}
 		// TXT
