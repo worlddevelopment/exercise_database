@@ -33,7 +33,7 @@
 
 <%@page import="db.UnixComandosThread"%>
 <%@page import="core.Global, core.PartDB"%>
-<%@page import="core.Exercise, core.Sheetdraft"%>
+<%@page import="core.Part, core.Sheetdraft"%>
 
 
 
@@ -248,17 +248,17 @@ try {
 
 	// PLAIN TEXT EXERCISES: (within try statement now to free the lock of the index writer in all cases.)
 
-	/* At this point the exercises are extracted, stored in the filesystem and the
-	relationships between exercise-sheetdrafts are stored in the database via filelink as id.*/
-	ArrayList<Exercise> al = new ArrayList<Exercise>();
-	al.addAll(sheetdraft.getAllExercisesPlainText().values());
+	/* At this point the parts are extracted, stored in the filesystem and the
+	relationships between part-sheetdrafts are stored in the database via filelink as id.*/
+	ArrayList<Part> al = new ArrayList<Part>();
+	al.addAll(sheetdraft.getAllPartsPlainText().values());
 	aufg_anz = al.size();
 	System.out.println(Global.addMessage("" + aufg_anz + " Aufgaben gefunden.</br>",
 			aufg_anz == 0 ? "nosuccess" : "success"));
-	//aufg_filelink = (String[])(sheetdraft.getAllExercises().keySet().toArray());gave a cast error
+	//aufg_filelink = (String[])(sheetdraft.getAllParts().keySet().toArray());gave a cast error
 
 	try {
-		// Generate images for exercise:
+		// Generate images for part:
 		for (int i = 0; i < aufg_anz; i++) {
 
 			String[] plainText = al.get(i).getPlainText();
@@ -275,49 +275,49 @@ try {
 			);
 			doc.add(new Field(al.get(i).getFilelink(), al.get(i).getPlainTextAsString(), Field.Store.YES, Field.Index.ANALYZED));
 		}
-		Global.addMessage("Created images to each exercise (plain text) ...", " success "/*, request, pageContext*/);
+		Global.addMessage("Created images to each part (plain text) ...", " success "/*, request, pageContext*/);
 
 
 
 		// NATIVE FORMAT EXERCISES
-		//al.addAll(sheetdraft.getAllExercises().values());
-		// Generate images for exercise:
-		for (Exercise exercise : sheetdraft.getAllExercises().values()) {
+		//al.addAll(sheetdraft.getAllParts().values());
+		// Generate images for part:
+		for (Part part : sheetdraft.getAllParts().values()) {
 
 			String sheetdraft_ending = Global.extractEnding(sheetdraft.getFilelink());
-			String exercise_ending = Global.extractEnding(exercise.getFilelink());
+			String part_ending = Global.extractEnding(part.getFilelink());
 
-			// Figure out which plain text exercise that has been generated corresponds to
+			// Figure out which plain text part that has been generated corresponds to
 			// this raw/native format one:
-			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.getFilelink());
-			String exercisePT_filelink
-			= sheetdraft.getFilelinkForExerciseFromPosWithoutEnding(exerciseNumber, exerciseNumber)
-					+ "." + sheetdraft_ending + ".txt" //+ exercise_ending
+			int partNumber = Global.extractPartNumberFromFilelink(part.getFilelink());
+			String partPT_filelink
+			= sheetdraft.getFilelinkForPartFromPosWithoutEnding(partNumber, partNumber)
+					+ "." + sheetdraft_ending + ".txt" //+ part_ending
 					;
 
-			Exercise exercisePT = sheetdraft.getAllExercisesPlainText().get(exercisePT_filelink);
+			Part partPT = sheetdraft.getAllPartsPlainText().get(partPT_filelink);
 			String correspondingPlainText = "";
-			if (exercisePT != null) {
-				correspondingPlainText = exercisePT.getPlainTextAsString();
-				//doc.add(new Field(exercise.getFilelink(), correspondingPlainText, Field.Store.YES, Field.Index.ANALYZED));
+			if (partPT != null) {
+				correspondingPlainText = partPT.getPlainTextAsString();
+				//doc.add(new Field(part.getFilelink(), correspondingPlainText, Field.Store.YES, Field.Index.ANALYZED));
 				doc.add(new Field("content", correspondingPlainText, Field.Store.YES, Field.Index.ANALYZED));
 			}
 			else {
-				Global.addMessage("No corresponding plain text exercise found.", "danger");
+				Global.addMessage("No corresponding plain text part found.", "danger");
 			}
 
 			//for now this would overwrite odt.txt -> odt.png!! Now using triple endings for images only?
-			//exercise.generateImage();
+			//part.generateImage();
 
-			al.add(exercise);
+			al.add(part);
 
 		}
 
 
 
 		// COMMON FORMAT EXERCISES (currently HTML as of v31.13c)
-		if (sheetdraft.getAllExercisesCommonFormat() != null) {
-			al.addAll(sheetdraft.getAllExercisesCommonFormat().values());
+		if (sheetdraft.getAllPartsCommonFormat() != null) {
+			al.addAll(sheetdraft.getAllPartsCommonFormat().values());
 		}
 
 
@@ -340,7 +340,7 @@ try {
 	/* INDEX WRITER -END */
 
 
-	/* File processing (splitting in exercises, ...) -END */
+	/* File processing (splitting in parts, ...) -END */
 	/*..........................................................................*/
 	/*..........................................................................*/
 
@@ -538,9 +538,9 @@ try {
 		for(int i = 0; i < aufg_anz; i++) {
 
 
-			query = Global.getQUERY_INSERT_INTO_exercise(al.get(i));
+			query = Global.getQUERY_INSERT_INTO_part(al.get(i));
 
-//			query = "INSERT INTO exercise ("
+//			query = "INSERT INTO part ("
 //						+ "sheetdraft_filelink"
 //						+ ", `filelink`"
 //						+ ", `originsheetdraft_filelink`"
@@ -550,9 +550,9 @@ try {
 //						+ ", whencreated"
 //					+ ")"
 //					+ "VALUES ("
-//				+ "'" + exercise_sheetdraft_filelink + "'"//sheetdraft_filelink
+//				+ "'" + part_sheetdraft_filelink + "'"//sheetdraft_filelink
 //				+ ",'" + al.get(i).getFilelinkRelative() + "'"
-//				+ ",'" + exercise_sheetdraft_filelink + "'"//originsheetdraft_filelink
+//				+ ",'" + part_sheetdraft_filelink + "'"//originsheetdraft_filelink
 //				+ ",'" + al.get(i).getSplitBy() + "'"
 //				//+ ",'" + Global.sqlm.mysql_real_escape_string(al.get(i).getPlainTextAsString())
 //				+ ", " + al.get(i).isNativeFormat() //is_native_format <-- all directly uploaded sheets are initially in native format

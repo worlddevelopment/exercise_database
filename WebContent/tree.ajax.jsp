@@ -71,11 +71,11 @@ if (varname_chosen == null) {
 //	SQL_Methods.createTreeView(request, response);
 //	response.getWriter().write("</div>");
 }
-else if (varname_chosen.equals("list_all_exercises") || varname_chosen.equals("List all exercises")
-		|| varname_chosen.equals("list_all_own_exercises") || varname_chosen.equals("List all own exercises")) {
+else if (varname_chosen.equals("list_all_parts") || varname_chosen.equals("List all parts")
+		|| varname_chosen.equals("list_all_own_parts") || varname_chosen.equals("List all own parts")) {
 
 
-	/*TODO If the sorting and grouping has no issues with it, then load the exercise rows using AJAX.
+	/*TODO If the sorting and grouping has no issues with it, then load the part rows using AJAX.
 		   i.e. At the end we could put a button, load more. Or we use a pager. Even though all of
 		   this really creates heaps of problems for JavaScript sorting and grouping.
 
@@ -98,7 +98,7 @@ else if (varname_chosen.equals("list_all_exercises") || varname_chosen.equals("L
 	}
 
 
-	//load x many exercises from start:
+	//load x many parts from start:
 	int howManyToLoadCount = 50;
 	int start_offset; start_offset = 0;
 
@@ -114,7 +114,7 @@ else if (varname_chosen.equals("list_all_exercises") || varname_chosen.equals("L
 	String sql;
 	ResultSet res1; res1 = null;
 	/* Note: Ajax can be debugged like the following:
-	   http://localhost:8080/aufgaben_db_v15/tree.ajax.jsp?debug=debug&ansicht=list_all_exercises
+	   http://localhost:8080/aufgaben_db_v15/tree.ajax.jsp?debug=debug&ansicht=list_all_parts
 	 */
 %>
 <!-- EXERCISE LISTING -->
@@ -137,7 +137,7 @@ else if (varname_chosen.equals("list_all_exercises") || varname_chosen.equals("L
 </form>
 </div>
 <form method="post" action="" onsubmit="/*TODO ajaxise return false;*/">
-<table id="exercise-listing" class="listing exercise-listing grid tablesorter">
+<table id="part-listing" class="listing part-listing grid tablesorter">
 	<!--
 	<colgroup>
 		<col width="19" />
@@ -158,7 +158,7 @@ out.println("<tr>"
 		   + "<th>" + Global.display("origin") + " <i class='icon-tree'></i></th>"/* Currently the order is from general left to specific right. */
 		   + "<th>" + Global.display("belongs to") + " " + Global.display("sheet") + "<i class='icon-tree'></i></th>"
 		   + "<th>" + Global.display("filelink") + "</th>"
-		   + "<th>" + Global.display("corresponding solution") + " " + Global.display("or") + " " + Global.display("exercise") + "</th>"
+		   + "<th>" + Global.display("corresponding solution") + " " + Global.display("or") + " " + Global.display("part") + "</th>"
 		   + "<th>" + Global.display("upload date") + " <i class='icon-tree'></i></th>"
 		   + "<th>" + Global.display("category") + System.getProperty("file.separator")/*<- as hint on underlaying os*/ + Global.display("tags") + "<i class='icon-tree'></i></th>"
 		   + "<th>" + Global.display("semester") + "<i class='icon-tree'></i></th>"/*Note: Semester has to be the highest level folder if a course name
@@ -179,13 +179,13 @@ out.println("<tr>"
 <%
 
 
-sql = "SELECT DISTINCT exercise.filelink, exercise.originsheetdraft_filelink, exercise.sheetdraft_filelink, exercise.splitby, exercise.is_native_format, exercise.whenchanged, exercise.whencreated"
-		+ " FROM exercise";
-if ( varname_chosen.equals("list_all_own_exercises") || varname_chosen.equals("List all own exercises") ) {
+sql = "SELECT DISTINCT part.filelink, part.originsheetdraft_filelink, part.sheetdraft_filelink, part.splitby, part.is_native_format, part.whenchanged, part.whencreated"
+		+ " FROM part";
+if ( varname_chosen.equals("list_all_own_parts") || varname_chosen.equals("List all own parts") ) {
 	sql += ", sheetdraft, lecturer"
 			+ " WHERE "
 				+ "(sheetdraft.author = '" + session_user + "' OR (lecturer = '" + session_user + "' AND sheetdraft.lecturer_id = lecturer.id))"//first select, then join.
-				+ " AND exercise.sheetdraft_filelink = sheetdraft.filelink"
+				+ " AND part.sheetdraft_filelink = sheetdraft.filelink"
 			;
 }
 // First group: (to have less rows)
@@ -205,7 +205,7 @@ sql += " GROUP BY `" + group_by_column + "`";
 */
 
 // Then sort (the grouped rows):
-String sort_by_column = "whencreated";//exercise.whenchanged";
+String sort_by_column = "whencreated";//part.whenchanged";
 if (request != null && request.getParameter("sort_by") != null) {
 	sort_by_column = request.getParameter("sort_by");
 }
@@ -214,23 +214,23 @@ sql += " LIMIT " + start_offset + "," + howManyToLoadCount;
 
 res1 = Global.query(sql);
 if (res1 == null) {
-	out.print("<tr><td colspan=\"11\">No exercises found for user "+ session_user +". "/*);*/
+	out.print("<tr><td colspan=\"11\">No parts found for user "+ session_user +". "/*);*/
 	/* return is no good option if this is not wrapped in a function. Unfortunately throwing an
 	   exception is no better and results in an ajax error. So we went for the else clause.*/
-	/*throw new NullPointerException(*/ + "Exercise List found nothing OR query was invalid. "
+	/*throw new NullPointerException(*/ + "Part List found nothing OR query was invalid. "
 			+ " Check keywords used or if generated parameters were empty.</td></tr>");
 }
 else {
-	int all_exercises_index = 0;
-	//else list all exercises for each found sheetdraft:
+	int all_parts_index = 0;
+	//else list all parts for each found sheetdraft:
 	while (res1.next()) {
 
 		//String aufg_id = res1.getString("id");
-		String exercise_filelink = res1.getString("filelink");
+		String part_filelink = res1.getString("filelink");
 		// Get other missing variables for the table or a possible edit
 		String originsheetdraft_filelink = res1.getString("originsheetdraft_filelink");
 		String sheetdraft_filelink = res1.getString("sheetdraft_filelink");//= filelink
-		String exercise_splitby = res1.getString("splitby");
+		String part_splitby = res1.getString("splitby");
 
 
 		// ----Fetch more information to the sheetdraft it belongs to ----
@@ -269,50 +269,50 @@ else {
 
 
 		// ------ Statistics ------
-		// List and count of all semesters this exercise is used in.
+		// List and count of all semesters this part is used in.
 		sql = "SELECT DISTINCT sheetdraft.semester, sheetdraft.filelink"//, COUNT(DISTINCT sheetdraft.semester) AS semester_used_in_count"
-				+ " FROM sheetdraft, exercise WHERE exercise.filelink='"+ exercise_filelink +"'"
-				+ " AND sheetdraft.filelink = exercise.sheetdraft_filelink"
+				+ " FROM sheetdraft, part WHERE part.filelink='"+ part_filelink +"'"
+				+ " AND sheetdraft.filelink = part.sheetdraft_filelink"
 		;
 		ResultSet res_statistics = Global.query(sql);
-		String exercise_semester_used_in = "";
+		String part_semester_used_in = "";
 
-		int exercise_semester_used_in_count = 0;
+		int part_semester_used_in_count = 0;
 		if (res_statistics != null/* && res_semester.next()*/) {
 			// There may be more than one sheetdraft filelinks, all having the same COUNT of semester.
 			while (res_statistics.next()) {
 				// Currently we are only interested in the semesters and the semester count. Not the correpsonding sheetdrafts.
-				exercise_semester_used_in += res_statistics.getString("semester");
-				exercise_semester_used_in += " (" + Global.extractFilename(res_statistics.getString("filelink")) + ")";
-				exercise_semester_used_in += ",";
-				exercise_semester_used_in_count++;//SELECT COUNT(DISTINCT sheetdraft.semester) FROM sheetdraft, exercise WHERE exercise.filelink='uploads/WS_2014/Analytik/Weigel/EXERCISES/ADB_uebungsblatt11.odt.odt__Exercise_2__splitby_AUFGABE.odt.odt' AND sheetdraft.filelink = exercise.sheetdraft_filelink;
+				part_semester_used_in += res_statistics.getString("semester");
+				part_semester_used_in += " (" + Global.extractFilename(res_statistics.getString("filelink")) + ")";
+				part_semester_used_in += ",";
+				part_semester_used_in_count++;//SELECT COUNT(DISTINCT sheetdraft.semester) FROM sheetdraft, part WHERE part.filelink='uploads/WS_2014/Analytik/Weigel/EXERCISES/ADB_uebungsblatt11.odt.odt__Part_2__splitby_AUFGABE.odt.odt' AND sheetdraft.filelink = part.sheetdraft_filelink;
 
 			}
 		}
 		Global.queryTidyUp(res_statistics);
-		exercise_semester_used_in = exercise_semester_used_in.replaceAll(",$", "");
+		part_semester_used_in = part_semester_used_in.replaceAll(",$", "");
 
-		// count of all sheetdrafts this exercise is used in.
+		// count of all sheetdrafts this part is used in.
 		sql = "SELECT COUNT(DISTINCT sheetdraft_filelink) AS count"
-				+ " FROM exercise WHERE exercise.filelink='"+ exercise_filelink +"'"
-				//+ " FROM sheetdraft, exercise WHERE exercise.filelink='"+ exercise_filelink +"'"
-				//+ " AND sheetdraft.filelink = exercise.sheetdraft_filelink;"
+				+ " FROM part WHERE part.filelink='"+ part_filelink +"'"
+				//+ " FROM sheetdraft, part WHERE part.filelink='"+ part_filelink +"'"
+				//+ " AND sheetdraft.filelink = part.sheetdraft_filelink;"
 				;
 		res_statistics = Global.query(sql);
-		int exercise_how_often_used = 0;
+		int part_how_often_used = 0;
 		if (res_statistics != null && res_statistics.next()) {
-			exercise_how_often_used = res_statistics.getInt("count");
+			part_how_often_used = res_statistics.getInt("count");
 		}
 		Global.queryTidyUp(res_statistics);
 
 
 		sql = "SELECT COUNT(DISTINCT originsheetdraft_filelink) AS count"
-				+ " FROM exercise WHERE exercise.filelink='"+ exercise_filelink +"'"
+				+ " FROM part WHERE part.filelink='"+ part_filelink +"'"
 				;
 		res_statistics = Global.query(sql);
-		int exercise_how_often_used_derived_total = 0;
+		int part_how_often_used_derived_total = 0;
 		if (res_statistics != null && res_statistics.next()) {
-			exercise_how_often_used_derived_total = res_statistics.getInt("count");//SELECT sheetdraft_filelink, semester, COUNT(DISTINCT sheetdraft.semester) FROM sheetdraft, exercise WHERE exercise.filelink='uploads/WS_2014/Analytik/Weigel/EXERCISES/ADB_uebungsblatt11.odt.odt__Exercise_2__splitby_AUFGABE.odt.odt' AND sheetdraft.filelink = exercise.sheetdraft_filelink;
+			part_how_often_used_derived_total = res_statistics.getInt("count");//SELECT sheetdraft_filelink, semester, COUNT(DISTINCT sheetdraft.semester) FROM sheetdraft, part WHERE part.filelink='uploads/WS_2014/Analytik/Weigel/EXERCISES/ADB_uebungsblatt11.odt.odt__Part_2__splitby_AUFGABE.odt.odt' AND sheetdraft.filelink = part.sheetdraft_filelink;
 		}
 		Global.queryTidyUp(res_statistics);
 
@@ -336,35 +336,35 @@ else {
 		}
 
 
-		/* ----Determine the corresponding Exercise to the Solution or Solution to the Exercise.
-			   There are some scenarios for differences in the path of an exercise as compared to a solution:
-			   1) <same_semester>/<same_course>/<same_lecturer>/<different_TYPE>/<different_mothersheet_filelink>__Exercise_<same_exercise_number>__splitby_<different_splitter>.<same_orig_ending>.<same_ending>
+		/* ----Determine the corresponding Part to the Solution or Solution to the Part.
+			   There are some scenarios for differences in the path of an part as compared to a solution:
+			   1) <same_semester>/<same_course>/<same_lecturer>/<different_TYPE>/<different_mothersheet_filelink>__Part_<same_part_number>__splitby_<different_splitter>.<same_orig_ending>.<same_ending>
 					   e.g.	  Path is equal, splitter different: (would overwrite mothersheet and if we allow only one solution per sheet that's desirable)
-							WS_2014/Brunnenbau/Eratosthenes/SOLUTION/Brunnenbau_Blatt_010.odt.odt__Exercise_1__splitby_AUFGABE.odt.luatex
-							WS_2014/Brunnenbau/Eratosthenes/SOLUTION/Brunnenbau_Blatt_010.odt.odt__Exercise_1__splitby_LOESUNG.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/SOLUTION/Brunnenbau_Blatt_010.odt.odt__Part_1__splitby_AUFGABE.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/SOLUTION/Brunnenbau_Blatt_010.odt.odt__Part_1__splitby_LOESUNG.odt.luatex
 							Note: Above the path is equal. The motherfilelink too. If chosen wrong TYPE at upload
-								  by accident then this would overwrite the motherfile, but not the exercises as long as the splitter is different.
+								  by accident then this would overwrite the motherfile, but not the parts as long as the splitter is different.
 								  So there exists these cases too:
-							WS_2014/Brunnenbau/Eratosthenes/EXERCISE/Brunnenbau_Loesung_010.odt.odt__Exercise_1__splitby_LOESUNG.odt.luatex
-							WS_2014/Brunnenbau/Eratosthenes/EXERCISE/Brunnenbau_Blatt_010-Lsg.odt.odt__Exercise_1__splitby_LOESUNG.odt.luatex
-							WS_2014/Brunnenbau/Eratosthenes/EXERCISE/Brunnenbau_Blatt_010-Loesung.odt.odt__Exercise_1__splitby_LOESUNG.odt.luatex
-							WS_2014/Brunnenbau/Eratosthenes/EXERCISE/Brunnenbau_Blatt_010-L.odt.odt__Exercise_1__splitby_LOESUNG.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/EXERCISE/Brunnenbau_Loesung_010.odt.odt__Part_1__splitby_LOESUNG.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/EXERCISE/Brunnenbau_Blatt_010-Lsg.odt.odt__Part_1__splitby_LOESUNG.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/EXERCISE/Brunnenbau_Blatt_010-Loesung.odt.odt__Part_1__splitby_LOESUNG.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/EXERCISE/Brunnenbau_Blatt_010-L.odt.odt__Part_1__splitby_LOESUNG.odt.luatex
 								and this where the type was chosen correctly:
-							WS_2014/Brunnenbau/Eratosthenes/SOLUTION/Brunnenbau_Blatt_010.odt.odt__Exercise_1__splitby_LOESUNG.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/SOLUTION/Brunnenbau_Blatt_010.odt.odt__Part_1__splitby_LOESUNG.odt.luatex
 								still the Loesung keyword could be added AND the sheettype be chosen correctly:
-							WS_2014/Brunnenbau/Eratosthenes/SOLUTION/Brunnenbau_Loesung_010.odt.odt__Exercise_1__splitby_LOESUNG.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/SOLUTION/Brunnenbau_Loesung_010.odt.odt__Part_1__splitby_LOESUNG.odt.luatex
 
-							=> Many different possibilities to find a solution that belongs to an exercise.
+							=> Many different possibilities to find a solution that belongs to an part.
 
-			   2) <same_semester>/<same_course>/<same_lecturer>/<same_TYPE>/<same_mothersheet_filelink>__Exercise_<same_exercise_number>__splitby_<different_splitter>.<same_orig_ending>.<same_ending>
-					   e.g. WS_2014/Brunnenbau/Eratosthenes/EXAM/Brunnenbau_Exam_010.odt.odt__Exercise_1__splitby_AUFGABE.odt.luatex
-							WS_2014/Brunnenbau/Eratosthenes/EXAM/Brunnenbau_Exam_010.odt.odt__Exercise_1__splitby_LOESUNG.odt.luatex
+			   2) <same_semester>/<same_course>/<same_lecturer>/<same_TYPE>/<same_mothersheet_filelink>__Part_<same_part_number>__splitby_<different_splitter>.<same_orig_ending>.<same_ending>
+					   e.g. WS_2014/Brunnenbau/Eratosthenes/EXAM/Brunnenbau_Exam_010.odt.odt__Part_1__splitby_AUFGABE.odt.luatex
+							WS_2014/Brunnenbau/Eratosthenes/EXAM/Brunnenbau_Exam_010.odt.odt__Part_1__splitby_LOESUNG.odt.luatex
 		*/
-		String correspondingExerciseFilelink = "";//null;
+		String correspondingPartFilelink = "";//null;
 		if ( !( semester.isEmpty() || course.isEmpty() || lecturer.isEmpty() || type.isEmpty() )
 				) {
 
-			correspondingExerciseFilelink = Global.resolveCorrespondingFilelinkTo(exercise_filelink);
+			correspondingPartFilelink = Global.resolveCorrespondingFilelinkTo(part_filelink);
 
 		}
 		// semester, course and lecturer are not empty?
@@ -386,8 +386,8 @@ else {
 		%>">
 		<!-- ADAPT ROWSPAN IF AN EXTRA ROW FOR PREVIEW IMAGE IS REINTRODUCED. -->
 		<td rowspan="1" class="collapsible">
-		<input id="exerciseRowAction_mark<%= res1.getRow() %>"
-				name="exercise_filelinks[]" value="<%= exercise_filelink %>" type="checkbox"
+		<input id="partRowAction_mark<%= res1.getRow() %>"
+				name="part_filelinks[]" value="<%= part_filelink %>" type="checkbox"
 				title="select" />
 		</td>
 		<%
@@ -410,11 +410,11 @@ else {
 
 		// Preview image in the first content as it needs a lot of space:
 		// overflow:hidden; css property or similar will break the preview resizing.
-		out.println("<label for='exerciseRowAction_mark"+ res1.getRow() +"'>"
-				+ "<img src='" + Global.convertToImageLink(exercise_filelink)
+		out.println("<label for='partRowAction_mark"+ res1.getRow() +"'>"
+				+ "<img src='" + Global.convertToImageLink(part_filelink)
 				+ "' alt='inline preview image' title='Diese Aufgabe ausw&auml;hlen.' align='left' />"
 				+ "</label>"
-				+ "<!-- Exercise optical separator --><hr />");
+				+ "<!-- Part optical separator --><hr />");
 
 		out.print("</td>");
 
@@ -440,7 +440,7 @@ else {
 						+ "<i class='icon-edit'></i>"
 					+ "</a>"
 					+ "<a href='?id=start&q=delete_sheet&filelink=" + URLEncoder.encode(sheetdraft_filelink, "utf-8") + "' class='btn-danger'"
-							+" title='delete sheet and all its exercises'"
+							+" title='delete sheet and all its parts'"
 							+" onmouseover='this.className=\"btn btn-danger\";'"
 							+" onmouseout='this.className=\"btn-danger\";'>"
 						+ "<i class='icon-trash icon-white'></i>"
@@ -455,41 +455,41 @@ else {
 				+ "</a></td>");
 
 		// EXERCISE/SOLUTION FILELINK:
-		end = Global.extractEnding(exercise_filelink);
+		end = Global.extractEnding(part_filelink);
 		imageType = ".png";
 		if (end.equals(".odt") || end.equals("odt")) {
 			//imageType = ".svg";<--svg is causing lag if it's just needed too often or contains too many vector nodes.
 		}
 		out.println("<td class='"+ end +"'>"
-				+ "<a href='" + exercise_filelink
-						+ "' class='screenshot' rel='" + Global.convertToImageLink(exercise_filelink)
+				+ "<a href='" + part_filelink
+						+ "' class='screenshot' rel='" + Global.convertToImageLink(part_filelink)
 						+ "'>"
-					+"<img class='icon' src='img/css/"+ end + imageType +"' title='"+ end + ": " + Global.extractFilenameAndEnding(exercise_filelink) + "' align='left' />"
+					+"<img class='icon' src='img/css/"+ end + imageType +"' title='"+ end + ": " + Global.extractFilenameAndEnding(part_filelink) + "' align='left' />"
 					+"<i onclick='/*toggleClass(this, */this.className=\"icon-ok\";' class='icon-download'></i> "
 					+"<img onmouseover='/*toggleClass(this,*/this.className=\"icon-eye-close\";' class='icon-eye-open'  title='Derived "
-							+ exercise_how_often_used_derived_total + " times. Still referenced "+ exercise_how_often_used +" times. | Used in "+ exercise_semester_used_in_count +" Semester: "+ exercise_semester_used_in +"' />"//<i class='icon-eye-open'></i>"
-					+ Global.extractExercisePartOnlyFromExerciseFilelink(exercise_filelink)//Global.extractFilename(exercise_filelink) + "." + Global.extractEnding(exercise_filelink)
+							+ part_how_often_used_derived_total + " times. Still referenced "+ part_how_often_used +" times. | Used in "+ part_semester_used_in_count +" Semester: "+ part_semester_used_in +"' />"//<i class='icon-eye-open'></i>"
+					+ Global.extractPartPartOnlyFromPartFilelink(part_filelink)//Global.extractFilename(part_filelink) + "." + Global.extractEnding(part_filelink)
 				+ "</a></td>");
 
 		//CORRESPONDING EXERCISE SOLUTION FILELINK:
 		out.println("<td class='"+ end +"'>");
-		if (correspondingExerciseFilelink == null) {
-			System.out.println("Looks like the corresponding exercise (solution) could not be found. correspondingExerciseFilelink: " + correspondingExerciseFilelink);
-			correspondingExerciseFilelink = "";
+		if (correspondingPartFilelink == null) {
+			System.out.println("Looks like the corresponding part (solution) could not be found. correspondingPartFilelink: " + correspondingPartFilelink);
+			correspondingPartFilelink = "";
 		}
 		else {
-			end = Global.extractEnding(correspondingExerciseFilelink);
+			end = Global.extractEnding(correspondingPartFilelink);
 //			if (end.equals(".odt") || end.equals("odt")) {
 //				//imageType = ".svg";<--svg is causing lag if it's just needed too often or contains too many vector nodes.
 //			}
 
-			out.println("<a href='" + correspondingExerciseFilelink
-						+ "' class='screenshot' rel='" + Global.convertToImageLink(correspondingExerciseFilelink)
+			out.println("<a href='" + correspondingPartFilelink
+						+ "' class='screenshot' rel='" + Global.convertToImageLink(correspondingPartFilelink)
 						+ "'>"
-					+"<img class='icon' src='img/css/"+ end + imageType +"' title='"+ end + ": " + Global.extractFilenameAndEnding(correspondingExerciseFilelink) + "' align='left' />"
+					+"<img class='icon' src='img/css/"+ end + imageType +"' title='"+ end + ": " + Global.extractFilenameAndEnding(correspondingPartFilelink) + "' align='left' />"
 					+"<i class='icon-download'></i> <i class='icon-eye-open'></i>"
-					+ Global.extractExercisePartOnlyFromExerciseFilelink(correspondingExerciseFilelink)
-					//+ Global.extractFilenameAndEnding(correspondingExerciseFilelink)
+					+ Global.extractPartPartOnlyFromPartFilelink(correspondingPartFilelink)
+					//+ Global.extractFilenameAndEnding(correspondingPartFilelink)
 				+ "</a>");
 		}
 		out.println("</td>");
@@ -498,7 +498,7 @@ else {
 		String description_input_id = "input_description_" + res1.getRow();
 		String description_old_input_id = description_input_id + "_old";
 		String onchange = "var description_old=document.getElementById('" + description_old_input_id + "');var description=document.getElementById('" + description_input_id + "'); "
-				+ "var el = document.getElementById('btn_ajax_submit_" + res1.getRow() /*all_exercises_index*/ + "');"
+				+ "var el = document.getElementById('btn_ajax_submit_" + res1.getRow() /*all_parts_index*/ + "');"
 				+ " el = el || this.nextElementNode;"
 				+ "if (description.value != description_old.value) { "
 					+ " el.disabled=false; el.style.display='inline';"
@@ -516,7 +516,7 @@ else {
 					<jsp:param name="default" value="<%=description %>" />
 					<jsp:param name="node_id" value="<%=description_old_input_id %>" />
 				</jsp:include>
-				<!-- TODO add possibility to add tags and description to exercises instead of the sheet as a whole?
+				<!-- TODO add possibility to add tags and description to parts instead of the sheet as a whole?
 				<input type="text" onfocus="makeNextButtonSubmit(this);" onkeyup="makeNextButtonSubmit(this);" />
 				-->
 				<jsp:include page="input.generic.jsp">
@@ -526,11 +526,11 @@ else {
 					<jsp:param name="onfocus" value="<%=onchange %>" />
 					<jsp:param name="onkeyup" value="<%=onchange %>" />
 				</jsp:include>
-				<button id="btn_ajax_submit_<%= res1.getRow() /*all_exercises_index*/ %>" type="button" style="display:none;" disabled="disabled" name="q" value="change_draft_exercise_position" class="btn btn-success" title="Update all!">
+				<button id="btn_ajax_submit_<%= res1.getRow() /*all_parts_index*/ %>" type="button" style="display:none;" disabled="disabled" name="q" value="change_draft_part_position" class="btn btn-success" title="Update all!">
 				  &larr;<i class="icon-refresh icon-white"></i>&nbsp;&amp;&nbsp;<i class="icon-ok icon-white"></i>&rarr;
 				</button>
 			</td>
-			<td title="For a list of all semesters this exercise can be found in: hover the details icon within the exercise filelink column.">
+			<td title="For a list of all semesters this part can be found in: hover the details icon within the part filelink column.">
 				<jsp:include page="input.semester.jsp">
 					<jsp:param name="default" value="<%=semester %>" />
 					<jsp:param name="onchange" value="<%= onchange %>" />
@@ -567,7 +567,7 @@ else {
 				</jsp:include>
 			</td>
 			<td>
-				<%=exercise_splitby %>
+				<%=part_splitby %>
 			</td>
 			-->
 		<%
@@ -581,14 +581,14 @@ else {
 
 
 		%></tr><%
-		++all_exercises_index;
+		++all_parts_index;
 	}
 	// Tackle memory leaks by closing result set and its statement properly:
 	Global.queryTidyUp(res1);
 }
 
 
-//Merely for the exercise listing
+//Merely for the part listing
 %>
 	</tbody>
 	</table><!-- EXERCISE LISTING -END -->
@@ -654,7 +654,7 @@ var makeTableSortable = (function(idOrObj) {
 		sortList: [[2,0]]//third column is initial sorting order.
 	});//without any options as we can do a zebra effect easily via n-th child of table rows.
 
-})('#exercise-listing');
+})('#part-listing');
 
 */
 
@@ -760,9 +760,9 @@ function toggleClass(obj, one, two) {
 </script>
 <!-- STYLESHEET FOR A MORE COMPACT DESIGN  -->
 <style type="text/css">
-table#exercise-listing select,
-table#exercise-listing input,
-table#exercise-listing input[type="text"]/*to make it overwrite other rules more easily as it's more specific'*/ {
+table#part-listing select,
+table#part-listing input,
+table#part-listing input[type="text"]/*to make it overwrite other rules more easily as it's more specific'*/ {
 	width: auto;
 	min-width: 20px;
 	max-width: 220px;

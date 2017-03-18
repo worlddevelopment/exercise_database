@@ -52,7 +52,7 @@ function getTargetIfLoadDesiredOtherwiseShowCache(target_idOrObj, this_obj) {
 	} */
 	//still no target object to attach the content to found?
 	if (!target_obj) {
-		var target_id_generated = "" + this_obj.id + "_listing"/*<-- could be both sheetdraft or exercise listing. */
+		var target_id_generated = "" + this_obj.id + "_listing"/*<-- could be both sheetdraft or part listing. */
 			   //WORKING BUT PROBLEMATIC: + ("" + target_idOrObj).replace(" ", "_").replace("\[|\]", "-") + '_created_for_callee_' + ("" + this_obj).replace(" ", "_").replace("\[|\]", "-")
 		;
 		/* alert('Target object was undefined! => Falling back to append the loaded content direclty after this element.'
@@ -173,7 +173,7 @@ function ajax_get_listing_sheetdrafts(filelink, semester,course,lecturer,type, a
 		);	// "div#ajaxcontent";
 
 		/* If the commented ready functions and click event assignments are used then
-		  thise ajax get listing sheetdraft|exercise functions have to be called
+		  thise ajax get listing sheetdraft|part functions have to be called
 		  via function(//...)(); at the end of the site to assign the click event! */
 		//$("#ajaxlink" + ajaxlink_num).click(function() {
 			//alert(par1+par2+par3);
@@ -186,7 +186,7 @@ function ajax_get_listing_sheetdrafts(filelink, semester,course,lecturer,type, a
 					+ "&lecturer=" + lecturer
 					+ "&type=" + type
 					+ "&ajaxlink_num=" + ajaxlink_num
-					+ "&session_user=<%=Global.getUserURLEncoded(session)%>" /*for exercise table.ajax.jsp!*/
+					+ "&session_user=<%=Global.getUserURLEncoded(session)%>" /*for part table.ajax.jsp!*/
 					//+ "&sheetdraft_listing"//superfluous
 					,
 				success: function(data) {
@@ -204,11 +204,11 @@ function ajax_get_listing_sheetdrafts(filelink, semester,course,lecturer,type, a
 
 
 /**
- * Loads a table containing all exercises of the lecturer.
+ * Loads a table containing all parts of the lecturer.
  */
-function ajax_get_listing_exercises(sheetdraft_filelink, lecturer /*par1,par2,par3,par4,par5*/, ajaxlink_num
+function ajax_get_listing_parts(sheetdraft_filelink, lecturer /*par1,par2,par3,par4,par5*/, ajaxlink_num
 		, target_idOrObj, source_obj) {
-	//alert('ajax_get_listing_exercises');
+	//alert('ajax_get_listing_parts');
 	/* Lecturer is required because this saves us one join operation in table.ajax.jsp.
 	   As of update v31.13 target_idOrObj and source_obj have been introduced. It's for
 	   1) caching, so that all link that may load ajax content has its own container nearby (and one global one).
@@ -227,13 +227,13 @@ function ajax_get_listing_exercises(sheetdraft_filelink, lecturer /*par1,par2,pa
 	//otherwise we involve ajax:
 	$("#loader").show();
 	//$(document).ready(function(){
-		//Now as of v31.13 the ajax loaded table exercises listing will be placed in somehow determined
+		//Now as of v31.13 the ajax loaded table parts listing will be placed in somehow determined
 		target_idOrObj = target_idOrObj || (source_obj.nextElementSibling ? source_obj.nextElementSibling.nextElementSibling
 				: (source_obj.nextSibling ? source_obj.nextSibling.nextSibling : undefined/*=> create target*/)
 		);	// "div#ajaxcontent";
 
 		/* If the commented ready functions and click event assignments are used then
-		  thise ajax get listing sheetdraft|exercise functions have to be called
+		  thise ajax get listing sheetdraft|part functions have to be called
 		  via function(//...)(); at the end of the site to assign the click event! */
 		//$("#ajaxlink0" + ajaxlink_num).click(function(){
 			//alert('ajax upcoming');
@@ -243,8 +243,8 @@ function ajax_get_listing_exercises(sheetdraft_filelink, lecturer /*par1,par2,pa
 				//data: "semester="+par1+"&course="+ par2 + "&lecturer=" + par3 + "&type=" + par4 + "&filelink=" + par5,
 				data: "filelink=" + sheetdraft_filelink
 					+ "&lecturer=" + lecturer
-					+ "&session_user=<%=Global.getUserURLEncoded(session)%>"/*for exercise table.ajax.jsp!*/
-					+ "&exercise_listing"
+					+ "&session_user=<%=Global.getUserURLEncoded(session)%>"/*for part table.ajax.jsp!*/
+					+ "&part_listing"
 					+ "&ajaxlink_num=" + ajaxlink_num,
 				success: function(data){
 					$(target_obj/*"#ajaxcontent"*/).html(data);
@@ -396,7 +396,7 @@ function removeNode(objOrId) {
 //-->
 </script>
 <%
-String requested = "list_all_exercises";
+String requested = "list_all_parts";
 if (request.getParameter("ansicht") != null/* && session.getAttribute("ansicht") != null
 		&& !session.getAttribute("ansicht").toString().equals(request.getParameter("ansicht"))
 		<--TODO 2 extra comparisons for only occasionally saving one write process?*/) {
@@ -419,10 +419,10 @@ if (session.getAttribute("ansicht") != null) {
 	<option onclick="document.getElementById('defaultAnsicht').value=this.value" value="lecturer"<%=Global.getIfEqualSelectedAttribute(requested, "lecturer")%>><%=Global.display("lecturer") %></option>
 	<option onclick="document.getElementById('defaultAnsicht').value=this.value" value="course"<%=Global.getIfEqualSelectedAttribute(requested, "course")%>><%=Global.display("course") %></option>
 	<option onclick="document.getElementById('defaultAnsicht').value=this.value" disabled="disabled">-------</option>
-	<option onclick="document.getElementById('defaultAnsicht').value=this.value" value="list_all_exercises"<%=Global.getIfEqual(requested, "list_all_exercises", " selected=\"selected\" ") %> >
-		<%=Global.display("list_all_exercises") %></option>
-	<option onclick="document.getElementById('defaultAnsicht').value=this.value" value="list_all_own_exercises"<%=Global.getIfEqual(requested, "list_all_own_exercises", " selected=\"selected\" ") %> >
-		<%=Global.display("list_all_own") /*+ " " + Global.display("own")*/ + " " + Global.display("exercises") %></option>
+	<option onclick="document.getElementById('defaultAnsicht').value=this.value" value="list_all_parts"<%=Global.getIfEqual(requested, "list_all_parts", " selected=\"selected\" ") %> >
+		<%=Global.display("list_all_parts") %></option>
+	<option onclick="document.getElementById('defaultAnsicht').value=this.value" value="list_all_own_parts"<%=Global.getIfEqual(requested, "list_all_own_parts", " selected=\"selected\" ") %> >
+		<%=Global.display("list_all_own") /*+ " " + Global.display("own")*/ + " " + Global.display("parts") %></option>
 </select>
 <form method="post" action="" style="display:inline-block">
 	<input id="defaultAnsicht" type="hidden" name="ansicht" value="" /><!-- value is set on select. -->

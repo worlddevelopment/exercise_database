@@ -40,51 +40,51 @@ else if (q.equals("clear_database")) {
 //====== DRAFT ACTIONS: ===========================================================//
 if (request.getParameter("draft_filelink") != null) {
 
-	/* Each draft has its own and separate draft form containing many draft exercises: */
+	/* Each draft has its own and separate draft form containing many draft parts: */
 	String draft_filelink = request.getParameter("draft_filelink");
 
 
 	//CHANGE DRAFT EXERCISE POSITION
-	if (q.equals("change_draft_exercise_position") || q.equals("change_draft_exercises_positions")
-			|| (request.getParameterValues("draft_exercise_position_old[]") != null
-					&& request.getParameterValues("draft_exercise_position_new[]") != null
-					&& request.getParameterValues("draft_exercise_filelink[]") != null
+	if (q.equals("change_draft_part_position") || q.equals("change_draft_parts_positions")
+			|| (request.getParameterValues("draft_part_position_old[]") != null
+					&& request.getParameterValues("draft_part_position_new[]") != null
+					&& request.getParameterValues("draft_part_filelink[]") != null
 			)
-			|| (request.getParameter("draft_exercise_position_old") != null
-					&& request.getParameter("draft_exercise_position_new") != null
-					&& request.getParameter("draft_exercise_filelink") != null
+			|| (request.getParameter("draft_part_position_old") != null
+					&& request.getParameter("draft_part_position_new") != null
+					&& request.getParameter("draft_part_filelink") != null
 				   // Only if old and new value differ the database has to be adapated.
-					&& request.getParameter("draft_exercise_position_old") != request.getParameter("draft_exercise_position_new")
+					&& request.getParameter("draft_part_position_old") != request.getParameter("draft_part_position_new")
 			)
 	) {
 
 
-		String[] draft_exercises_positions_old; draft_exercises_positions_old = request.getParameterValues("draft_exercise_position_old[]");
-		String[] draft_exercises_positions_new; draft_exercises_positions_new = request.getParameterValues("draft_exercise_position_new[]");
-		String[] draft_exercises_filelinks; draft_exercises_filelinks = request.getParameterValues("draft_exercise_filelink[]");
-		if (draft_exercises_positions_old == null || draft_exercises_positions_new == null
-				|| draft_exercises_filelinks == null) {
-			draft_exercises_positions_old = new String[1];
-			draft_exercises_positions_new = new String[1];
-			draft_exercises_filelinks = new String[1];
-			draft_exercises_positions_old[0] = request.getParameter("draft_exercise_position_old");
-			draft_exercises_positions_new[0] = request.getParameter("draft_exercise_position_new");
-			draft_exercises_filelinks[0] = request.getParameter("draft_exercise_filelink");
+		String[] draft_parts_positions_old; draft_parts_positions_old = request.getParameterValues("draft_part_position_old[]");
+		String[] draft_parts_positions_new; draft_parts_positions_new = request.getParameterValues("draft_part_position_new[]");
+		String[] draft_parts_filelinks; draft_parts_filelinks = request.getParameterValues("draft_part_filelink[]");
+		if (draft_parts_positions_old == null || draft_parts_positions_new == null
+				|| draft_parts_filelinks == null) {
+			draft_parts_positions_old = new String[1];
+			draft_parts_positions_new = new String[1];
+			draft_parts_filelinks = new String[1];
+			draft_parts_positions_old[0] = request.getParameter("draft_part_position_old");
+			draft_parts_positions_new[0] = request.getParameter("draft_part_position_new");
+			draft_parts_filelinks[0] = request.getParameter("draft_part_filelink");
 		}
-		int draft_exercises_index; draft_exercises_index = draft_exercises_filelinks.length;
-		while (--draft_exercises_index > -1) {
-			if (draft_exercises_positions_new[draft_exercises_index]
-					.equals(draft_exercises_positions_old[draft_exercises_index])) {
+		int draft_parts_index; draft_parts_index = draft_parts_filelinks.length;
+		while (--draft_parts_index > -1) {
+			if (draft_parts_positions_new[draft_parts_index]
+					.equals(draft_parts_positions_old[draft_parts_index])) {
 				continue;
 			}
 			String sql;
-			sql = "UPDATE `draftexerciseassignment`"
-					+ " SET position = " + draft_exercises_positions_new[draft_exercises_index]
-					// Both draft filelink and exercise filelink is the joint primary key:
+			sql = "UPDATE `draftpartassignment`"
+					+ " SET position = " + draft_parts_positions_new[draft_parts_index]
+					// Both draft filelink and part filelink is the joint primary key:
 					+ " WHERE sheetdraft_filelink = '" + draft_filelink + "'"
-					+ " AND exercise_filelink = '" + draft_exercises_filelinks[draft_exercises_index] + "'";
-			Global.query(sql, "Tried to update draft exercise position. " + draft_exercises_positions_old[draft_exercises_index]
-					+ " &rarr; " + draft_exercises_positions_new[draft_exercises_index]);
+					+ " AND part_filelink = '" + draft_parts_filelinks[draft_parts_index] + "'";
+			Global.query(sql, "Tried to update draft part position. " + draft_parts_positions_old[draft_parts_index]
+					+ " &rarr; " + draft_parts_positions_new[draft_parts_index]);
 		}
 
 	}
@@ -94,48 +94,48 @@ if (request.getParameter("draft_filelink") != null) {
 
 
 	//REMOVE DRAFT EXERCISES
-	if (q.equals("remove_draft_exercises") || q.equals("remove_draft_exercise")
-			|| request.getParameterValues("draft_exercise_to_be_removed[]") != null
-			|| request.getParameter("draft_exercise_to_be_removed") != null
+	if (q.equals("remove_draft_parts") || q.equals("remove_draft_part")
+			|| request.getParameterValues("draft_part_to_be_removed[]") != null
+			|| request.getParameter("draft_part_to_be_removed") != null
 			) {
-		String[] draft_exercises_filelinks = request.getParameterValues("draft_exercise_filelink[]");
-		// Because not all exercises must be removed.
-		String[] draft_exercises_to_be_removed = request.getParameterValues("draft_exercise_to_be_removed[]");
-		if (draft_exercises_to_be_removed == null) {//automatically detect if only one exercise filelink given
-			if (request.getParameter("draft_exercise_to_be_removed") != null) {
-				draft_exercises_to_be_removed = new String[1];
-				draft_exercises_to_be_removed[0] = request.getParameter("draft_exercise_to_be_removed");
+		String[] draft_parts_filelinks = request.getParameterValues("draft_part_filelink[]");
+		// Because not all parts must be removed.
+		String[] draft_parts_to_be_removed = request.getParameterValues("draft_part_to_be_removed[]");
+		if (draft_parts_to_be_removed == null) {//automatically detect if only one part filelink given
+			if (request.getParameter("draft_part_to_be_removed") != null) {
+				draft_parts_to_be_removed = new String[1];
+				draft_parts_to_be_removed[0] = request.getParameter("draft_part_to_be_removed");
 			}
 			else {
-				// Because draft_exercises_to_be_removed == null now the next branch body commands
+				// Because draft_parts_to_be_removed == null now the next branch body commands
 				// will not be reached.
 			}
 		}
 		// Preconditions met, i.e. Parameter given?
-		if (draft_filelink != null && draft_exercises_to_be_removed != null) {
+		if (draft_filelink != null && draft_parts_to_be_removed != null) {
 
-			//Delete all exercises that are assigned to this draft: (because otherwise they are orphans)
-			String sql_base = "DELETE FROM `draftexerciseassignment`"
-					// Sheetdraft filelink and exercise filelink together form the primary key.
+			//Delete all parts that are assigned to this draft: (because otherwise they are orphans)
+			String sql_base = "DELETE FROM `draftpartassignment`"
+					// Sheetdraft filelink and part filelink together form the primary key.
 					+ " WHERE `sheetdraft_filelink` = '" + draft_filelink + "'";
-					//+ " AND `exercise_filelink` = '" + exercise_filelink + "'";
+					//+ " AND `part_filelink` = '" + part_filelink + "'";
 			ResultSet res; res = null;
 			int resL;
 
-			boolean all_draft_exercises_to_be_removed_deleted; all_draft_exercises_to_be_removed_deleted = true;
+			boolean all_draft_parts_to_be_removed_deleted; all_draft_parts_to_be_removed_deleted = true;
 
-			List<String> draft_exercise_filelinks_not_successful; draft_exercise_filelinks_not_successful
+			List<String> draft_part_filelinks_not_successful; draft_part_filelinks_not_successful
 				= new ArrayList<String>();
 
-			String draft_exercise_to_be_removed_filelink;
+			String draft_part_to_be_removed_filelink;
 
-			int draft_exercises_to_be_removed_index;
-			draft_exercises_to_be_removed_index = draft_exercises_to_be_removed.length;
-			while (--draft_exercises_to_be_removed_index > -1) {
-				draft_exercise_to_be_removed_filelink
-				= draft_exercises_to_be_removed[draft_exercises_to_be_removed_index];
+			int draft_parts_to_be_removed_index;
+			draft_parts_to_be_removed_index = draft_parts_to_be_removed.length;
+			while (--draft_parts_to_be_removed_index > -1) {
+				draft_part_to_be_removed_filelink
+				= draft_parts_to_be_removed[draft_parts_to_be_removed_index];
 				res = Global.query(sql_base
-						+ " AND `exercise_filelink` = '" + draft_exercise_to_be_removed_filelink + "'"
+						+ " AND `part_filelink` = '" + draft_part_to_be_removed_filelink + "'"
 				);
 
 				if (res != null) {
@@ -147,13 +147,13 @@ if (request.getParameter("draft_filelink") != null) {
 						++resL;
 					}
 					if (resL < 1) {
-						draft_exercise_filelinks_not_successful.add(draft_exercise_to_be_removed_filelink);
-						all_draft_exercises_to_be_removed_deleted = false;
+						draft_part_filelinks_not_successful.add(draft_part_to_be_removed_filelink);
+						all_draft_parts_to_be_removed_deleted = false;
 					}
 				}
 				else {
-					draft_exercise_filelinks_not_successful.add(draft_exercise_to_be_removed_filelink);
-					all_draft_exercises_to_be_removed_deleted = false;
+					draft_part_filelinks_not_successful.add(draft_part_to_be_removed_filelink);
+					all_draft_parts_to_be_removed_deleted = false;
 				}
 
 				// Tackle memory leaks by closing result set and its statement properly:
@@ -162,25 +162,25 @@ if (request.getParameter("draft_filelink") != null) {
 			}
 
 			// Generate message: (deactivated even in debug mode to make things easier.)
-			if (false && !all_draft_exercises_to_be_removed_deleted) {
+			if (false && !all_draft_parts_to_be_removed_deleted) {
 				String message;
-				message = "Not successfully removed draft exercises: <ul>";
-				for (String draft_exercise_filelink_that_failed : draft_exercise_filelinks_not_successful) {
-					message += "<li>" + draft_exercise_filelink_that_failed + "</li>";
+				message = "Not successfully removed draft parts: <ul>";
+				for (String draft_part_filelink_that_failed : draft_part_filelinks_not_successful) {
+					message += "<li>" + draft_part_filelink_that_failed + "</li>";
 				}
 				message += "</ul>";
 				Global.addMessage(message, "nosuccess");
 			}
 			else {
-				//Global.addMessage(draft_exercises_to_be_removed.length + " Aufgaben des Entwurfs erfolgreich gel&ouml;scht.", "success");
-				Global.addMessage("Tried to remove " + draft_exercises_to_be_removed.length + " exercises.", "info");
+				//Global.addMessage(draft_parts_to_be_removed.length + " Aufgaben des Entwurfs erfolgreich gel&ouml;scht.", "success");
+				Global.addMessage("Tried to remove " + draft_parts_to_be_removed.length + " parts.", "info");
 			}
 			// Tackle memory leaks by closing result set and its statement properly:
 			Global.queryTidyUp(res);
 
 		}
 		else {
-			Global.addMessage("For deleting a draft exercise a draft filelink as well as the draft_exercises have to be given.", "nosuccess");
+			Global.addMessage("For deleting a draft part a draft filelink as well as the draft_parts have to be given.", "nosuccess");
 		}
 	}
 
@@ -195,8 +195,8 @@ if (request.getParameter("draft_filelink") != null) {
 			ResultSet res; res = null;
 			int resL; resL = 0;
 
-			// Delete all exercises that are assigned to this draft: (because otherwise they are orphans)
-			sql = "DELETE FROM `draftexerciseassignment` WHERE `sheetdraft_filelink` = '" + draft_filelink + "'";
+			// Delete all parts that are assigned to this draft: (because otherwise they are orphans)
+			sql = "DELETE FROM `draftpartassignment` WHERE `sheetdraft_filelink` = '" + draft_filelink + "'";
 			res = Global.query(sql);
 			if (res == null || resL == 0) {
 				Global.addMessage("Resource ResultSet = " + res + " was null or result length = " + resL + " was zero.", "nosuccess");
@@ -210,16 +210,16 @@ if (request.getParameter("draft_filelink") != null) {
 			// Tackle memory leaks by closing result set and its statement properly:
 			Global.queryTidyUp(res);
 
-			// Delete all already copied and standalone exercises too? => depending on not isDraft?
+			// Delete all already copied and standalone parts too? => depending on not isDraft?
 			if (!Global.extractEndingDouble(draft_filelink).equals("draft.draft")) {
-				// => has been generated at least once! => has exercises!
+				// => has been generated at least once! => has parts!
 				// => don't delete sheetdraft if not deleting everything! This everything deletion can be handled via the delete_sheet, initiated from the tree or list view!
 
 				// TODO complete deletion: draft related in the filesystem too. <-- USE delete_sheet (see above)
 
 //				/* As it should be separated this here really only deletes the draft part. The sheetdraft
 //				must not be deleted from the database if this draft has been generated at least once! */
-//				sql = "DELETE FROM `exercise` WHERE `sheetdraft_filelink` = '" + draft_filelink + "'";
+//				sql = "DELETE FROM `part` WHERE `sheetdraft_filelink` = '" + draft_filelink + "'";
 //				res = Global.query(sql);
 //				if (res == null || resL == 0) {
 //					Global.addMessage("Resource ResultSet = " + res + " was null or result length = " + resL + " was zero.", "nosuccess");
@@ -233,8 +233,8 @@ if (request.getParameter("draft_filelink") != null) {
 //				// tackle memory leaks by closing result set and its statement properly:
 //				Global.queryTidyUp(res);
 			}
-			else { // it's okay, there are no copied exercises for a never before merged draft. Only references.
-				// deleting the sheetdraft from the sheetdraft database table is now okay as there are no exercise copies in exercise.
+			else { // it's okay, there are no copied parts for a never before merged draft. Only references.
+				// deleting the sheetdraft from the sheetdraft database table is now okay as there are no part copies in part.
 				sql = "DELETE FROM `sheetdraft` WHERE `filelink` = '" + draft_filelink + "'";
 				res = Global.query(sql);
 				if (res != null) {

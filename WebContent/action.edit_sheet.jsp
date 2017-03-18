@@ -197,7 +197,7 @@ String filelink_new = filelink_target_new + Global.extractFilename(sheetdraft_fi
 ;
 
 /*
-// Modify sheet name? Has to be propagated to all derived files and exercises.
+// Modify sheet name? Has to be propagated to all derived files and parts.
 if (!filelink.equals(sheetdraft.getFilelink())) {
 
 	rename = true;
@@ -319,105 +319,105 @@ if ((verschieben || rename) && !filelink_new.equals(sheetdraft_filelink)) {
 				+ " SET filelink = '" + filelink_new + "'"
 				+ " WHERE filelink = '" + sheetdraft_filelink + "'"
 		);
-		Global.sqlm.executeUpdate("UPDATE draftexerciseassignment"
+		Global.sqlm.executeUpdate("UPDATE draftpartassignment"
 				+ " SET sheetdraft_filelink = '" + filelink_new + "'"
 				+ " WHERE sheetdraft_filelink = '" + sheetdraft_filelink + "'"
 		);
-		Global.sqlm.executeUpdate("UPDATE exercise" //<-- done here now for consistency
+		Global.sqlm.executeUpdate("UPDATE part" //<-- done here now for consistency
 				+ " SET sheetdraft_filelink = '" + filelink_new + "'"
 				+ " WHERE sheetdraft_filelink = '" + sheetdraft_filelink + "'"
 		);
 
 		// Verschiebe auch die Aufgaben des Uebungsblatts.
-		// Also move the exercises of the sheet.
-		// TODO debug: sheetdraft.synchronizeExercisesLocationToFilelink();
+		// Also move the parts of the sheet.
+		// TODO debug: sheetdraft.synchronizePartsLocationToFilelink();
 
-		// To know the exercises' old filelinks for building the new ones:
-		ResultSet res = Global.query("SELECT exercise.filelink FROM exercise"
-				  + " WHERE exercise.sheetdraft_filelink = '" + filelink_new + "'");
-				  // <--depends on whether exercise mod comes before or after this.
+		// To know the parts' old filelinks for building the new ones:
+		ResultSet res = Global.query("SELECT part.filelink FROM part"
+				  + " WHERE part.sheetdraft_filelink = '" + filelink_new + "'");
+				  // <--depends on whether part mod comes before or after this.
 		while (res.next()) {
-			String exercise_filelink = res.getString("filelink");
-			// Build the new filelink to this exercise
-			String exercise_filelink_new = filelink_target_new
-					+ Global.extractFilename(exercise_filelink)
-					+ "." + Global.extractEnding(exercise_filelink);
+			String part_filelink = res.getString("filelink");
+			// Build the new filelink to this part
+			String part_filelink_new = filelink_target_new
+					+ Global.extractFilename(part_filelink)
+					+ "." + Global.extractEnding(part_filelink);
 					//TODO 1st of double ext contained in filename?
 
-			Global.renameFile(r + exercise_filelink,  r + exercise_filelink_new);
+			Global.renameFile(r + part_filelink,  r + part_filelink_new);
 			// Image link:
-			if (new File(r + Global.replaceEnding(exercise_filelink, Global.imageTypeToGenerate)).exists()) {
+			if (new File(r + Global.replaceEnding(part_filelink, Global.imageTypeToGenerate)).exists()) {
 				Global.renameFile(
-					r + Global.replaceEnding(exercise_filelink, Global.imageTypeToGenerate),
-					r + Global.replaceEnding(exercise_filelink, Global.imageTypeToGenerate)
+					r + Global.replaceEnding(part_filelink, Global.imageTypeToGenerate),
+					r + Global.replaceEnding(part_filelink, Global.imageTypeToGenerate)
 				);
 			}
-			if (new File(r + Global.getImageLinkFromFile(exercise_filelink)).exists()) {
+			if (new File(r + Global.getImageLinkFromFile(part_filelink)).exists()) {
 				Global.renameFile(
-					r + Global.getImageLinkFromFile(exercise_filelink),
-					r + Global.getImageLinkFromFile(exercise_filelink_new)
+					r + Global.getImageLinkFromFile(part_filelink),
+					r + Global.getImageLinkFromFile(part_filelink_new)
 				);
 			}
 			// TXT too:
-			if (new File(r + Global.replaceEnding(exercise_filelink, "txt")).exists()) {
+			if (new File(r + Global.replaceEnding(part_filelink, "txt")).exists()) {
 				Global.renameFile(
-					r + Global.replaceEnding(exercise_filelink, "txt"),
-					r + Global.replaceEnding(exercise_filelink_new, "txt")
+					r + Global.replaceEnding(part_filelink, "txt"),
+					r + Global.replaceEnding(part_filelink_new, "txt")
 				);
 			}
-			if (new File(r + Global.replaceEnding(exercise_filelink, "txt." + Global.imageTypeToGenerate)).exists()) {
+			if (new File(r + Global.replaceEnding(part_filelink, "txt." + Global.imageTypeToGenerate)).exists()) {
 				Global.renameFile(
-					r + Global.replaceEnding(exercise_filelink, "txt." + Global.imageTypeToGenerate),
-					r + Global.replaceEnding(exercise_filelink_new, "txt." + Global.imageTypeToGenerate)
+					r + Global.replaceEnding(part_filelink, "txt." + Global.imageTypeToGenerate),
+					r + Global.replaceEnding(part_filelink_new, "txt." + Global.imageTypeToGenerate)
 				);
 			}
 			// PDF too:
-			if (new File(r + Global.replaceEnding(exercise_filelink, "pdf")).exists()) {
+			if (new File(r + Global.replaceEnding(part_filelink, "pdf")).exists()) {
 				Global.renameFile(
-					r + Global.replaceEnding(exercise_filelink, "pdf"),//sheetdraft.getPDFLinkPrevious(),
-					r + Global.replaceEnding(exercise_filelink_new, "pdf")//sheetdraft.getPDFLink());
+					r + Global.replaceEnding(part_filelink, "pdf"),//sheetdraft.getPDFLinkPrevious(),
+					r + Global.replaceEnding(part_filelink_new, "pdf")//sheetdraft.getPDFLink());
 				);
 			}
-			if (new File(r + Global.replaceEnding(exercise_filelink, "pdf--tmp--pdf-creation")).exists()) {
+			if (new File(r + Global.replaceEnding(part_filelink, "pdf--tmp--pdf-creation")).exists()) {
 				Global.renameFile(
-					r + Global.replaceEnding(exercise_filelink, "pdf--tmp--pdf-creation"),
-					r + Global.replaceEnding(exercise_filelink_new, "pdf--tmp--pdf-creation")
+					r + Global.replaceEnding(part_filelink, "pdf--tmp--pdf-creation"),
+					r + Global.replaceEnding(part_filelink_new, "pdf--tmp--pdf-creation")
 				);
 			}
 			// COMMON FORMAT: currently HTML.
 			String t =  PartDB.commonFormat.name().toLowerCase();
-			if (new File(r + Global.replaceEnding(exercise_filelink, t)).exists()) {
+			if (new File(r + Global.replaceEnding(part_filelink, t)).exists()) {
 				Global.renameFile(
-					r + Global.replaceEnding(exercise_filelink, t),
-					r + Global.replaceEnding(exercise_filelink_new, t)
+					r + Global.replaceEnding(part_filelink, t),
+					r + Global.replaceEnding(part_filelink_new, t)
 				);
 			}
-			if (new File(r + Global.replaceEnding(exercise_filelink, t + "." + Global.imageTypeToGenerate)).exists()) {
+			if (new File(r + Global.replaceEnding(part_filelink, t + "." + Global.imageTypeToGenerate)).exists()) {
 				Global.renameFile(
-					r + Global.replaceEnding(exercise_filelink, t + "." + Global.imageTypeToGenerate),
-					r + Global.replaceEnding(exercise_filelink_new, t + "." + Global.imageTypeToGenerate)
+					r + Global.replaceEnding(part_filelink, t + "." + Global.imageTypeToGenerate),
+					r + Global.replaceEnding(part_filelink_new, t + "." + Global.imageTypeToGenerate)
 				);
 			}
 
-			Global.sqlm.executeUpdate("UPDATE exercise"
-					+ " SET filelink='" + exercise_filelink_new + "'"
-					+ " WHERE filelink = '" + exercise_filelink + "'"
+			Global.sqlm.executeUpdate("UPDATE part"
+					+ " SET filelink='" + part_filelink_new + "'"
+					+ " WHERE filelink = '" + part_filelink + "'"
 			);
-			Global.sqlm.executeUpdate("UPDATE draftexerciseassignment"
-					+ " SET exercise_filelink = '" + exercise_filelink_new + "'"
-					+ " WHERE exercise_filelink = '" + exercise_filelink + "'"
+			Global.sqlm.executeUpdate("UPDATE draftpartassignment"
+					+ " SET part_filelink = '" + part_filelink_new + "'"
+					+ " WHERE part_filelink = '" + part_filelink + "'"
 			);
 
 		}
 		// tackle memory leaks by closing result set and its statement properly:
 		Global.queryTidyUp(res);
 
-//		Global.sqlm.executeUpdate("UPDATE exercise" <-- done before changing the exercises' files' location for safety!
+//		Global.sqlm.executeUpdate("UPDATE part" <-- done before changing the parts' files' location for safety!
 //				 + " SET sheetdraft_filelink = '" + filelink_new + "'"
 //				 + " WHERE sheetdraft_filelink = '" + sheetdraft_filelink + "'"
 //		);
 
-		System.out.println(Global.addMessage(Global.display("exercises moved"), " success "));
+		System.out.println(Global.addMessage(Global.display("parts moved"), " success "));
 
 	}
 

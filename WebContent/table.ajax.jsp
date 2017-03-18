@@ -20,9 +20,9 @@
 	<form id="form" name='tf' action="index.jsp" method="get">
 	<%
 	// retrieve & decide
-	boolean table_for_sheetdraft_listing = (request.getParameter("exercise_listing") == null);
+	boolean table_for_sheetdraft_listing = (request.getParameter("part_listing") == null);
 	// retrieve
-	// for both the sheetdraft and the exercise list
+	// for both the sheetdraft and the part list
 	//session = (HttpSession)request.getParameter("session");
 	String session_user = request.getParameter("session_user");
 	if (session_user == null) {
@@ -42,7 +42,7 @@
 	if (filelink == null && !table_for_sheetdraft_listing) {
 		out.print(
 			Global.addMessage("Without a key (filelink or id) of a sheet/draft"
-					+ " an exercise listing cannot be generated. -> Aborting ..."
+					+ " an part listing cannot be generated. -> Aborting ..."
 					, "warning")
 		);
 		return ;
@@ -86,7 +86,7 @@
 			);
 
 
-			// For building the directory of where to fetch the exercises from.
+			// For building the directory of where to fetch the parts from.
 			// retrieve (for sheetdrafts' table listing) TODO alternatively extract from filelink
 			String semester = request.getParameter("semester");
 			String course = request.getParameter("course");
@@ -126,7 +126,7 @@
 						+ " FROM sheetdraft, lecturer l "
 						+ " WHERE (semester = '" + Global.encodeUmlauts(semester) + "' OR semester = '" + semester + "')"
 						+ " AND (course = '" + Global.encodeUmlauts(course) + "' OR course = '" + course + "')"
-						+ " AND (type = '" + Global.encodeUmlauts(type) + "' OR type = '" + type + "')" //Exercise|Solution|Exam
+						+ " AND (type = '" + Global.encodeUmlauts(type) + "' OR type = '" + type + "')" //Exercise|Solution|Exam|Examsolution
 						+ " AND (l.lecturer = '" + Global.encodeUmlauts(lecturer) + "' OR lecturer = '" + lecturer + "')"
 						+ " AND l.id = lecturer_id";
 			}
@@ -250,7 +250,7 @@
 
 			%>
 				<!-- EXERCISE LISTING -->
-				<table class="listing exercise-listing">
+				<table class="listing part-listing">
 			<%
 			//EXERCISE LISTING
 			//Tabelle fuer Einzelaufgaben generieren
@@ -278,12 +278,12 @@
 					+ ", e.splitby"
 					+ (lecturer == null ?  ", l.lecturer" : "")
 					+ ", author"
-					+ " FROM exercise e, sheetdraft"
+					+ " FROM part e, sheetdraft"
 					+ (lecturer == null ?  ", lecturer l" : "")
 					+ " WHERE sheetdraft.filelink = '" + filelink + "'"
 					+ (lecturer == null ?  " AND l.id = sheetdraft.lecturer_id" : "")
 					+ " AND sheetdraft.filelink = e.sheetdraft_filelink"
-					/* filelink is a index => unique for each exercise.
+					/* filelink is a index => unique for each part.
 					+ " AND semester = '" + semester + "'"
 					+ " AND course = '" + course + "'"
 					+ " AND type = '" + type + "'"
@@ -294,48 +294,48 @@
 			//--------------------Datei -----------------------
 			while (res1.next()) {
 				//String aufg_id = res1.getString("id");
-				String exercise_filelink = res1.getString("filelink");
+				String part_filelink = res1.getString("filelink");
 				// Get other missing variables for the table or a possible edit
 				String originsheetdraft_filelink = res1.getString("originsheetdraft_filelink");
 				String sheetdraft_filelink = res1.getString("sheetdraft_filelink");
 				//String lecturer = res1.getString("lecturer"); given per request to save the join
 				uploader = res1.getString("author");
-				String exercise_splitby = res1.getString("splitby");
+				String part_splitby = res1.getString("splitby");
 
 				out.println("<tr>");
 
 
 				out.println("<td>" + sheetdraft_filelink + "</td>");
 				out.println("<td>" + originsheetdraft_filelink + "</td>");
-				out.println("<td><a href='" + exercise_filelink
-						+ "' class='screenshot' rel='" + Global.convertToImageLink(exercise_filelink)
+				out.println("<td><a href='" + part_filelink
+						+ "' class='screenshot' rel='" + Global.convertToImageLink(part_filelink)
 						+ "'><i class='icon-download'></i> <i class='icon-eye-open'></i>"
-						+ Global.extractExercisePartOnlyFromExerciseFilelink(exercise_filelink) /*+ "." + Global.extractEnding(exercise_filelink)*/
+						+ Global.extractPartPartOnlyFromPartFilelink(part_filelink) /*+ "." + Global.extractEnding(part_filelink)*/
 						+ "</a></td>");
 				out.println("<td>" + lecturer + "</td>");
 				out.println("<td>" + uploader + "</td>");
-				out.println("<td>" + exercise_splitby + "</td>");
+				out.println("<td>" + part_splitby + "</td>");
 				//out.println("<td><input name='aufg_id[]' value='"
 				//		+ aufg_id + "' type='checkbox'/></td>");
-				out.println("<td rowspan='2'><input id='exerciseRowAction_mark"+ res1.getRow() +"'"
-						+ " name='exercise_filelinks[]' value='" + exercise_filelink + "' type='checkbox'"
+				out.println("<td rowspan='2'><input id='partRowAction_mark"+ res1.getRow() +"'"
+						+ " name='part_filelinks[]' value='" + part_filelink + "' type='checkbox'"
 						+ " title='select' /></td>");
 
 				out.println("</tr>");
 				out.println("<tr>");
 
-				out.println("<td colspan='6'><label for='exerciseRowAction_mark"+ res1.getRow() +"'>"
-						+ "<img src='" + Global.convertToImageLink(exercise_filelink)
+				out.println("<td colspan='6'><label for='partRowAction_mark"+ res1.getRow() +"'>"
+						+ "<img src='" + Global.convertToImageLink(part_filelink)
 						+ "' alt='inline preview image' title='Diese Aufgabe ausw&auml;hlen.' />"
 						+ "</label>"
-						+ "<!-- Exercise optical separator --><hr /></td>");
+						+ "<!-- Part optical separator --><hr /></td>");
 
 
 				out.println("</tr>");
 			}
 
 
-			//Merely for the exercise listing
+			//Merely for the part listing
 			%>
 				</table><!-- EXERCISE LISTING -END -->
 

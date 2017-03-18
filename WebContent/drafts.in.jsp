@@ -52,7 +52,7 @@ while (res.next()) {
 			<select id="draft_<%=res.getRow() %>_target_fileformat_<%=res.getRow() %>" name="draft_target_fileformat">
 
 				<%
-				out.print("<option value='DRAFT' selected='selected'>Derive from first exercise.</option>");
+				out.print("<option value='DRAFT' selected='selected'>Derive from first part.</option>");
 				for (DocType fileformat : DocType.values()) {
 					String format = fileformat.name();
 					//skip entries that shall never be converted to:
@@ -78,8 +78,8 @@ while (res.next()) {
 			<input type="hidden" name="draft_filelink" value="<% out.print(draft_filelink); %>" />
 
 			<!-- FILELINK RENAME -->
-			<input type="hidden" style="display:;" name="draft_exercise_filelink_old" value="<% out.print(draft_filelink); %>" />
-			<input id='draft_filelink_<%=res.getRow() %>' style="display:;" type="text" name="draft_exercise_filelink" value="<% out.print(draft_filelink); %>"
+			<input type="hidden" style="display:;" name="draft_part_filelink_old" value="<% out.print(draft_filelink); %>" />
+			<input id='draft_filelink_<%=res.getRow() %>' style="display:;" type="text" name="draft_part_filelink" value="<% out.print(draft_filelink); %>"
 					onkeyup="if (this.value != this.previousElementSibling.value) { this.nextElementSibling.style.display='inline'; } else { this.nextElementSibling.style.display='none'; } /*if (this.value == '' || this.value == this.placeholder) { this.value = this.previousElementSibling.value; }*/" />
 			<button type="button" name="q" value="change_draft_filelink" class="btn btn-warning" title="rename" style="display:none;"
 					onclick="this.type='submit'; return true;">
@@ -117,14 +117,14 @@ while (res.next()) {
 			</span>
 			<span style="display:inline-block;">
 				<span style="display:inline-block;">
-				<input id="draft_<%= res.getRow() %>_solution_position_after_exercise" type="radio" name="solution_position" value="after exercise"
+				<input id="draft_<%= res.getRow() %>_solution_position_after_part" type="radio" name="solution_position" value="after part"
 					onclick="var draft_solution_index=-1; var draft_solution_row; while(typeof ( draft_solution_row = document.getElementById('draft_<%= res.getRow() %>_solution_fieldset_' + (++draft_solution_index)) ) == 'object') { draft_solution_row.setAttribute('style', 'display:inline;'); draft_solution_row.disabled=false; }"
 					/>
 				</span>
 				<span style="display:inline-block; vertical-align:bottom;">
-				<label for="draft_<%= res.getRow() %>_solution_position_after_exercise"
+				<label for="draft_<%= res.getRow() %>_solution_position_after_part"
 					onclick="var draft_solution_index=-1; var draft_solution_row; while(typeof ( draft_solution_row = document.getElementById('draft_<%= res.getRow() %>_solution_fieldset_' + (++draft_solution_index)) ) == 'object') { draft_solution_row.setAttribute('style', 'display:inline;'); draft_solution_row.disabled=false; }"
-				>Directly after exercise.</label>
+				>Directly after part.</label>
 				</span>
 			</span>
 
@@ -139,18 +139,18 @@ while (res.next()) {
 		<!-- SHOW HIDE DRAFT EXERCISES -->
 		<a class="btn btn-secondary" style="color:black !important;"
 				onclick="if (this.nextElementSibling.style.display == 'none') { this.nextElementSibling.style.display='block' } else { this.nextElementSibling.style.display='none' }">
-			<i class="icon-zoom-in icon-white"></i>Toggle contained Exercises (show/hide).
+			<i class="icon-zoom-in icon-white"></i>Toggle contained Parts (show/hide).
 		</a>
 
 
 		<!-- DRAFT EXERCISES (ASSIGNED TO DRAFT) -->
-		<div class="draftexerciserows" style="display:none;">
+		<div class="draftpartrows" style="display:none;">
 		<%
-		// Load exercises of the current draft item.
-		String str_query = "SELECT exercise.*, dea.position"
-				+ " FROM exercise, draftexerciseassignment dea"
+		// Load parts of the current draft item.
+		String str_query = "SELECT part.*, dea.position"
+				+ " FROM part, draftpartassignment dea"
 				+ " WHERE dea.sheetdraft_filelink = '" + draft_filelink +"'"//select first
-				+ " AND exercise.filelink = dea.exercise_filelink"//join remaining
+				+ " AND part.filelink = dea.part_filelink"//join remaining
 				+ " ORDER BY position";
 		ResultSet res1 = Global.query(str_query);
 //		 res1.last();
@@ -164,7 +164,7 @@ while (res.next()) {
 		int count = res1.getRow();
 		count = res1Rows.size();
 		if (count == 0) {
-			out.print("- no exercises contained in this draft -");
+			out.print("- no parts contained in this draft -");
 			//continue ;Continuing makes trouble here as the HTML markup will not be closed properly.
 		}
 		else {
@@ -173,17 +173,17 @@ while (res.next()) {
 		int res1Rows_index = -1;
 		while (++res1Rows_index < res1Rows.size()) {
 			Map<String, Object> res1Row =  res1Rows.get(res1Rows_index);
-			String draft_exercise_filelink = (String)res1Row.get("filelink");//stored filelinks are relative filelinks!
-			String exercise_position = (String)res1Row.get("position");
+			String draft_part_filelink = (String)res1Row.get("filelink");//stored filelinks are relative filelinks!
+			String part_position = (String)res1Row.get("position");
 			%>
 				<!-- DRAFT EXERCISE ROW -->
-				<div class="draft_exercise_row">
+				<div class="draft_part_row">
 					<!-- DRAFT EXERCISE FILELINK -->
-					<input type="hidden" name="draft_exercise_filelink[]" value="<% out.print(draft_exercise_filelink); %>" />
+					<input type="hidden" name="draft_part_filelink[]" value="<% out.print(draft_part_filelink); %>" />
 
 					<!-- DRAFT EXERCISE POSITION -->
-					<input name="draft_exercise_position_old[]" type="hidden" value="<%=exercise_position %>" class="" title="Change Position" />
-					<input name="draft_exercise_position_new[]" value="<%=exercise_position/*#*/ %>" placeholder="<%=exercise_position %>" class="" title="Change Position"
+					<input name="draft_part_position_old[]" type="hidden" value="<%=part_position %>" class="" title="Change Position" />
+					<input name="draft_part_position_new[]" value="<%=part_position/*#*/ %>" placeholder="<%=part_position %>" class="" title="Change Position"
 					onfocus="makeNextButtonSubmit(this);" onkeyup="makeNextButtonSubmit(this);" />
 					<!--
 					<a style="display:none;" href="javascript:this.form.submit();" onclick="return false;">Aktualisieren </a>
@@ -192,33 +192,33 @@ while (res.next()) {
 					<!-- ACTION: CHANGE EXERCISE POSITION -->
 					<!--NOTE: Now position is modified IF and only if old and new value differ!
 					submit makes this button the default action -->
-					<button type="button" style="display:none;" disabled="disabled" name="q" value="change_draft_exercise_position" class="btn btn-warning" title="Update all!">
+					<button type="button" style="display:none;" disabled="disabled" name="q" value="change_draft_part_position" class="btn btn-warning" title="Update all!">
 					  &larr;<i class="icon-refresh icon-white"></i>&nbsp;&amp;&nbsp;<i class="icon-ok icon-white"></i> all
 					</button>
 					<div style="display:inline-block;">
 						<!-- ACTION: DELETE -->
-						<label class="btn btn-danger" for="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1Rows_index/*res1.getRow()*/%>">
+						<label class="btn btn-danger" for="draft_<%=res.getRow() %>_part_to_be_removed_<%=res1Rows_index/*res1.getRow()*/%>">
 						   <%=Global.display("Remove") + " " + Global.display("multiple") %>?
 						</label>
-						<input id="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1Rows_index/*res1.getRow()*/ %>" type="checkbox"
-							name="draft_exercise_to_be_removed[]" value="<%=draft_exercise_filelink %>" />
+						<input id="draft_<%=res.getRow() %>_part_to_be_removed_<%=res1Rows_index/*res1.getRow()*/ %>" type="checkbox"
+							name="draft_part_to_be_removed[]" value="<%=draft_part_filelink %>" />
 					</div>
-					<button type="button" name="q" value="remove_draft_exercises" class="btn btn-danger" title="remove this and update all"
+					<button type="button" name="q" value="remove_draft_parts" class="btn btn-danger" title="remove this and update all"
 						onclick="this.previousElementSibling.lastElementChild.checked=true; this.type='submit';">
 					  &larr;<i class="icon-trash icon-white"></i>&nbsp;&amp;&nbsp;<i class="icon-ok icon-white"></i>all
 					</button>
 					<!-- actualize
-					<button type="button" name="q" value="change_draft_exercise_position" class="btn btn-warning" title="Change order!">
+					<button type="button" name="q" value="change_draft_part_position" class="btn btn-warning" title="Change order!">
 					  <i class="icon-goal icon-white"></i>
 					</button>
 					-->
 
 				</div>
 				<!-- IMAGE -->
-				<div class='draft_exercise_img'>
-				<label class="btn btn-danger" for="draft_<%=res.getRow() %>_exercise_to_be_removed_<%=res1Rows_index/*res1.getRow()*/%>">
-				  <img src="<% out.print(Global.convertToImageLink(draft_exercise_filelink)); %>"
-					  alt="<% out.print(draft_exercise_filelink); %>" title="<% out.print(draft_exercise_filelink); %>" />
+				<div class='draft_part_img'>
+				<label class="btn btn-danger" for="draft_<%=res.getRow() %>_part_to_be_removed_<%=res1Rows_index/*res1.getRow()*/%>">
+				  <img src="<% out.print(Global.convertToImageLink(draft_part_filelink)); %>"
+					  alt="<% out.print(draft_part_filelink); %>" title="<% out.print(draft_part_filelink); %>" />
 				</label>
 				</div>
 
@@ -227,18 +227,18 @@ while (res.next()) {
 
 //			if (res_solution.next()) {
 //				String draft_solution_filelink = res_solution.getString("filelink");//stored filelinks are relative filelinks!
-//				String exercise_position = res_solution.getString("position");
-				String draft_solution_filelink = Global.resolveCorrespondingFilelinkTo(draft_exercise_filelink);
+//				String part_position = res_solution.getString("position");
+				String draft_solution_filelink = Global.resolveCorrespondingFilelinkTo(draft_part_filelink);
 				if (draft_solution_filelink != null) {
 
 				}
 				else {
-					System.out.println("No corresponding exercise/solution found to "+ draft_exercise_filelink + ".");
-					draft_solution_filelink = "--No corresponding exercise/solution found.--";
+					System.out.println("No corresponding part/solution found to "+ draft_part_filelink + ".");
+					draft_solution_filelink = "--No corresponding part/solution found.--";
 				}
 				%>
 					<!-- DRAFT EXERCISE ROW -->
-					<fieldset id="draft_<%= res.getRow() %>_solution_fieldset_<%=res1Rows_index/*res1.getRow()*/ %>" class="draft_exercise_row" style="display:none;" disabled="disabled">
+					<fieldset id="draft_<%= res.getRow() %>_solution_fieldset_<%=res1Rows_index/*res1.getRow()*/ %>" class="draft_part_row" style="display:none;" disabled="disabled">
 						<div>
 						<!-- DRAFT EXERCISE FILELINK -->
 						<input type="hidden" name="draft_solution_filelink[]" value="<% out.print(draft_solution_filelink); %>" />
@@ -262,7 +262,7 @@ while (res.next()) {
 						</button>
 						</div>
 						<!-- IMAGE -->
-						<div class='draft_exercise_img'>
+						<div class='draft_part_img'>
 						<label class="btn btn-info" for="draft_<%=res.getRow() %>_solution_to_be_assigned_<%=res1Rows_index/*res1.getRow()*/%>">
 						  <img src="<% out.print(Global.convertToImageLink(draft_solution_filelink)); %>"
 							  alt="<% out.print(draft_solution_filelink); %>" title="<% out.print(draft_solution_filelink); %>" />

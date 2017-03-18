@@ -219,7 +219,7 @@ if (Global.isLoggedIn(session)) {
 
 
 
-<title>DMUW - <%=Global.display("exercise database")%></title>
+<title>DMUW - <%=Global.display("part database")%></title>
 </head>
 <body id="body" onload="document.getElementsByTagName('input')[0].focus(); screenshotPreview();">
 	<!-- WRAPPER -BEGIN -->
@@ -228,7 +228,7 @@ if (Global.isLoggedIn(session)) {
 	<a href="index.jsp?id=start" id="kopf" class="gestaltung">
 		<span style="/*font-variant:small-caps;*/
 		display:block;font-size:2enpx;min-height:100px; width:400px; color:white; margin-left: 200px; margin-top: 20px;">
-		<%=Global.display("Exercise Database") + " " + Global.version %></span>
+		<%=Global.display("Part Database") + " " + Global.version %></span>
 		<%
 		if (Global.isLoggedIn(session)) {
 			//out.println("LOGGED IN");

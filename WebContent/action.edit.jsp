@@ -149,7 +149,7 @@ String target_new = Global.uploadTarget
 if (hasAnyParameterBeenGloballyChanged) {
 
 
-	// Move complete directory containing all exercises, images, ...
+	// Move complete directory containing all parts, images, ...
 	// Only possible if the lecturer, semester or type changed globally. As other sheets may be in there too!
 	if (Global.moveDir(Global.root + target_old, Global.root + target_new, ""))  {
 		// verschiebe Ordner mit allen Blaettern und Aufgaben. (as of v31.14):
@@ -166,22 +166,22 @@ if (hasAnyParameterBeenGloballyChanged) {
 			+ " SET filelink = REPLACE(filelink, '" + target_old + "', '" + target_new + "')"
 			+ " WHERE filelink LIKE '" + target_old + "%'"
 	);
-	Global.sqlm.executeUpdate("UPDATE draftexerciseassignment"
+	Global.sqlm.executeUpdate("UPDATE draftpartassignment"
 			+ " SET sheetdraft_filelink = REPLACE(sheetdraft_filelink, '" + target_old + "', '" + target_new + "')"
 			+ " WHERE sheetdraft_filelink LIKE '" + target_old + "%'"
 	);
-	Global.sqlm.executeUpdate("UPDATE exercise" //<-- done here now for consistency
+	Global.sqlm.executeUpdate("UPDATE part" //<-- done here now for consistency
 			+ " SET sheetdraft_filelink = REPLACE(sheetdraft_filelink, '" + target_old + "', '" + target_new + "')"
 			+ " WHERE sheetdraft_filelink LIKE '" + target_old + "%'"
 	);
 
-	Global.sqlm.executeUpdate("UPDATE exercise"
+	Global.sqlm.executeUpdate("UPDATE part"
 			+ " SET filelink = REPLACE(filelink, '" + target_old + "', '" + target_new + "')"
 			+ " WHERE filelink LIKE '" + target_old + "%'"
 	);
-	Global.sqlm.executeUpdate("UPDATE draftexerciseassignment"
-			+ " SET exercise_filelink = REPLACE(exercise_filelink, '" + target_old + "', '" + target_new + "')"
-			+ " WHERE exercise_filelink LIKE '" + target_old + "%'"
+	Global.sqlm.executeUpdate("UPDATE draftpartassignment"
+			+ " SET part_filelink = REPLACE(part_filelink, '" + target_old + "', '" + target_new + "')"
+			+ " WHERE part_filelink LIKE '" + target_old + "%'"
 	);
 
 }

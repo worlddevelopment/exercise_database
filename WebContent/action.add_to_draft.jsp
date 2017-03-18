@@ -1,44 +1,44 @@
 <%@page import="java.util.List, java.util.ArrayList,java.util.Map"%>
 <%@page import="java.sql.ResultSet"%>
-<%@page import="core.Global, core.Exercise, core.Sheetdraft"%>
+<%@page import="core.Global, core.Part, core.Sheetdraft"%>
 <jsp:useBean id="draft" class="core.Sheetdraft" scope="session"></jsp:useBean>
 <%
 /**
  * Here happen several important things:
  * - If a new draft:
  *   1) create new sheetdraft
- *   2) add all given exercises by reference
+ *   2) add all given parts by reference
  *   3) add the relationships from point 2) to the database.
  * - If existing draft:
- *   1) add all given (per POST/GET, request) exercises by ref.
+ *   1) add all given (per POST/GET, request) parts by ref.
  *   2) write relationships from 1) to database.
  *
  */
 
 //Preconditions not met?
 if (request.getParameter("filelink") == null
-		&& request.getParameterValues("exercise_filelinks_to_add[]") == null
-		&& request.getParameterValues("exercise_filelinks[]") == null
+		&& request.getParameterValues("part_filelinks_to_add[]") == null
+		&& request.getParameterValues("part_filelinks[]") == null
 		&& request.getParameterValues("sheetdraft_filelinks[]") == null) {
-	Global.addMessage("No exercise/sheetdraft filelinks or ids were given. Without that, obviously, nothing can be added to a draft."
-		  + " Use the treeview of the start page for editing sheetdrafts and selecting exercises."
-		  + " Currently only exercises are supported.", "warning");
+	Global.addMessage("No part/sheetdraft filelinks or ids were given. Without that, obviously, nothing can be added to a draft."
+		  + " Use the treeview of the start page for editing sheetdrafts and selecting parts."
+		  + " Currently only parts are supported.", "warning");
 	return ;
 }
 if (request.getParameter("filelink") == null
-		&& request.getParameterValues("exercise_filelinks_to_add[]") == null
-		&& request.getParameterValues("exercise_filelinks[]") == null
+		&& request.getParameterValues("part_filelinks_to_add[]") == null
+		&& request.getParameterValues("part_filelinks[]") == null
 		) {
-	Global.addMessage("No exercises have been selected. Without that, nothing can be added to a draft."
-			+ " Use the treeview of the start page for editing sheetdrafts and selecting exercises."
-			+ " Currently only exercises are supported.", "warning");
+	Global.addMessage("No parts have been selected. Without that, nothing can be added to a draft."
+			+ " Use the treeview of the start page for editing sheetdrafts and selecting parts."
+			+ " Currently only parts are supported.", "warning");
 	return ;
 }
 
 
-String[] exercise_filelinks = (String[]) request.getParameterValues("exercise_filelinks_to_add[]");
-if (exercise_filelinks == null) {
-	exercise_filelinks = (String[]) request.getParameterValues("exercise_filelinks[]");
+String[] part_filelinks = (String[]) request.getParameterValues("part_filelinks_to_add[]");
+if (part_filelinks == null) {
+	part_filelinks = (String[]) request.getParameterValues("part_filelinks[]");
 }
 
 // Redirect/correct target page
@@ -56,9 +56,9 @@ destination_draft_filelink = request.getParameter("destination_draft_filelink");
 if (destination_draft_filelink == null) {
 	// Without filelinks to add to the draft continuing is senseless.
 	// =>Are there filelinks?
-	if (exercise_filelinks == null || exercise_filelinks.length == 0) {
+	if (part_filelinks == null || part_filelinks.length == 0) {
 		Global.addMessage("`Add to draft` was forced to cancel due to lack of a "
-				+ "destination draft and exercise identifiers(filelinks) required to know what to add."
+				+ "destination draft and part identifiers(filelinks) required to know what to add."
 				, "danger");
 		return ;  //cancel
 	}
@@ -72,18 +72,18 @@ if (destination_draft_filelink == null) {
 
 
 // GET THE FILELINKS LISTING AS ARRAYLIST.
-List<String> exercise_filelinks_to_add = new ArrayList<String>();
-// Add all already existing exercises of the draft bean. (should be 0)
-exercise_filelinks_to_add.addAll(draft.getAllExercises().keySet());
+List<String> part_filelinks_to_add = new ArrayList<String>();
+// Add all already existing parts of the draft bean. (should be 0)
+part_filelinks_to_add.addAll(draft.getAllParts().keySet());
 
-// Add all given exercise filelinks to the list.
-for (String l : exercise_filelinks) {
-	exercise_filelinks_to_add.add(l);
+// Add all given part filelinks to the list.
+for (String l : part_filelinks) {
+	part_filelinks_to_add.add(l);
 }
 
-// Intermezzo, how many exercises have been added so far?
+// Intermezzo, how many parts have been added so far?
 // Note: Arrays are given by reference!
-int exercise_filelinks_to_add_size = exercise_filelinks_to_add.size(); // for performance
+int part_filelinks_to_add_size = part_filelinks_to_add.size(); // for performance
 
 
 // HANDLE DESTINATION DRAFT.
@@ -105,7 +105,7 @@ if (destination_draft_filelink == null || destination_draft_filelink.isEmpty()
 
 	// INSERT THE DRAFT INTO THE DATABASE.
 	// It's not for certain that we should do this here as the sheetdraft name will change anyways:
-	// So perhaps better only have the filelink as non-foreign-key in the draftexerciseassignment table?
+	// So perhaps better only have the filelink as non-foreign-key in the draftpartassignment table?
 	// - The problem will be then to determine to which author the draft belongs! So the following remains:
 
 	//ResultSet result = Global.query(
@@ -124,64 +124,64 @@ if (destination_draft_filelink == null || destination_draft_filelink.isEmpty()
 
 
 	new_or_latest_changed_or_other_draft = "<em>neu erstellten</em>";
-	//Global.addMessage("Created new draft with no exercises in it.", "success");
+	//Global.addMessage("Created new draft with no parts in it.", "success");
 }
 else {
 	// ADD TO A DRAFT THAT ALREADY EXISTS.
 	//SEMI-WORKING draft = new Sheetdraft();
 	//SEMI-WORKING draft.synchronizeWithDatabaseLoadFromItBecomeIdentical(destination_draft_filelink);
 
-	// Join the now possibly loaded exercise_filelinks with the ones
+	// Join the now possibly loaded part_filelinks with the ones
 	// delivered by http request.
-	//SEMI-WORKING exercise_filelinks_to_add.addAll(draft.getAllExercises().keySet());
+	//SEMI-WORKING part_filelinks_to_add.addAll(draft.getAllParts().keySet());
 	new_or_latest_changed_or_other_draft = "<em>bereits vorhandenen</em>";
 
 	//Global.addMessage("Synchronized draft with another sheet or draft.", "success");
-	//SEMI-WORKING int exercises_count_prior_to_addition = draft.getAllExercises().keySet().size();
+	//SEMI-WORKING int parts_count_prior_to_addition = draft.getAllParts().keySet().size();
 
 }
 
 
 
-// Intermezzo, how many exercises have been added so far?
-exercise_filelinks_to_add_size = exercise_filelinks_to_add.size(); // for performance
+// Intermezzo, how many parts have been added so far?
+part_filelinks_to_add_size = part_filelinks_to_add.size(); // for performance
 
 
 
 // ADD EXERCISES DATABASE
-// 1.) Add relations in database, hence referenced the exercises to be added.
+// 1.) Add relations in database, hence referenced the parts to be added.
 // HINT: A DRAFT ONLY CONSISTS OF REFERENCED EXERCISES ALWAYS UNTIL INDEPENDENCE!
-// Assign the referenced exercises.
-int exercise_filelinks_added_actively_count = 0;
-for (int exercise_position = 0; exercise_position < exercise_filelinks_to_add_size
-		; exercise_position++) {
+// Assign the referenced parts.
+int part_filelinks_added_actively_count = 0;
+for (int part_position = 0; part_position < part_filelinks_to_add_size
+		; part_position++) {
 
-	if ( Global.sqlm.exist(" `draftexerciseassignment` ", " * "
+	if ( Global.sqlm.exist(" `draftpartassignment` ", " * "
 			, "sheetdraft_filelink = '" + destination_draft_filelink + "'"
-			+ " AND exercise_filelink = '" + exercise_filelinks_to_add.get(exercise_position) + "'")	) {
-		System.out.println(Global.addMessage("Because this sheet/draft already contains this exercise, it was skipped: "
-			+ exercise_filelinks_to_add.get(exercise_position), "warning"));
+			+ " AND part_filelink = '" + part_filelinks_to_add.get(part_position) + "'")	) {
+		System.out.println(Global.addMessage("Because this sheet/draft already contains this part, it was skipped: "
+			+ part_filelinks_to_add.get(part_position), "warning"));
 		continue;
 	}
 
-	String query = "INSERT INTO `draftexerciseassignment`"
-			+ " (sheetdraft_filelink, `position`, exercise_filelink)"
+	String query = "INSERT INTO `draftpartassignment`"
+			+ " (sheetdraft_filelink, `position`, part_filelink)"
 			+ " VALUES('" + destination_draft_filelink/*draft.getFilelinkRelative()*/ + "'"
-			+ ", " + exercise_position
-			+ ", '" + exercise_filelinks_to_add.get(exercise_position) + "'"
+			+ ", " + part_position
+			+ ", '" + part_filelinks_to_add.get(part_position) + "'"
 			+ ");";
 	Global.query(query);
-	exercise_filelinks_added_actively_count++;
+	part_filelinks_added_actively_count++;
 }
 
 
 // NOTE:
-// At this point all the draft's exercises are referenced in the database
-// in the table `draftexerciseassignment`.
+// At this point all the draft's parts are referenced in the database
+// in the table `draftpartassignment`.
 
 
 // To keep integrity between DB and the object/instance of the active draft:
-//draft.loadAssignedAndReferencedSingleSourceExercisesFromDatabase();
+//draft.loadAssignedAndReferencedSingleSourcePartsFromDatabase();
 
 
 
@@ -189,22 +189,22 @@ for (int exercise_position = 0; exercise_position < exercise_filelinks_to_add_si
 
 // 2.) Add those given per request.
 // Already checked per precondition, see beginning of this file.
-//if (request.getParameterValues("exercise_filelinks_to_add[]") != null) {
+//if (request.getParameterValues("part_filelinks_to_add[]") != null) {
 /*
-	String exercise_filelink_to_add;
-	for (int i = 0; i < exercise_filelinks_to_add_size; i++) {
+	String part_filelink_to_add;
+	for (int i = 0; i < part_filelinks_to_add_size; i++) {
 		//if (!aufg_ids.contains(request.getParameterValues("aufg_id[]")[i])) {
 		//	aufg_ids.add(request.getParameterValues("aufg_id[]")[i]);
 		//}
 		// Synchronize with/from database
-		exercise_filelink_to_add = exercise_filelinks_to_add.get(i);
-		if (!draft.getAllExercises().keySet().contains(exercise_filelink_to_add)) {
-			draft.getAllExercises().put(
-				exercise_filelink_to_add
-				, new Exercise(
+		part_filelink_to_add = part_filelinks_to_add.get(i);
+		if (!draft.getAllParts().keySet().contains(part_filelink_to_add)) {
+			draft.getAllParts().put(
+				part_filelink_to_add
+				, new Part(
 					// Arguments to be loaded prior to this point of time
 					//sheetdraft_id,
-					exercise_filelink_to_add,
+					part_filelink_to_add,
 					//originsheetdraft_filelink,
 					content,
 					header
@@ -212,38 +212,38 @@ for (int exercise_position = 0; exercise_position < exercise_filelinks_to_add_si
 			);
 
 			// count up
-			exercise_filelinks_added_count++;
+			part_filelinks_added_count++;
 		}
 
 	}
 */
 
 // Independence skipped for now.
-// Don't make this draft's exercises independent single users now!
+// Don't make this draft's parts independent single users now!
 // => Skip this point for now! -> Then, when independence requested, copy:
-// - the filesystem files equivalent to the exercise,
-// - the database entries from table `exercise`.
-// - Update the relation draftexerciseassignment to refer to the newly copied
-//   exercises. This is done by deleting the to the draft correlated entries
-//   in the relation draftexerciseassignment because the exercises are single users
-//   i.e. independent and separately in the table `exercise`.
+// - the filesystem files equivalent to the part,
+// - the database entries from table `part`.
+// - Update the relation draftpartassignment to refer to the newly copied
+//   parts. This is done by deleting the to the draft correlated entries
+//   in the relation draftpartassignment because the parts are single users
+//   i.e. independent and separately in the table `part`.
 
 
 
 
 // 3.)
 // FEEDBACK
-String message = "<p>Es wurden " + exercise_filelinks_added_actively_count + " von "
-		+ exercise_filelinks_to_add_size + " angefragten "
+String message = "<p>Es wurden " + part_filelinks_added_actively_count + " von "
+		+ part_filelinks_to_add_size + " angefragten "
 		//+ " Aufgaben zum aktuell aktiven Entwurf hinzugefügt</p>");
 		+ " Aufgaben zum " + new_or_latest_changed_or_other_draft
 		+ " Entwurf (filelink: " + draft.getFilelink() + ") hinzugef&uuml;gt (per Referenz).</p>"
-		+ (exercise_filelinks_added_actively_count < exercise_filelinks_to_add_size
-			? " <div class='anno'>(A guess for the missing ones: Filelink combinations that already exist are not inserted! That means, one sheet/draft can't contain one exercise more than once!)</div>" : "")
-		+ "Insgesamt umfasst der Entwurf nun " + draft.getAllExercises().size()
+		+ (part_filelinks_added_actively_count < part_filelinks_to_add_size
+			? " <div class='anno'>(A guess for the missing ones: Filelink combinations that already exist are not inserted! That means, one sheet/draft can't contain one part more than once!)</div>" : "")
+		+ "Insgesamt umfasst der Entwurf nun " + draft.getAllParts().size()
 		+ " Aufgaben.";
 	System.out.print(
-		Global.addMessage(message, (exercise_filelinks_added_actively_count > 0 ? "success" : "nosuccess"))
+		Global.addMessage(message, (part_filelinks_added_actively_count > 0 ? "success" : "nosuccess"))
 	);
 	Global.addMessage("Filelink of draft been added to: " + draft.getFilelink(), "info");
 //}
@@ -266,7 +266,7 @@ String message = "<p>Es wurden " + exercise_filelinks_added_actively_count + " v
 
 
 //--------------------------------------------------------------------------//
-// Add complete sheetdrafts - TODO This could be achieved via exercises.
+// Add complete sheetdrafts - TODO This could be achieved via parts.
 //--------------------------------------------------------------------------//
 
 
