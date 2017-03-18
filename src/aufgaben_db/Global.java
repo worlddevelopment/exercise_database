@@ -125,8 +125,6 @@ import org.odftoolkit.odfdom.doc.OdfTextDocument;
 
 import sun.rmi.log.ReliableLog;
 
-import Verwaltung.HashLog;
-
 
 
 
@@ -3955,8 +3953,6 @@ public class Global {
 		// TXT SOURCE ----------------------------------
 		else if (source_ending.equalsIgnoreCase("txt")) {
 			String[] plainText = ReadWrite.loadText(filelink);
-			HashLog.erweitereLogFile("Text file: "
-					+ filelink);
 
 			/* HERE THE MISSION IS TO CREATE DOCUMENTS OUT OF THE TEXT.
 			SUCH THAT THE PLAIN TEXT IS IN THE DOCUMENT FORMAT
