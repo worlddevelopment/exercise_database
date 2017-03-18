@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 
-public class TexManipulator {
+public class TeXConverter {
 
 	public static void main(String[] args) {
 

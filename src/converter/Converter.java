@@ -1716,7 +1716,7 @@ public abstract class Converter implements IConverter {
 
 		// Method 1)
 		// At this point a pdf file has to be generated. TODO e.g.
-		// using TexManipulator.java, portable LaTex in root directory.
+		// using TeXConverter.java, portable LaTex in root directory.
 		//this.plainText = PdfKonverter
 		//	.textAusPdf(filelink.replaceAll("[.]tex$", ".pdf"));
 //		this.rawContent = ReadWrite.loadText(filelink);

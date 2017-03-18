@@ -14,8 +14,6 @@ import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
 
-import converter.Converter;
-
 
 /**
  * Utility for processing LaTeX files.
@@ -25,22 +23,22 @@ import converter.Converter;
  */
 public class TeXProcessor {
 
-/**
- * Cuts the given LaTeX sheetdraft with the help of a stored
- * DeclarationSet.
- *
- * @param sheetdraft
- * @return ArrayList of the split result (parts) with header
- * and \begin | \end{document}, and in theory directly compilable.
- * @throws IOException
- */
-	public static ArrayList<Part> cutParts(Sheetdraft sheetdraft) throws IOException {
+	/**
+	 * Cuts the given LaTeX sheetdraft with the help of a stored
+	 * DeclarationSet.
+	 *
+	 * @param sheetdraft
+	 * @return ArrayList of the split result (parts) with header
+	 * and \begin | \end{document}, and in theory directly compilable.
+	 * @throws IOException
+	*/
+	public static ArrayList<Part> cutParts(Sheetdraft sheetdraft)
+		throws IOException {
 
 		System.out.println("TeXProcessor was called.");
 
 		String headermixture = ""; // to be determined
-//		ArrayList<String> allLines = new ArrayList<String>();
-		String[] allTexLines = sheetdraft.getRawContent();//getTexText();
+		String[] allTexLines = sheetdraft.getRawContent();
 		int indexOfFirstIdentifier = 0;
 		int indexOfLastIdentifier = 0 ;
 		int indexOfBeginDoc = 0;
@@ -64,7 +62,7 @@ public class TeXProcessor {
 
 		HashMap<Integer, Declaration> lineDecReference
 			= new HashMap<Integer, Declaration>();
-		int ex_count_and_pos = 0;
+		int part_count_and_pos = 0;
 		for (int i = 0; i < allTexLines.length; i++) {
 			String singleLine = allTexLines[i];
 				for (Declaration dec
@@ -151,18 +149,18 @@ public class TeXProcessor {
 			// Creating file for it on harddrive in writeToHarddisk.
 
 			// Increment here because we start with 1 instead of 0
-			ex_count_and_pos++;
+			part_count_and_pos++;
 
 			// write to filesystem
-			String new_ex_filelink = sheetdraft
+			String partFilelink = sheetdraft
 				.getFilelinkForPartFromPosWithoutEnding(
-					ex_count_and_pos, ex_count_and_pos)
+					part_count_and_pos, part_count_and_pos)
 				+ sheetdraft.getFileEnding();
-			ReadWrite.write(partText, new_ex_filelink);
+			ReadWrite.write(partText, partFilelink);
 
 			// Create Part instance for eventual further handling.
 //			Part loopPart = new Part(
-//					new_ex_filelink
+//					partFilelink
 //					, dec
 //					, partPlainText
 //					//, partText
@@ -184,7 +182,7 @@ public class TeXProcessor {
 
 	static void createImagesForParts(Collection<Part> parts) throws FileNotFoundException {
 		for (Part part : parts) {
-			Converter.tex2image(part.filelink);
+			converter.Converter.tex2image(part.filelink);
 		}
 	}
 
