@@ -37,77 +37,77 @@ import javax.faces.context.FacesContext;
 public class FileUploadForm
 {
 	private static final int BUFFER_SIZE = 6124;
-    private UploadedFile _upFile;
-    private String _name = "";
+	private UploadedFile _upFile;
+	private String _name = "";
 
-    public UploadedFile getUpFile()
-    {
-        return _upFile;
-    }
+	public UploadedFile getUpFile()
+	{
+		return _upFile;
+	}
 
-    public void setUpFile(UploadedFile upFile)
-    {
-        _upFile = upFile;
-    }
+	public void setUpFile(UploadedFile upFile)
+	{
+		_upFile = upFile;
+	}
 
-    public String getName()
-    {
-        return _name;
-    }
+	public String getName()
+	{
+		return _name;
+	}
 
-    public void setName(String name)
-    {
-        _name = name;
-    }
+	public void setName(String name)
+	{
+		_name = name;
+	}
 
-    public String upload() throws IOException
-    {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        facesContext.getExternalContext().getApplicationMap().put("fileupload_bytes", _upFile.getBytes());
-        facesContext.getExternalContext().getApplicationMap().put("fileupload_type", _upFile.getContentType());
-        facesContext.getExternalContext().getApplicationMap().put("fileupload_name", _upFile.getName());
-        return "ok";
-    }
+	public String upload() throws IOException
+	{
+		FacesContext facesContext = FacesContext.getCurrentInstance();
+		facesContext.getExternalContext().getApplicationMap().put("fileupload_bytes", _upFile.getBytes());
+		facesContext.getExternalContext().getApplicationMap().put("fileupload_type", _upFile.getContentType());
+		facesContext.getExternalContext().getApplicationMap().put("fileupload_name", _upFile.getName());
+		return "ok";
+	}
 
-    public boolean isUploaded()
-    {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        return facesContext.getExternalContext().getApplicationMap().get("fileupload_bytes")!=null;
-    }
-    public void handleFileUpload(FileUploadEvent event) throws IOException {
+	public boolean isUploaded()
+	{
+		FacesContext facesContext = FacesContext.getCurrentInstance();
+		return facesContext.getExternalContext().getApplicationMap().get("fileupload_bytes")!=null;
+	}
+	public void handleFileUpload(FileUploadEvent event) throws IOException {
 //		FacesMessage msg = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
 //		FacesContext.getCurrentInstance().addMessage(null, msg);
-    	File f = new File("new_fucking_file.txt");
-    	f.createNewFile();
-    	ExternalContext extContext = FacesContext.getCurrentInstance().
-    			getExternalContext();
-    			File result = new File(extContext.getRealPath
-    			("//WEB-INF//upload") + "//" + event.getFile().getFileName());
-    			try {
-    				FileOutputStream fileOutputStream = new
-    				FileOutputStream(result);
-    				byte[] buffer = new byte[BUFFER_SIZE];
-    				int bulk;
-    				InputStream inputStream = event.getFile().getInputstream();
-    				while (true) {
-    				bulk = inputStream.read(buffer);
-    				if (bulk < 0) {
-    				break;
-    				}
-    				fileOutputStream.write(buffer, 0, bulk);
-    				fileOutputStream.flush();
-    				}
-    				fileOutputStream.close();
-    				inputStream.close();
-    				FacesMessage msg = new FacesMessage("Succesful",
-    				event.getFile().getFileName() + " is uploaded.");
-    				FacesContext.getCurrentInstance().addMessage(null, msg);
-    			} catch (IOException e) {
-    				e.printStackTrace();
-    				FacesMessage error = new FacesMessage("The files were not uploaded!");
-    				FacesContext.getCurrentInstance().addMessage(null, error);
-    				}
-    	
+		File f = new File("new_fucking_file.txt");
+		f.createNewFile();
+		ExternalContext extContext = FacesContext.getCurrentInstance().
+				getExternalContext();
+				File result = new File(extContext.getRealPath
+				("//WEB-INF//upload") + "//" + event.getFile().getFileName());
+				try {
+					FileOutputStream fileOutputStream = new
+					FileOutputStream(result);
+					byte[] buffer = new byte[BUFFER_SIZE];
+					int bulk;
+					InputStream inputStream = event.getFile().getInputstream();
+					while (true) {
+					bulk = inputStream.read(buffer);
+					if (bulk < 0) {
+					break;
+					}
+					fileOutputStream.write(buffer, 0, bulk);
+					fileOutputStream.flush();
+					}
+					fileOutputStream.close();
+					inputStream.close();
+					FacesMessage msg = new FacesMessage("Succesful",
+					event.getFile().getFileName() + " is uploaded.");
+					FacesContext.getCurrentInstance().addMessage(null, msg);
+				} catch (IOException e) {
+					e.printStackTrace();
+					FacesMessage error = new FacesMessage("The files were not uploaded!");
+					FacesContext.getCurrentInstance().addMessage(null, error);
+					}
+
 	}
 
 }

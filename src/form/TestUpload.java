@@ -11,11 +11,11 @@ import org.primefaces.model.UploadedFile;
 public class TestUpload {
 
 	public void handleFileUpload(FileUploadEvent event) {
-		
+
 		System.out.println("HALLOOOOOOO");
-		
+
 		FacesMessage msg = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
 		FacesContext.getCurrentInstance().addMessage(null, msg);
-		
+
 	}
 }
