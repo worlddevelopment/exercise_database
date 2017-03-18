@@ -516,7 +516,7 @@ public /*abstract*/ class ContentToImage {
 			if (this.getClass().toString().equals("Sheetdraft")) {
 				// Sheetdraft only! Not meant for exercises:
 				System.out.println("Further handle the RTF file:");
-				new rtf.RTFProcessor((Sheetdraft)this);
+				new processors.RTFProcessor((Sheetdraft)this);
 			}
 		}
 		// TEX

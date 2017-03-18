@@ -187,7 +187,7 @@ public class Aufgaben_DB {
 
 			System.out.println("Looking for identifiers in the given"
 					+ " RTF document.");
-			new rtf.RTFProcessor((Sheetdraft)sheetdraft));
+			new processors.RTFProcessor((Sheetdraft)sheetdraft));
 		}
 
 
