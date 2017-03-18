@@ -1,6 +1,6 @@
-<%@page import="aufgaben_db.DocType, java.util.Map
-		, aufgaben_db.Global
-		, aufgaben_db.Aufgaben_DB, aufgaben_db.Sheetdraft"
+<%@page import="core.DocType, java.util.Map
+		, core.Global
+		, core.Aufgaben_DB, core.Sheetdraft"
 %>
 
 

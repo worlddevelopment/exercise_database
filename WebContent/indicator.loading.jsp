@@ -1,4 +1,4 @@
-<%@page import="aufgaben_db.Global" %>
+<%@page import="core.Global" %>
 <div class="loader" id="loader" style="">
 	<!--
 	<img src="pictures/loader.gif" alt="Please wait..." />

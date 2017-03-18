@@ -1,4 +1,4 @@
-<%@page import="aufgaben_db.*"%>
+<%@page import="core.*"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="java.util.HashMap"%>
 <%@page import="java.io.File, java.net.URLDecoder"%>

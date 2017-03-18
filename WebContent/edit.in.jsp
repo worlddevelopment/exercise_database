@@ -1,7 +1,7 @@
 <%@page
 	import="java.util.*"
 	import="java.text.*"
-	import="aufgaben_db.*, aufgaben_db.DocType"
+	import="core.*, core.DocType"
 	import="java.net.URLDecoder"
 	import="java.sql.ResultSet"
 %>

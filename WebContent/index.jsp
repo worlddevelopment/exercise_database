@@ -3,8 +3,8 @@
 	request.setCharacterEncoding("UTF-8");
 %>
 <%@page
-	import="aufgaben_db.Global"
-	import="aufgaben_db.Aufgaben_DB"
+	import="core.Global"
+	import="core.Aufgaben_DB"
 	import="java.net.InetAddress"
 	import="java.io.*, java.io.File"
 	import="java.lang.Exception"
@@ -80,7 +80,7 @@ if (language == null) {
 	language = request.getParameter("language");
 }
 if (language != null && !language.toLowerCase().equals(Global.LANGUAGE.name().toLowerCase()) ) {
-	Global.LANGUAGE = aufgaben_db.Language.getByName(language);
+	Global.LANGUAGE = core.Language.getByName(language);
 }
 
 
@@ -245,10 +245,10 @@ if (Global.isLoggedIn(session)) {
 			style="display:block; position:absolute;top:20px;left:50%; margin-left: 400px; font-size:10pt !important; width:80px; line-height:15px !important;overflow-x:hidden; font-weight:normal;">
 		<!-- Language controls  -->
 		<!--
-		<select style="width:100px" name="lang" size="<%=aufgaben_db.Language.values().length %>" onselect="this.form.submit();">
+		<select style="width:100px" name="lang" size="<%=core.Language.values().length %>" onselect="this.form.submit();">
 		 -->
 		<%
-		for (aufgaben_db.Language l : aufgaben_db.Language.values()) {
+		for (core.Language l : core.Language.values()) {
 			//out.print("<option value='" + l.name() + "'>" + l.toString() + "</option>");
 			out.print("<a style='color:white;' href='?lang=" + l.name().toLowerCase() + "'>[" + Global.display(l.toString()) + "]</a>");
 		}

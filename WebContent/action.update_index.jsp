@@ -1,5 +1,5 @@
 
-<%@page import="aufgaben_db.Global"%>
+<%@page import="core.Global"%>
 <%@page import="java.sql.SQLException"%>
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.io.File, java.net.URLDecoder"%>

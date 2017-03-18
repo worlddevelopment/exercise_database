@@ -1,5 +1,5 @@
 
-<%@page import="db.*, aufgaben_db.Global, java.net.URLEncoder"%>
+<%@page import="db.*, core.Global, java.net.URLEncoder"%>
 
 <!-- Treeview -->
 <link rel="stylesheet" href="jquery.treeview/jquery.treeview.css" />

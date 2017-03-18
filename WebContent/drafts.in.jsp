@@ -1,14 +1,14 @@
 <!--
 <script type="text/javascript" src="jquery/toolTipPreview.js"></script>
 -->
-<%@page import="aufgaben_db.DocType"%>
+<%@page import="core.DocType"%>
 <%@page import="java.util.ArrayList,java.util.List, java.util.Map, java.util.HashMap"%>
 <%@page import="java.sql.ResultSet,
 				java.sql.SQLException,
-				aufgaben_db.Global" %>
+				core.Global" %>
 <%
 /* <!-- theoretically this bean works, unfortuneately it does not fit into this site until now
-<jsp: useBean id="draft" class="aufgaben_db.Sheetdraft" scope="session"></jsp:useBean>
+<jsp: useBean id="draft" class="core.Sheetdraft" scope="session"></jsp:useBean>
 --> */
 // Preconditions
 if (Global.session == null) {

@@ -1,4 +1,4 @@
-<%@page import="java.text.DateFormat, java.text.SimpleDateFormat, java.util.Calendar, aufgaben_db.Global;" %>
+<%@page import="java.text.DateFormat, java.text.SimpleDateFormat, java.util.Calendar, core.Global;" %>
 
 <%
 if (request.getParameter("default") != null) {

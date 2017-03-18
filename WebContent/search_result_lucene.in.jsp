@@ -5,7 +5,7 @@
 <%@page import="org.apache.lucene.index.Term"%>
 <%@page import="org.apache.lucene.queryParser.QueryParser.Operator"%>
 <%@page import="org.apache.lucene.search.WildcardQuery"%>
-<%@page import="aufgaben_db.DocType, aufgaben_db.Global"%>
+<%@page import="core.DocType, core.Global"%>
 <%@page import="java.net.URLDecoder, java.net.URLEncoder"%>
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.sql.Connection"%>

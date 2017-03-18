@@ -1,5 +1,5 @@
-<%@page import="aufgaben_db.Global" %>
-<%@page import= "java.sql.ResultSet, java.util.List, java.util.ArrayList, java.io.File, aufgaben_db.Aufgaben_DB" %>
+<%@page import="core.Global" %>
+<%@page import= "java.sql.ResultSet, java.util.List, java.util.ArrayList, java.io.File, core.Aufgaben_DB" %>
 <%
 
 

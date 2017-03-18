@@ -1,5 +1,5 @@
 <%@page import="java.util.*,
-		aufgaben_db.Global,
+		core.Global,
 		java.sql.ResultSet;"
 %>
 <%

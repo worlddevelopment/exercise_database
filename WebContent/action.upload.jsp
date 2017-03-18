@@ -32,8 +32,8 @@
 <%@page import="java.util.Iterator"%>
 
 <%@page import="db.UnixComandosThread"%>
-<%@page import="aufgaben_db.Global, aufgaben_db.Aufgaben_DB"%>
-<%@page import="aufgaben_db.Exercise, aufgaben_db.Sheetdraft"%>
+<%@page import="core.Global, core.Aufgaben_DB"%>
+<%@page import="core.Exercise, core.Sheetdraft"%>
 
 
 

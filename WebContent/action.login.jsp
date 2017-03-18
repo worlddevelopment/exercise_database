@@ -1,5 +1,5 @@
 <%@page import="db.Login,db.User,db.LDAP"
-		import="aufgaben_db.Global" %>
+		import="core.Global" %>
 <%
 
 if ( request.getParameter("login") != null

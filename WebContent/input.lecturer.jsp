@@ -1,4 +1,4 @@
-<%@page import="aufgaben_db.Global, java.sql.ResultSet" %>
+<%@page import="core.Global, java.sql.ResultSet" %>
 
 <%
 String id = "lecturer";

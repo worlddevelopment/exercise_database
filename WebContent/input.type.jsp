@@ -1,4 +1,4 @@
-<%@page import="aufgaben_db.Global" %>
+<%@page import="core.Global" %>
 
 
 <%

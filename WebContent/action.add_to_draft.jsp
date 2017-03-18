@@ -1,7 +1,7 @@
 <%@page import="java.util.List, java.util.ArrayList,java.util.Map"%>
 <%@page import="java.sql.ResultSet"%>
-<%@page import="aufgaben_db.Global, aufgaben_db.Exercise, aufgaben_db.Sheetdraft"%>
-<jsp:useBean id="draft" class="aufgaben_db.Sheetdraft" scope="session"></jsp:useBean>
+<%@page import="core.Global, core.Exercise, core.Sheetdraft"%>
+<jsp:useBean id="draft" class="core.Sheetdraft" scope="session"></jsp:useBean>
 <%
 /**
  * Here happen several important things:

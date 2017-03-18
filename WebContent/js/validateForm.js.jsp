@@ -1,4 +1,4 @@
-<%@page import="aufgaben_db.Global;" %>
+<%@page import="core.Global;" %>
 <%
 response.setContentType("text/html; charset=UTF-8");
 request.setCharacterEncoding("UTF-8");

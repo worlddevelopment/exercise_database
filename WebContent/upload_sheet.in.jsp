@@ -1,4 +1,4 @@
-<%@page import="java.util.*, java.text.*,aufgaben_db.*, java.sql.ResultSet;" %>
+<%@page import="java.util.*, java.text.*,core.*, java.sql.ResultSet;" %>
 <%
 response.setContentType("text/html; charset=UTF-8");
 request.setCharacterEncoding("UTF-8");

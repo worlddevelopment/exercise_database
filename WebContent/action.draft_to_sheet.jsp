@@ -1,7 +1,7 @@
 <%@page import="java.util.List, java.util.ArrayList,java.util.Map"%>
 <%@page import="java.sql.ResultSet"%>
-<%@page import="aufgaben_db.Global, aufgaben_db.Exercise, aufgaben_db.Sheetdraft, aufgaben_db.DocType"%>
-<jsp:useBean id="draft" class="aufgaben_db.Sheetdraft" scope="session"></jsp:useBean>
+<%@page import="core.Global, core.Exercise, core.Sheetdraft, core.DocType"%>
+<jsp:useBean id="draft" class="core.Sheetdraft" scope="session"></jsp:useBean>
 <%
 /**
 At this point all the decisions of target-fileformat, which exercises to add, which order, ...

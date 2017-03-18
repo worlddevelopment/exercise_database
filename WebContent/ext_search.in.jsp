@@ -4,7 +4,7 @@ request.setCharacterEncoding("UTF-8");
 %>
 <%@page import="java.net.URLEncoder, java.sql.ResultSet"%>
 <%@page import="java.util.Map, java.util.HashMap, java.util.List, java.util.ArrayList"%>
-<%@page import="aufgaben_db.Global,aufgaben_db.DocType"%>
+<%@page import="core.Global,core.DocType"%>
 
 <script type="text/javascript">
 

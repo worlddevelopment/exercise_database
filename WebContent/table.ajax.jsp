@@ -6,7 +6,7 @@
 %>
 <%@page import="java.net.URLDecoder, java.net.URLEncoder" %>
 <%@page import="java.util.Map" %>
-<%@page import="db.SQL_Methods,aufgaben_db.Global,aufgaben_db.Aufgaben_DB,aufgaben_db.Sheetdraft"%>
+<%@page import="db.SQL_Methods,core.Global,core.Aufgaben_DB,core.Sheetdraft"%>
 <%@page import="db.MysqlHelper,java.sql.Connection,java.sql.DriverManager,java.sql.ResultSet,java.sql.SQLException,java.sql.Statement"%>
 
 <script type="text/javascript" src="jquery/toolTipPreview.js"></script>

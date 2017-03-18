@@ -1,9 +1,9 @@
 <%@page import="db.UnixComandosThread"%>
 <%@page import="db.MysqlHelper"%>
-<%@page import="aufgaben_db.DocType"%>
+<%@page import="core.DocType"%>
 <%@page import="java.util.ArrayList,java.util.List, java.util.Date"%>
 <%@page import="java.io.File"%>
-<%@page import="aufgaben_db.Global" %>
+<%@page import="core.Global" %>
 <%
 
 
@@ -72,7 +72,7 @@ if (!allFilesStillThere || !allFilesStillUpToDate
 	}
 	Global.conn = Global.msqh.getConnection("sqlite");
 	// c) Export MySQL content and Run the SQLite import script: https://gist.github.com/esperlu/943776/ (executes mysqldump itself! data)
-//	 String sql_filelink = Global.root + File.separator + Global.uploadTarget + "aufgaben_db.sql";
+//	 String sql_filelink = Global.root + File.separator + Global.uploadTarget + "core.sql";
 //	 String mysql2sqlite_conversion_filelink = Global.root + File.separator + "mysql2sqlite.sql";
 	command.Command[] commands = {
 			//command.Command.constructInstance(Global.root + System.getProperty("file.separator")),/*Needs sqlite3 to be installed on the UNIX server.*/

@@ -1,4 +1,4 @@
-<%@page import="java.sql.ResultSet,java.net.URLEncoder,db.*,aufgaben_db.Global" %>
+<%@page import="java.sql.ResultSet,java.net.URLEncoder,db.*,core.Global" %>
 
 
 <%

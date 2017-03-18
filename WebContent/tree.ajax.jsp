@@ -10,7 +10,7 @@
 <%@page import="java.net.URLDecoder, java.net.URLEncoder" %>
 <%@page import="java.util.List, java.util.ArrayList, java.util.TimeZone, java.util.Locale, java.util.GregorianCalendar" %>
 <%@page import="java.text.SimpleDateFormat" %>
-<%@page import="db.SQL_Methods, aufgaben_db.Global" %>
+<%@page import="db.SQL_Methods, core.Global" %>
 <%@page import="db.MysqlHelper,java.sql.Connection,java.sql.DriverManager,
 		java.sql.ResultSet,java.sql.SQLException,java.sql.Statement"%>
 <!--

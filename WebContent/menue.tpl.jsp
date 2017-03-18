@@ -1,4 +1,4 @@
-<%@page import="aufgaben_db.Global" %>
+<%@page import="core.Global" %>
 <hr />
 <div style="float: left;">
 	<form action="index.jsp" method="get">
@@ -36,7 +36,7 @@
 		}
 		%>
 		<!--
-		<button class="menue" name="id" value="usermanagement"Verwaltung</button>
+		<button class="menue" name="id" value="usermanagement">Verwaltung</button>
 		-->
 		<!--
 		<button class="btn btn-secondary" style="color:rgb(75,150,200);font-size:auto !important;" name="id" value="settings">

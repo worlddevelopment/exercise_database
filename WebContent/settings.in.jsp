@@ -1,4 +1,4 @@
-<%@page import="aufgaben_db.Global" %>
+<%@page import="core.Global" %>
 <% if (session.getAttribute("pass").toString().equals("laew galu")) { %>
 <div>
 	<div><label>Titel: </label><input name="title" value="Gwador" disabled="disabled" /></div>
