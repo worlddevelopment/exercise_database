@@ -549,6 +549,22 @@ public class Global {
 
 
 	/**
+	 * Builds a path by inserting the file separator.
+	 *
+	 * @param parts Array of String, the directories|files|parts
+	 * @return the path as string
+	 */
+	public static String buildRootPath(String[] parts) {
+		String path = Global.root;
+		for (String p : parts) {
+			path += System.getProperty("file.separator") + p;
+		}
+		return path;
+	}
+
+
+
+	/**
 	 * BUILD PATH TO filelink -- a convention
 	 * @param semester
 	 * @param course
@@ -568,6 +584,11 @@ public class Global {
 			+ Global.encodeUmlauts(type)
 			+ System.getProperty("file.separator");
 	}
+
+
+
+
+
 
 
 
@@ -5741,6 +5762,128 @@ public class Global {
 
 	}
 
+
+
+	/**
+	 * Counts the occurrences of word in the given array of string.
+	 *
+	 * @param text String[]
+	 * @param phrase String
+	 * @return count of phrase
+	 */
+	public int getPhraseCount(String[] text, String phrase) {
+
+		int count = 0;
+		String line = "";
+		int phraseL = phrase.length();
+		if (phraseL < 1) {
+			System.out.println("Phrase was of length < 1: " + phrase);
+			return 0;
+		}
+		for (int i = 0; i < text.length; i++) {
+			line = text[i];
+			int lineL = line.length();
+			if (lineL != 0) {
+				int searchStartIndex = 0;
+				int index = line.indexOf(phrase, searchStartIndex);
+				while (index != -1) {
+					count++;
+					searchStartIndex = index + 1;
+					if (searchStartIndex > lineL - 1) {
+						break; // inner loop
+					}
+					// Search for more occurrences:
+					index = line.indexOf(phrase, searchStartIndex);
+				}
+			}
+		}
+		return count;
+	}
+
+
+
+	/**
+	 * Get number of phrase occurrences per line in a map.
+	 *
+	 * @param text array of String
+	 * @param phrase what to search
+	 * @return map of line number to number of occurrences of
+	 * phrase within this line.
+	 */
+	public HashMap<Integer, Integer> getPhraseCountPerLine(
+			String[] text, String phrase) {
+
+		Map<Integer, Integer> phraseCountPerLine
+			= new HashMap<Integer, Integer>();
+
+		System.out.println("getPhraseCountPerLine: " + phrase);
+		int[] r = new int[text.length];
+		int phraseCountTotal = 0;
+
+		for (int i = 0; i < text.length; i++ ) {
+			r[i] = 0;
+			if (text[i] != null) {
+				int lineL = text[i].length;
+				int searchStartIndex = 0;
+				int index = text[i].indexOf(phrase);
+				while (index != -1) {
+					r[i]++;
+					searchStartIndex = index + 1;
+					if (searchStartIndex > lineL - 1) {
+						break; // inner loop
+					}
+					index = text[i].indexOf(phrase, searchStartIndex);
+				}
+				phraseCountTotal += r[i];
+				System.out.println("#phrase@line " + i + ": " + r[i]);
+			}
+		}
+
+		System.out.println("Total count: " + phraseCountTotal);
+		for (int i = 0; i < r.length; ++i) {
+			if (r[i] < 1) {
+				continue;
+			}
+			phraseCountPerLine.push(i, r[i]);
+		}
+
+		return phraseCountPerLine;
+	}
+
+
+
+	/**
+	 * Get an array of line numbers where phrase occurs at least once.
+	 *
+	 * @param text array of String
+	 * @param phrase to search
+	 * @return array of line numbers
+	 */
+	public int[] getLineNumbersContaining(String[] text, String phrase) {
+
+		System.out.println("getLineNumbersContaining: " + phrase);
+		int[] r = new int[text.length];
+		int lineContainingCount = 0;
+
+		for (int i = 0; i < text.length; i++ ) {
+			if (text[i] != null) {
+				if (text[i].indexOf(phrase) != -1) {
+					r[lineContainingCount] = i;
+					// To not overwrite the stored index|line number:
+					lineContainingCount += 1;
+				}
+			}
+		}
+
+		System.out.println("#lines containing the phrase: "
+				+ lineContainingCount);
+		int[] lineNumbersContaining = new int[lineContainingCount];
+		for (int i = 0; i < lineContainingCount; ++i) {
+			lineNumbersContaining[i] = r[i];
+		}
+
+		return lineNumbersContaining;
+	}
 
 
 

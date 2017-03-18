@@ -518,12 +518,10 @@ public /*abstract*/ class ContentToImage {
 		// RTF
 		else if (ending.equals("rtf")) {
 			this.plainText = RtfConverter.konvertiereRtfZuText(filelink);
-			MethodenWortSuche.schreibeErstesLetztesWortAusTextInHashMap(
-					plainText);
 			if (this.getClass().toString().equals("Sheetdraft")) {
 				// Sheetdraft only! Not meant for exercises:
 				System.out.println("Further handle the RTF file:");
-				rtf.SucheIdentifierRtfNeu.bearbeiteRtf((Sheetdraft)this);
+				new rtf.RTFProcessor((Sheetdraft)this);
 			}
 		}
 		// TEX

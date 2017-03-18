@@ -185,12 +185,10 @@ public class Aufgaben_DB {
 				.equals("rtf")
 				&& sheetdraft.getClass().toString().equals("Sheetdraft")
 				) {// sheetdraft only! not exercise
-			MethodenWortSuche.schreibeErstesLetztesWortAusTextInHashMap(
-					sheetdraft.getPlainText());
+
 			System.out.println("Looking for identifiers in the given"
 					+ " RTF document.");
-			rtf.SucheIdentifierRtfNeu.bearbeiteRtf(
-					(Sheetdraft)sheetdraft);
+			new rtf.RTFProcessor((Sheetdraft)sheetdraft));
 		}
 
 
