@@ -102,7 +102,7 @@ String sheetdraft_filelink = request.getParameter("filelink");//wird im hidden f
 //String sheetdraft_filelink =  URLDecoder.decode(request.getParameter("filelink"));
 
 // TODO clarify if this is a good idea or not? Is the following too risky?
-//Sheetdraft sheetdraft = Aufgaben_DB.getSheetdraftByFilelink(sheetdraft_filelink);
+//Sheetdraft sheetdraft = PartDB.getSheetdraftByFilelink(sheetdraft_filelink);
 
 
 HashMap<String, String> hm = new HashMap<String, String>();
@@ -269,7 +269,7 @@ if ((verschieben || rename) && !filelink_new.equals(sheetdraft_filelink)) {
 	}
 
 	// COMMON FORMAT: currently HTML.
-	String t = Aufgaben_DB.commonFormat.name().toLowerCase();
+	String t = PartDB.commonFormat.name().toLowerCase();
 	String existing_filelink = r + Global.replaceEnding(sheetdraft_filelink, t);
 	if (new File(existing_filelink).exists()) {
 		Global.renameFile(
@@ -385,7 +385,7 @@ if ((verschieben || rename) && !filelink_new.equals(sheetdraft_filelink)) {
 				);
 			}
 			// COMMON FORMAT: currently HTML.
-			String t =  Aufgaben_DB.commonFormat.name().toLowerCase();
+			String t =  PartDB.commonFormat.name().toLowerCase();
 			if (new File(r + Global.replaceEnding(exercise_filelink, t)).exists()) {
 				Global.renameFile(
 					r + Global.replaceEnding(exercise_filelink, t),

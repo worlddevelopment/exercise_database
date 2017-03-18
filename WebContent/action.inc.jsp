@@ -1,5 +1,5 @@
 <%@page import="core.Global" %>
-<%@page import= "java.sql.ResultSet, java.util.List, java.util.ArrayList, java.io.File, core.Aufgaben_DB" %>
+<%@page import= "java.sql.ResultSet, java.util.List, java.util.ArrayList, java.io.File, core.PartDB" %>
 <%
 
 
@@ -15,7 +15,7 @@ if (q.equals("logout")) {//LOGOUT
 //if (request.getParameter("q").equals("login")) {  //LOGIN
 // CREATE DRAFT
 else if (q.equals("create_draft")) {
-	//Aufgaben_DB.addSheetdraft(new Sheetdraft("filelink",));
+	//PartDB.addSheetdraft(new Sheetdraft("filelink",));
 	if (true) {
 		Global.message += "<div class='success'>Entwurf erfolgreich erstellt.</div>";
 	}
@@ -24,13 +24,13 @@ else if (q.equals("create_draft")) {
 else if (q.equals("clear_database_partial")) {
 	String[] exceptions = new String[1];
 	exceptions[0] = Global.msqh.sqlite_db_filelink;
-	Aufgaben_DB.clearDatabaseAllButLecturer();
+	PartDB.clearDatabaseAllButLecturer();
 	Global.deleteDirRecursively(new File(Global.root + File.separator + Global.uploadTarget), exceptions);
 }
 // CLEAR DATABASE COMPLETELY
 else if (q.equals("clear_database")) {
 	// Clear MySQL database | SQLite is within uploadTarget therefore gets deleted with the filesystem files:
-	Aufgaben_DB.clearDatabase();
+	PartDB.clearDatabase();
 	// TODO Filesystem? (files generally get overriden at file-upload.
 	// the only problem is that files remain which are no longer generated at upload.)
 	Global.deleteDirRecursively(new File(Global.root + File.separator + Global.uploadTarget));

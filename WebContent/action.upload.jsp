@@ -32,7 +32,7 @@
 <%@page import="java.util.Iterator"%>
 
 <%@page import="db.UnixComandosThread"%>
-<%@page import="core.Global, core.Aufgaben_DB"%>
+<%@page import="core.Global, core.PartDB"%>
 <%@page import="core.Exercise, core.Sheetdraft"%>
 
 
@@ -156,7 +156,7 @@ try {
 	//=======			 AND MORE PROCESSING						   =======
 	//=========================================================================
 	//String uploadedFileLink = uploadedFile.getAbsolutePath();
-	Sheetdraft sheetdraft = Aufgaben_DB.processUploadedSheetdraft(
+	Sheetdraft sheetdraft = PartDB.processUploadedSheetdraft(
 			uploadedFile.getAbsolutePath());//=>The sheetdraft.getFilelink is absolute.
 
 	/* IMPORTANT: From here only always use sheetdraft.getFilelink !! as it may have

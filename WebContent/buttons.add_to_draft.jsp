@@ -1,6 +1,6 @@
 <%@page import="core.DocType, java.util.Map
 		, core.Global
-		, core.Aufgaben_DB, core.Sheetdraft"
+		, core.PartDB, core.Sheetdraft"
 %>
 
 
@@ -21,9 +21,9 @@ String buttons__add_to_draft__session_user = request.getParameter("session_user"
 if (buttons__add_to_draft__session_user != null) {
 	// LOAD USER DRAFTS.
 	// false because drafts always belong to the author/uploader/deriving and not the lecturer
-	Aufgaben_DB.loadAllSheetdrafts(buttons__add_to_draft__session_user, false);
-	Map<String, Sheetdraft> loadedDrafts = Aufgaben_DB.getLoadedDraftsOnly();
-	Sheetdraft latestChangedDraft = Aufgaben_DB.getLatestChangedDraft();
+	PartDB.loadAllSheetdrafts(buttons__add_to_draft__session_user, false);
+	Map<String, Sheetdraft> loadedDrafts = PartDB.getLoadedDraftsOnly();
+	Sheetdraft latestChangedDraft = PartDB.getLatestChangedDraft();
 
 	// USER DRAFTS TO BE LOADED PRIOR TO THIS OR ON THE FLY IN GET ALL...!
 	// latest changed draft

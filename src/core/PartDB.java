@@ -17,7 +17,7 @@ import org.apache.commons.lang.NotImplementedException;
 
 
 
-public class Aufgaben_DB {
+public class PartDB {
 
 
 	//======= ATTRIBUTES
@@ -66,7 +66,7 @@ public class Aufgaben_DB {
 	public static String filelink;
 	public static Sheetdraft processUploadedSheetdraft(String filelink)
 //			throws Exception {
-//		//Aufgaben_DB.filelink = filelink;
+//		//PartDB.filelink = filelink;
 //		return processUploadedSheetdraft(filelink);
 //	}
 	//private static Sheetdraft processUploadedSheetdraft()
@@ -84,7 +84,7 @@ public class Aufgaben_DB {
 //			}
 		if (sheetType == null) {
 			//TODO Specialize the exception to e.g.FiletypeNotSupported?
-			System.out.println("Aufgaben_DB: Not implemented: " + Global.extractEnding(filelink));
+			System.out.println("PartDB: Not implemented: " + Global.extractEnding(filelink));
 			throw new NotImplementedException();
 		}
 		System.out.println("It is a " + sheetType + " document.");
@@ -95,7 +95,7 @@ public class Aufgaben_DB {
 
 		//======= BASEFILE HAS CHANGED?
 		System.out.println("Basefile as uploaded: (prior to compatibility conversion)\r\n" + filelink);
-		//Aufgaben_DB.convertInputFormatIntoSupportedFormat();
+		//PartDB.convertInputFormatIntoSupportedFormat();
 		//generatedFlavours.addAll(
 		if (filelink.endsWith("doc")) {
 			Global.addMessage("Unsupported basefile. Trying to convert."
@@ -278,7 +278,7 @@ public class Aufgaben_DB {
 		String[] entries = (sourceFile.isDirectory() ? sourceFile.list()
 				: (sourceFile.exists() ? new String[]{source} : new String[0]));
 		for (int i = 0; i < entries.length; i++) {
-			Aufgaben_DB.processUploadedSheetdraft(
+			PartDB.processUploadedSheetdraft(
 					source
 					+ System.getProperty("file.separator")
 					+ entries[i]
@@ -830,7 +830,7 @@ public class Aufgaben_DB {
 			boolean keep_database_in_synch = false;
 			if (keep_database_in_synch/*truncate_database_too*/) {
 				// => Truncate the whole DB except the lecturers:
-				Aufgaben_DB.clearDatabase();
+				PartDB.clearDatabase();
 			}
 		}
 
@@ -875,7 +875,7 @@ public class Aufgaben_DB {
 		String sql = "TRUNCATE `" + table + "`";
 		if (Global.msqh.isConnSQLite()) {
 			System.out.println(
-					"Aufgaben_DB: Clear table: Connection is SQLite.");
+					"PartDB: Clear table: Connection is SQLite.");
 			sql = "DELETE FROM `" + table + "`";
 		}
 		Global.query(sql);

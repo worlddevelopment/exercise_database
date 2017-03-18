@@ -3454,7 +3454,7 @@ public class Global {
 					, Global.imageTypeToGenerate
 					, Global.getImageLinkFromFile(exercise_filelink));
 			Global.convertFile(exercise_filelink
-					, Aufgaben_DB.commonFormat.name().toLowerCase());
+					, PartDB.commonFormat.name().toLowerCase());
 		}
 
 
@@ -3468,7 +3468,7 @@ public class Global {
 				, Global.imageTypeToGenerate
 				, Global.getImageLinkFromFile(target_sheetdraft_filelink));
 		Global.convertFile(target_sheetdraft_filelink
-				, Aufgaben_DB.commonFormat.name().toLowerCase());
+				, PartDB.commonFormat.name().toLowerCase());
 
 	}
 

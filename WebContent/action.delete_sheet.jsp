@@ -1,4 +1,4 @@
-<%@page import="core.Global, core.Aufgaben_DB"%>
+<%@page import="core.Global, core.PartDB"%>
 <%@page import="java.io.File, java.net.URLDecoder"%>
 <%@page import="java.sql.ResultSet"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
@@ -24,7 +24,7 @@ if (values == null) {
 		return ;
 	}
 	//else
-	Aufgaben_DB.delete_sheet(filelink);
+	PartDB.delete_sheet(filelink);
 
 }
 else {
@@ -32,7 +32,7 @@ else {
 	for (int i = 0; i < values.length; i++) {
 
 		values[i] = URLDecoder.decode(values[i], "utf-8");
-		Aufgaben_DB.delete_sheet(values[i]);
+		PartDB.delete_sheet(values[i]);
 
 	}
 }

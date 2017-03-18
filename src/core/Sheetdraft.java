@@ -623,7 +623,7 @@ public class Sheetdraft extends ContentToImage {
 	/*
 	If a foreign filelink=> sheetdraft is copied, then this
 	method must ENSURE that this sheetdraft's key (filelink)
-	in the array allSheetdrafts of class Aufgaben_DB|Main are
+	in the array allSheetdrafts of class PartDB|Main are
 	resynchronized to the new lecturer = user. Author stays unchanged.
 	(3)
 	While semester could be updated to the new one, because this
@@ -2900,7 +2900,7 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 				, exerciseText
 				//, exerciseRaw
 				// Not working because the file not yet written to disk
-				//, Aufgaben_DB.extractRawContentDependingOnFiletype(
+				//, PartDB.extractRawContentDependingOnFiletype(
 				//		filelink)
 				, header_of_its_sheet
 		);

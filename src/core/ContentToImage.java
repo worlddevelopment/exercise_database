@@ -374,7 +374,7 @@ public /*abstract*/ class ContentToImage {
 
 			// WITH THE CHANGE TO THE BACHELOR THESIS, HTML IS THE LONE
 			// STORAGE FORMAT.
-			if (!docType.equals(Aufgaben_DB.commonFormat)) {
+			if (!docType.equals(PartDB.commonFormat)) {
 				// <- as of v31.13d this became dynamic.
 				continue ;
 			}

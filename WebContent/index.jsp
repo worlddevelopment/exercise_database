@@ -4,7 +4,7 @@
 %>
 <%@page
 	import="core.Global"
-	import="core.Aufgaben_DB"
+	import="core.PartDB"
 	import="java.net.InetAddress"
 	import="java.io.*, java.io.File"
 	import="java.lang.Exception"
@@ -146,7 +146,7 @@ if (request.getParameter("q") != null) {
 // AFTER THESE CHANGES LOAD ALL USER DATA
 if (Global.isLoggedIn(session)) {
 
-	Aufgaben_DB.loadAllSheetdrafts();
+	PartDB.loadAllSheetdrafts();
 
 }
 
