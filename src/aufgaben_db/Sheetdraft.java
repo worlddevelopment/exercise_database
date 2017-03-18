@@ -66,8 +66,6 @@ import org.jdom2.Element;
 import org.junit.Assert;
 import org.jvnet.jaxb2_commons.ppp.Child;
 
-import Verwaltung.HashLog;
-
 import aufgaben_db.Exercise.Docx4JTravelCallback;
 import aufgaben_db.LatexCutter;
 
@@ -820,8 +818,6 @@ public class Sheetdraft extends ContentToImage {
 		// CREATION OF EXERCISES IN THE ORIGINAL FILE FORMAT
 		// Link to the individual .type exercises is stored in
 		// the exercise map (as keys).
-		HashLog.erweitereLogFile("Extract exercises: Filelink: "
-				+ filelink + ".");
 		String ending = Global.extractEnding(filelink);
 		// DOC
 		if (ending.equals("doc")) {
