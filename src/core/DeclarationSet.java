@@ -61,6 +61,20 @@ public class DeclarationSet {
 
 	// ======= METHODS
 	/**
+	 * @return all distinct patterns of the declarations
+	 */
+	public ArrayList<Muster> getAllDistinctPatterns() {
+		ArrayList<Muster> patterns = new ArrayList<Muster>();
+		for (Declaration d : this.declarations) {
+			// Has this enum value already occurred?
+			if (!patterns.contains(d.getMatchedPattern())) {
+				patterns.add(d.getMatchedPattern());
+			}
+		}
+		return patterns;
+	}
+
+	/**
 	 * @return the pattern
 	 */
 	public Muster getPattern() {
