@@ -5840,7 +5840,7 @@ public class Global {
 			if (r[i] < 1) {
 				continue;
 			}
-			phraseCountPerLine.push(i, r[i]);
+			phraseCountPerLine.put(i, r[i]);
 		}
 
 		return phraseCountPerLine;
