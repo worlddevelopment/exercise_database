@@ -40,12 +40,9 @@ public class RegExFinder {
 	public DeclarationSet sucheMuster(String[] text, Muster muster) {
 
 		Pattern pattern = muster.getPattern();
-		//String[][] ergebnisFuerHashMap;
 		DeclarationSet foundDeclarations;
 		foundDeclarations = new DeclarationSet(muster);
 
-
-//		Matcher matcher;
 		String wort;
 		boolean gleich;
 		int zaehler = 0;
@@ -99,15 +96,16 @@ public class RegExFinder {
 					//if (wort.equals("")
 					///*&& TODO!emptyLineAcceptedAsExerciseSplitter*/)
 					//	continue;
-					gleich = RegExFinder.matches(wort, pattern);
-					// matcher = pattern.matcher(wort);
-					// gleich = matcher.matches();
+					Matcher matcher = pattern.matcher(wort);
+					gleich = matcher.matches();
 					if(gleich) {
 						System.out.println("Match@Line: " + zeile);
 
 						Declaration loopDeclaration
 							= new Declaration(
-									muster, wort, zeile, text[zeile]);
+									muster, wort, zeile, text[zeile]
+									, matcher.start(), matcher.end()
+									, matcher.group());
 
 						// Store succeding words:
 						// Also store index if an index pattern matched.
@@ -182,14 +180,15 @@ public class RegExFinder {
 						message += "\tsucceding: " + woerter[word_index + 1];
 					}
 					System.out.println(message);
-					gleich = RegExFinder.matches(wort, pattern);
-					// matcher = pattern.matcher(wort);
-					// gleich = matcher.matches();
+					Matcher matcher = pattern.matcher(wort);
+					gleich = matcher.matches();
 					if(gleich) {
 						System.out.println("Match@Line: " + zeile);
 						Declaration loopDeclaration
 							= new Declaration(
-									muster, wort, zeile, text[zeile]);
+									muster, wort, zeile, text[zeile]
+									, matcher.start(), matcher.end(),
+									matcher.group());
 
 						// Store IndexNumber and store declaration:
 						loopDeclaration.setIndex(
@@ -575,10 +574,9 @@ public class RegExFinder {
 					for (int words_within_line_index = 0
 							; words_within_line_index < wordCountToExermine
 							; words_within_line_index++) {
-
-						if (RegExFinder.matches(
-									woerter[words_within_line_index]
-									, m.getPattern())) {
+						Matcher matcher = m.getPattern()
+							.matcher(woerter[words_within_line_index]);
+						if (matcher.matches()) {
 
 							loopDeclaration.setIndex(RegExFinder
 									.getContainedIndexNumber(
@@ -597,13 +595,6 @@ public class RegExFinder {
 			}
 
 		}
-	}
-
-
-
-	private static boolean matches(String wort, Pattern pattern) {
-		Matcher matcher = pattern.matcher(wort);
-		return matcher.matches();
 	}
 
 
