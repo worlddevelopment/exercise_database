@@ -7,245 +7,20 @@ import aufgaben_db.Sheetdraft;
 import aufgaben_db.Global;
 
 
-/**
- * Text based formats like MD,RST,RTF,TEX require some processing
- * to find the correct positions to cut content parts at to remove
- * as little relevant style, definitions, custom commands, et alia.
- * TODO Other markup formats like Node|Tree based require adaption of
- * data stored in a Declaration. Only then a (post)processor like this
- * can be added for these.
- */
 public class RTFProcessor extends TextMarkupProcessor {
-
-
-	// ======= ATTRIBUTES
-
-	private Sheetdraft sheetdraft = null;
-
-	// Store document begin, end words to know where to stop cutting:
-	public String lastWord = null;
-	public int lastWordLineNumber = -1;
-	public int lastWordPosition = -1; // char index within line
-
-	public String firstWord = null;
-	public int firstWordLineNumber = -1;
-	public int firstWordPosition = -1; // char index within line
-
-
 
 
 	// ======= CONSTRUCTOR
 
 	public boolean RTFProcessor(Sheetdraft sheetdraft)
 		throws IOException {
-
-		this.sheetdraft = sheetdraft;
-		findAndPopulateFirstWordData();
-		findAndPopulateLastWordData();
-
-		cut();
-
+		super(sheetdraft);
 	}
 
 
 
 
 	// ======= METHODS
-
-	/**
-	 * Called from constructor.
-	 *
-	 * @return true if successful
-	 */
-	public boolean findAndPopulateFirstWordData() {
-
-		firstWord = findPlainTextFirstWord();
-		System.out.println("1st word: " + firstWord);
-
-		int[] linesW1 = Global.getLineNumbersContaining(sheetdraft.getRawContent(), firstWord);
-		System.out.println("Occurrences in RTF: " + linesW1.length);
-
-		if (linesW1.length < 1) {
-			String text = "DocBegin as derived from plain text was"
-				+ " not found in RTF document: " + firstWord
-				+ " => Can not remove header.";
-			System.out.println(text);
-			return false;
-		}
-		else if (linesW1.length > 1) {
-			System.out.println("RTF: The firstWord|DocBegin occurs in"
-					+ " more than one line.");
-		}
-
-
-		// 3 possibilities:
-		int phraseCountPT = Global.getPhraseCount(plainText, firstWord);
-
-		System.out.println("Occurrences in plain text: " + phraseCountPT);
-
-		if (linesW1.length == phraseCountPT) {
-			System.out.println("The word occurs equally as often"
-					+ " in the plain text as in the raw content.");
-		}
-		else if (linesW1.length < phraseCountPT) {
-			String text = "The within plain text found word for"
-				+ " DocBegin exists less often in the RTF than in"
-				+ " the plain text."
-				+ " A word may have been split in the RTF."
-				+ " The first occurrence is chosen. May be wrong."
-				;
-			System.out.println(text);
-		}
-		else if (linesW1.length > phraseCountPT) {
-			String text = "The within plain text found word for"
-				+ " DocBegin exists more often in the RTF than in"
-				+ " the plain text."
-				+ " The word may be part of a style or RTF syntax."
-				+ " The first occurrence is chosen. May be wrong."
-				;
-			System.out.println(text);
-		}
-
-
-		// DocBegin => choose first occurrence within RTF
-		firstWordLineNumber = linesW1[0];
-		firstWordPosition = MethodenRtf
-			.indexOf((sheetdraft.getRawContent()[firstWordLineNumber], firstWord);
-
-
-		// If the first word contains a special character, then it is
-		// modified partly already in the .txt-Dokument or at latest
-		// in the RTF. It is often split and parts wrapped.
-		// TODO Support split words to not have to removes Umlauts.
-		// For RTF text this workaround works not so good because
-		// the identifiers are not positioned at the beginning
-		// of a line.
-		// Thus it is only deleted after this occurrence, potentially
-		// leaving back the Special char when it is located at the
-		// beginning of the word.
-		// This first letter then occurs ahead of every found part.
-
-		// FIXME Hard coded special case workaround for only &Uuml;:
-		// *bung...:
-		// Search for uppercase UE at the beginning:
-		// If first found word begins with bung, bungen, bungsblatt,...
-		boolean hasUmlaut = firstWord.startsWith("bung");
-		int umlautPosition = firstWordPosition;
-		if (hasUmlaut) {
-			// 'dc steht im rtf-Format fuer "Ue"
-			umlautPosition = sheetdraft.getRawContent()[firstWordLineNumber].indexOf("'dc");
-			if (umlautPosition == -1
-					|| umlautPosition > firstWordPosition) {
-
-				String text = "First word likely begins with Umlaut."
-					+ " Unfortunately it could not be identified."
-					+ " Likely this character will remain in the doc.";
-				System.out.println(text);
-				hasUmlaut = false;
-			}
-			else {
-				// Umlaut exists in the same line, before first word
-				// in the RTF, then remove starting from that position:
-				firstWordPosition = umlautPosition;
-				//firstWordPosition = MethodenRtf
-				//	.indexOf((sheetdraft.getRawContent()[lineErstesWort], "'dc");
-			}
-		}
-
-		System.out.println("RTF line where the first word occurs:");
-		System.out.println(sheetdraft.getRawContent()[firstWordLineNumber]);
-		System.out.println("Index of char: " + firstWordPosition);
-
-		return true;
-	}
-
-
-
-	/**
-	 * Called from constructor.
-	 *
-	 * @return true if successful
-	 */
-	public boolean findAndPopulateLastWordData() {
-
-		lastWord = findPlainTextLastWord();
-		System.out.println("Last word in plain text: " + lastWord);
-
-		int[] linesW2 = Global.getLineNumbersContaining(sheetdraft.getRawContent(), lastWord);
-		System.out.println("Occurrences in RTF: " + linesW2.length);
-
-		if (linesW2.length < 1) {
-			String text = "Identifier for DocEnd: " + lastWord
-			+ " was not found in the RTF document. => Removal of last"
-			+ " exercise impossible.";
-			System.out.println(text);
-			return null;
-		}
-		if (linesW2.length > 1) {
-			System.out.println("RTF: The lastWord|DocEnd occurs in"
-					+ " more than one line.");
-		}
-
-		int countInPT = Global.getPhraseCount(plainText, lastWord);
-		System.out.println("Occurrences in plain text: " + countInPT);
-
-
-		// 3 possibilities:
-		// TODO Move to function, use both here and above for firstWord
-		if (linesW2.length == countInPT) {
-			System.out.println("#rtfLastWord==#plainTextLastWord");
-		}
-		else if (linesW2.length < phraseCountPT) {
-			String text = "DocEnd identifier occurs less often"
-				+ " in the RTF than in the plain text."
-				+ " A word may have been split in the RTF."
-				+ " The first occurrence is chosen. May be wrong."
-				;
-			System.out.println(text);
-		}
-		else if (linesW2.length > phraseCountPT) {
-			String text = "The within plain text found word for"
-				+ " DocBegin exists more often in the RTF than in"
-				+ " the plain text."
-				+ " The word may be part of a style or RTF syntax."
-				+ " The first occurrence is chosen. May be wrong."
-				;
-			System.out.println(text);
-		}
-
-
-		lastWordLineNumber = linesW2[linesW2.length - 1];
-		lastWordPosition = MethodenRtf
-			.indexOf((sheetdraft.getRawContent()[lastWordLineNumber], lastWord);
-		System.out.println("RTF line of lastWord:");
-		System.out.println(sheetdraft.getRawContent()[lastWordLineNumber]);
-
-		// Point to the last letter of the word as it is last word:
-		lastWordPosition = lastWordPosition + lastWord.length() - 1;
-		System.out.println("@line: " + lastWordLineNumber
-				+ " ends @position: " + lastWordPosition);
-
-		return true;
-
-	}
-
-
-
-	/**
-	 * Costly, thus cache the first, last word.
-	 * TODO Always ensure the cache is valid.
-	 */
-	public String findPlainTextFirstWord(String plainText) {
-		return MethodenWortSuche
-			.sucheErstesWortImDoc(plainText);
-	}
-
-	public String findPlainTextLastWord(String plainText) {
-		return MethodenWortSuche
-			.sucheLetztesWortImDoc(textdoc);
-	}
-
-
 
 	/**
 	 * Cut and store the content parts to disk or database.
@@ -278,21 +53,6 @@ public class RTFProcessor extends TextMarkupProcessor {
 
 			String[] rtf = sheetdraft.getRawContent().clone();
 			int lineNumber = d.getLineNumber();
-			/*
-			It is the task of the DeclarationFinder to ensure
-			the stored context is correct|exists.
-			int index = line.indexOf(dFirstWord);
-			if (index != -1) {
-				System.out.println("Found 1st word of declaration"
-						+ " intact: " + dFirstWord
-						+ " at line: " + lineNumber
-						+ " at index: " + index
-						);
-			}
-			else {
-				return false;
-			}
-			*/
 
 
 			boolean isAMiddlePart = d_index > 0 && d_index < count - 1;
@@ -300,6 +60,7 @@ public class RTFProcessor extends TextMarkupProcessor {
 					0, firstWordPosition);
 			String docEnd = rtf[lastWordLineNumber].substring(
 					lastWordPosition, rtf[lastWordLineNumber].length());
+
 
 			// All raw content within one line?
 			// TODO Operate DeclarationFinder on the raw content! Else
@@ -566,120 +327,6 @@ public class RTFProcessor extends TextMarkupProcessor {
 		return true;
 	}
 
-
-
-	/**
-	 * Get the number of occurrences of a char in a String.
-	 *
-	 * @param line String to search in
-	 * @param char to count
-	 * @return number of occurrences
-	 */
-	public int getCharCount(String line, char c) {
-
-		System.out.println("char to count: " + c);
-		int count = 0;
-		for (int i = 0; i < line.length(); i++) {
-			if (line.charAt(i) == c) {
-				//System.out.println("Found in line: " + i);
-				count++;
-			}
-		}
-		System.out.println("#c: " + count);
-		return count;
-	}
-
-
-
-	/**
-	 * Get the number of occurrences of a char within an array of String
-	 *
-	 * @param text String[] to search in.
-	 * @param c char to count
-	 * @return number of occurrences
-	 */
-	public int getCharCount(String[] text, char c) {
-
-		int sum = 0;
-		for (int i = 0; i < text.length; i++) {
-			//System.out.println(text[i]);
-			int count = getCharCount(text[i], c);
-			sum += count;
-		}
-		return sum;
-	}
-
-
-
-	/**
-	 * Checks the validity of brackets. (#opening == #closing)
-	 *
-	 * @param text String[] in which to check the bracket pair validity.
-	 * @return true if equal amount of opening, closing brackets.
-	 */
-	public boolean areBracketPairsIntact(String[] text) {
-
-		int bracketOpeningCount = getCharCount(text, '{');
-		int bracketClosingCount = getCharCount(text, '}');
-		System.out.println("#{ " + bracketOpeningCount);
-		System.out.println("#} " + bracketClosingCount);
-		int differenz = bracketOpeningCount - bracketClosingCount;
-		return differenz == 0;
-	}
-
-
-	/**
-	 * Count the brackets within an array of String in the interval defined
-	 * by start and end.
-	 *
-	 * @param text where the brackets are contained.
-	 * @param start inclusive
-	 * @param end inclusive
-	 * @return array containing 2 entries: #{, #}
-	 */
-	public int[] getBracketPairCount(String[] text, int start, int end) {
-
-		int bracketOpeningCountTotal = 0;
-		int bracketClosingCountTotal = 0;
-		char c1 = '{';
-		char c2 = '}';
-		for (int i = start; i < end + 1; i++) {
-			int bracketOpeningCount = getCharCount(text[i], c1);
-			bracketOpeningCountTotal += bracketOpeningCount;
-			int bracketClosingCount = getCharCount(text[i], c2);
-			bracketClosingCountTotal += bracketClosingCount;
-		}
-		System.out.println("#{ " + bracketOpeningCountTotal);
-		System.out.println("#} " + bracketClosingCountTotal);
-
-		int[] bracketPairCount = new int [2];
-		bracketPairCount[0] = bracketOpeningCountTotal;
-		bracketPairCount[1] = bracketClosingCountTotal;
-		return bracketPairCount;
-	}
-
-
-
-	/**
-	 * Get the count of opening and closing brackets within a String.
-	 *
-	 * @param line The String to search the char in.
-	 * @return Array with 2 entries: #{ and #}
-	 */
-	public int[] getBracketPairCount(String line) {
-
-		char c1 = '{';
-		char c2 = '}';
-		int bracketOpeningCountTotal = getCharCount(line, c1);
-		int bracketClosingCountTotal = getCharCount(line, c2);
-		System.out.println("#{ " + bracketOpeningCountTotal);
-		System.out.println("#} " + bracketClosingCountTotal);
-
-		int[] bracketPairCount = new int [2];
-		bracketPairCount[0] = bracketOpeningCountTotal;
-		bracketPairCount[1] = bracketClosingCountTotal;
-		return bracketPairCount;
-	}
 
 
 
