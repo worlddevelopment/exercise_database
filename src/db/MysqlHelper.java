@@ -12,39 +12,59 @@ import aufgaben_db.Global;
 
 public class MysqlHelper {
 
-	/* TODO: Make this handle multiple instances (e.g. MySQL, SQLite, UnQLite, ..) simultaneously
-	 * to allow for copying from one database (mostly MySQL) to another (e.g. SQLite) for
-	 * better automatic synchronisation for the local downloadable version.
+	// ======= ATTRIBUTES
+	/* TODO: Make this handle multiple instances (e.g. MySQL, SQLite,
+	 * UnQLite, ..) simultaneously to allow for copying from one
+	 * database (mostly MySQL) to another (e.g. SQLite) for better
+	 * automatic synchronisation for the local downloadable version.
 	 * To download are:
-	 * 1) Program container --> tomcat. Start via one of the $CATALINA_HOME/bin/* scripts.
-	 * 2) Program. (jars, Java, wild mix).
+	 * 1) Program container: Tomcat. To start it see $CATALINA_HOME/bin/*
+	 * 2) Program. (jars, Java, JSP, wild mix).
 	 * 3) Filesystem,
 	 * 4) and database (for relations of exercises towards their sheets).
 	*/
 	private Connection connMySQL = null;
+
 	private Connection connSQLite = null;
+
 	private Connection conn = null; //<- the currently active one.
 
-	private static String host = "localhost";//<--@Override by sub class.
-	private final String port = "3306";//<--@Override by sub class. Default value: 3306 .
+	@Override
+	private static String host = "localhost";
+
+	@OVerride
+	private final String port = "3306";
+
 	private String engine = "MySQL";
-	private String typeToTryFirst = "MySQL";//<-- higher precedence, may be changed on establishing connection.
+
+	// Higher precedence, may be changed on establishing connection.
+	private String typeToTryFirst = "MySQL";
+
 	private String driver = "com.mysql.jdbc.Driver";//<--last used driver.
+
 	//final String url = "jdbc:mysql://localhost:3306/";
+	//
 	private final String db = "aufgaben_db";
-	private final String user = "root";	/*annotations by JRIBW to LOCAL:*/
-	private final String password = "a)t5qTU[";//cmd: mysqladmin -uroot -psample password "<secret>"
-	// for localhost: SET PASSWORD FOR root@'localhost' = PASSWORD('a)t5qTU[');
-	// for eclipse not conflicting with the usual os tomcat service.
+
+	private final String user = "root";
+
+	private final String password = "a)t5qTU[";
+	// LOCAL:
+	//mysqladmin -uroot -psample password "<secret>"
+	// For localhost:
+	//SET PASSWORD FOR root@'localhost' = PASSWORD('a)t5qTU[');
+	// For eclipse not conflicting with the usual os tomcat service:
 	//sudo /usr/local/tomcat/bin/shutdown.sh
-	// #importing an sql db to a local db
-	// eventually drop all filled tables prior to the import (as it results in doubles else)
+	// How to import an sql DB file to a local DB:
+	// (May need to drop all tables prior to import to prevent doubles.)
 	//mysql -u root -p aufgaben_db < aufgaben_db_11_june_13.sql
 
 	public String sqlite_db_filelink;
 
 
 
+
+	// ======= CONSTRUCTOR
 	/**
 	 * Constructor
 	 */
@@ -54,6 +74,8 @@ public class MysqlHelper {
 
 
 
+
+	// ======= METHODS
 	/**
 	 * Connect to a MYSQL database.
 	 *
@@ -68,7 +90,8 @@ public class MysqlHelper {
 
 		// create a database connection:
 		connMySQL = DriverManager.getConnection(
-				"jdbc:" + engine.toLowerCase() + "://" + host + ":" + port + "/" /* + url */+ db
+				"jdbc:" + engine.toLowerCase() + "://" + host + ":"
+				+ port + "/" /* + url */+ db
 				, user, password
 		);
 
@@ -83,16 +106,19 @@ public class MysqlHelper {
 	 *
 	 * @return the established connection or null.
 	 */
-	public Connection connectToSQLite() throws InstantiationException,
-	       IllegalAccessException, ClassNotFoundException, SQLException {
+	public Connection connectToSQLite() throws InstantiationException
+		, IllegalAccessException, ClassNotFoundException, SQLException {
+
 		// Load database engine using the current class loader:
 		engine = "SQLite";
 		driver = "org.sqlite.JDBC";
 		Class.forName(driver);//.newInstance();
 
-		// create a database connection:
-		sqlite_db_filelink = Global.root + File.separator + Global.uploadTarget + db + ".sqlite";
-		connSQLite = DriverManager.getConnection("jdbc:sqlite:" + sqlite_db_filelink /*.db*/);
+		// Create a database connection:
+		sqlite_db_filelink = Global.root + File.separator
+			+ Global.uploadTarget + db + ".sqlite";
+		connSQLite = DriverManager
+			.getConnection("jdbc:sqlite:" + sqlite_db_filelink /*.db*/);
 		// If absolute filelinks are used then it has to be
 		// differentiated between the different operating systems.
 		// Exempli gratia Windows systems use ; and UNIX : as delimiter!
@@ -101,7 +127,8 @@ public class MysqlHelper {
 
 
 		// 1) IF NOT TABLE EXISTS => CREATE THOSE.
-		// SQLite: SELECT name FROM sqlite_master WHERE type='table' AND name='table_name';
+		// SQLite:	SELECT name FROM sqlite_master
+		//				WHERE type='table' AND name='table_name';
 		String table = "sheetdraft";
 		String sql = "CREATE TABLE IF NOT EXISTS `" + table + "` ("
 //SQLite has ROWID	id	| int(11)	| NO | PRI | NULL | auto_increment |
@@ -162,7 +189,10 @@ public class MysqlHelper {
 
 		sttmnt.execute(sql);
 
-//		sql = "CREATE UNIQUE INDEX IF NOT EXISTS sheetdraft_filelink__exercise_filelink ON draftexerciseassignment(sheetdraft_filelink, exercise_filelink)";
+//		sql = "CREATE UNIQUE INDEX IF NOT EXISTS"
+//			+ " sheetdraft_filelink__exercise_filelink"
+//			+ " ON draftexerciseassignment(sheetdraft_filelink"
+//			+ ", exercise_filelink)";
 //		sttmnt.execute(sql);
 
 
@@ -177,7 +207,9 @@ public class MysqlHelper {
 	 * @param response An HTTP response.
 	 * @return The connection handle or null
 	 */
-	public Connection establishConnection(HttpServletResponse response) throws IOException {
+	public Connection establishConnection(HttpServletResponse response)
+		throws IOException {
+
 		this.typeToTryFirst = "MySQL";
 		return establishConnection(response, "MySQL");
 	}
@@ -191,18 +223,23 @@ public class MysqlHelper {
 	 * @param typeToTryFirst A supported DB type like SQLite or MySQL
 	 * @return The connection handle or null
 	 */
-	public Connection establishConnection (HttpServletResponse response, String typeToTryFirst) throws IOException {
+	public Connection establishConnection (HttpServletResponse response
+			, String typeToTryFirst) throws IOException {
+
 		this.typeToTryFirst = typeToTryFirst;
 		//PrintWriter out = response.getWriter();
 
-		/* As the MySQL database engine is more suited for simultaneous access by multiple threads
-		   we start with a mysql database.
-		   If we are on a local system without a MySQL installation and configuration or any other
-		   error then we fall back to the SQLite database that ships with our application (AVSy).
-		 */
+		/*
+		As the MySQL database engine is more suited for simultaneous
+		access by multiple threads we start with a mysql database.
+		If we are on a local system without a MySQL installation and
+		configuration or any other error then we fall back to the
+		SQLite database that ships with our application (AVSy).
+		*/
 		try {
-	 		typeToTryFirst = "sqlite";
-			if (typeToTryFirst == null || typeToTryFirst.equalsIgnoreCase("mysql")) {
+			typeToTryFirst = "sqlite";
+			if (typeToTryFirst == null
+					|| typeToTryFirst.equalsIgnoreCase("mysql")) {
 				return connectToMySQL();
 			}
 			else {
@@ -213,10 +250,10 @@ public class MysqlHelper {
 		catch (Exception e) {
 			// error reporting:
 			if (e instanceof ClassNotFoundException) {
-				System.out.println("Treiber nicht gefunden");
+				System.out.println("Driver not found");
 			}
 			else if (e instanceof SQLException) {
-				System.out.println("Connect nicht moeglich");
+				System.out.println("Connect not possible");
 				//out.println("no conn</br>");
 				e.printStackTrace();
 				if (connSQLite != null) {
@@ -241,8 +278,10 @@ public class MysqlHelper {
 			usage of this program (EMSy) as requested by Prof. Puppe:
 			*/
 			try {
-				// ATTENTION: Here the order is switched compared to the above (i.e. our first efforts)!
-				if (typeToTryFirst == null || typeToTryFirst.equalsIgnoreCase("mysql")) {
+				// ATTENTION: Here the order is switched compared to
+				// the above (i.e. our first efforts)!
+				if (typeToTryFirst == null
+						|| typeToTryFirst.equalsIgnoreCase("mysql")) {
 					return connectToSQLite();
 				}
 				else {
