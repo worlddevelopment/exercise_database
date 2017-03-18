@@ -1,4 +1,4 @@
-package aufgaben_db;
+package core;
 
 
 /* http://stackoverflow.com/questions/13036995/java-library-to-create-pdf-from-latex-source

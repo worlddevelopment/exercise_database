@@ -7,7 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import javax.servlet.http.HttpServletResponse;
 
-import aufgaben_db.Global;
+import core.Global;
 
 
 public class MysqlHelper {
@@ -44,7 +44,7 @@ public class MysqlHelper {
 
 	//final String url = "jdbc:mysql://localhost:3306/";
 	//
-	private final String db = "aufgaben_db";
+	private final String db = "core";
 
 	private final String user = "root";
 
@@ -57,7 +57,7 @@ public class MysqlHelper {
 	//sudo /usr/local/tomcat/bin/shutdown.sh
 	// How to import an sql DB file to a local DB:
 	// (May need to drop all tables prior to import to prevent doubles.)
-	//mysql -u root -p aufgaben_db < aufgaben_db_11_june_13.sql
+	//mysql -u root -p core < core_11_june_13.sql
 
 	public String sqlite_db_filelink;
 

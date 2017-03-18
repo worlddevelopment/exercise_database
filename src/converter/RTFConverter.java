@@ -7,7 +7,7 @@ import java.io.InputStream;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.rtf.RTFEditorKit;
 
-import aufgaben_db.Global;
+import core.Global;
 
 /**
  *

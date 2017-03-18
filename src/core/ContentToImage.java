@@ -1,4 +1,4 @@
-package aufgaben_db;
+package core;
 
 import java.io.File;
 import java.io.FileOutputStream;

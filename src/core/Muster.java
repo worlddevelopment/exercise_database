@@ -1,9 +1,9 @@
-package aufgaben_db;
+package core;
 
 
 import java.util.regex.Pattern;
 
-import aufgaben_db.Global.SheetTypes;
+import core.Global.SheetTypes;
 
 
 /**

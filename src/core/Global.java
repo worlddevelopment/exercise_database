@@ -1,4 +1,4 @@
-package aufgaben_db;
+package core;
 
 
 import command.Command;
@@ -1038,7 +1038,7 @@ public class Global {
 		return Global.filemtime(session, filename
 				, System.getProperty("file.separator")
 				, "d.M.y, H:mm z"
-				, pageContext);//webapps/aufgaben_db/
+				, pageContext);//webapps/core/
 
 	}
 

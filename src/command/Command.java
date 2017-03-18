@@ -2,7 +2,7 @@ package command;
 
 import java.io.File;
 
-import aufgaben_db.Global;
+import core.Global;
 
 
 

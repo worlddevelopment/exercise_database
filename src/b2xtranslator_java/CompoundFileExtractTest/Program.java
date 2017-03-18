@@ -4,7 +4,7 @@
 
 package b2xtranslator_java.CompoundFileExtractTest;
 
-import aufgaben_db.Global;
+import core.Global;
 import b2xtranslator_java.DIaLOGIKa.b2xtranslator.StructuredStorage.Reader.DirectoryEntry;
 import b2xtranslator_java.DIaLOGIKa.b2xtranslator.StructuredStorage.Reader.IStreamReader;
 import b2xtranslator_java.DIaLOGIKa.b2xtranslator.StructuredStorage.Reader.StructuredStorageReader;

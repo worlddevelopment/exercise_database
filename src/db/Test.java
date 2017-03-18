@@ -1,5 +1,5 @@
 package db;
-import aufgaben_db.Global;
+import core.Global;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +31,9 @@ public class Test {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-//		new File("/home/artjom/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp1/wtpwebapps/aufgaben_db/uploads/sose4/mathe3/dozent/Uebung").mkdirs();
+//		new File("/home/artjom/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp1/wtpwebapps/core/uploads/sose4/mathe3/dozent/Uebung").mkdirs();
 //		new File("bla/foo.txt").createNewFile();
-//		Global.moveDir("/home/artjom/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp1/wtpwebapps/aufgaben_db/uploads/sose3/mathe3/dozent/Uebung", "/home/artjom/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp1/wtpwebapps/aufgaben_db/uploads/sose4/mathe3/dozent/Uebung", "");
+//		Global.moveDir("/home/artjom/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp1/wtpwebapps/core/uploads/sose3/mathe3/dozent/Uebung", "/home/artjom/workspace/.metadata/.plugins/org.eclipse.wst.server.core/tmp1/wtpwebapps/core/uploads/sose4/mathe3/dozent/Uebung", "");
 		
 		Global.renameFile("bla6", "bla7");
 		

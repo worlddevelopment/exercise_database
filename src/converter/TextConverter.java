@@ -68,8 +68,8 @@ import org.docx4j.wml.SdtBlock;
 import org.docx4j.wml.R.CommentReference;
 import org.docx4j.wml.R.Tab;
 
-import aufgaben_db.Global;
-import aufgaben_db.ReadWrite;
+import core.Global;
+import core.ReadWrite;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

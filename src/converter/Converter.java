@@ -42,8 +42,8 @@ import db.UnixComandosThread;
 import docx4j_library.ConvertOutHtml;
 import docx4j_library.ConvertOutPDF;
 
-import aufgaben_db.Global;
-import aufgaben_db.ReadWrite;
+import core.Global;
+import core.ReadWrite;
 
 import fr.opensagres.xdocreport.converter.ConverterRegistry;
 import fr.opensagres.xdocreport.converter.ConverterTypeTo;

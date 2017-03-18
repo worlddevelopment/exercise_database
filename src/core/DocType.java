@@ -1,4 +1,4 @@
-package aufgaben_db;
+package core;
 
 
 import java.util.ArrayList;

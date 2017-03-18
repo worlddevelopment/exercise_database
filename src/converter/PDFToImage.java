@@ -27,7 +27,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.util.PDFImageWriter;
 
-import aufgaben_db.Global;
+import core.Global;
 
 import fr.opensagres.xdocreport.converter.IConverter;
 import fr.opensagres.xdocreport.converter.MimeMapping;

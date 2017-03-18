@@ -16,7 +16,7 @@ import converter.Converter;
 import converter.PDFToImage;
 import fr.opensagres.xdocreport.converter.Options;
 
-import aufgaben_db.Global;
+import core.Global;
 
 public class UnixComandosThread extends Thread /* implements Runnable */ {
 

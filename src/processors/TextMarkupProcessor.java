@@ -3,8 +3,8 @@ package rtf;
 
 import java.io.IOException;
 
-import aufgaben_db.Sheetdraft;
-import aufgaben_db.Global;
+import core.Sheetdraft;
+import core.Global;
 
 
 /**

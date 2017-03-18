@@ -1,4 +1,4 @@
-package aufgaben_db;
+package core;
 
 
 import java.io.File;
@@ -66,8 +66,8 @@ import org.jdom2.Element;
 import org.junit.Assert;
 import org.jvnet.jaxb2_commons.ppp.Child;
 
-import aufgaben_db.Part.Docx4JTravelCallback;
-import aufgaben_db.LatexCutter;
+import core.Part.Docx4JTravelCallback;
+import core.LatexCutter;
 
 import org.odftoolkit.odfdom.pkg.OdfPackage;
 import org.odftoolkit.odfdom.pkg.OdfPackageDocument;
@@ -86,7 +86,7 @@ import java.awt.image.BufferedImage;
 import javax.xml.bind.JAXBElement;
 import javax.xml.parsers.ParserConfigurationException;
 
-import aufgaben_db.DeclarationFinder;
+import core.DeclarationFinder;
 
 
 /**

@@ -16,7 +16,7 @@ public class DBConnection {
 	// Port -- Standard: 3306
 	protected static String dbPort = "3306";//<--@Override by sub class.
 
-	protected static String database = "aufgaben_db";//<--possibly @Override by sub class.
+	protected static String database = "core";//<--possibly @Override by sub class.
 
 	protected static String dbUser = "root";
 

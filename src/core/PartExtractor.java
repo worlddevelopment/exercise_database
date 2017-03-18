@@ -1,4 +1,4 @@
-package aufgaben_db;
+package core;
 
 // When testing these imports may be required again
 /*

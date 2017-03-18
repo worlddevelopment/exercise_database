@@ -17,8 +17,8 @@ import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
-import aufgaben_db.Global;
-import aufgaben_db.ReadWrite;
+import core.Global;
+import core.ReadWrite;
 
 
 

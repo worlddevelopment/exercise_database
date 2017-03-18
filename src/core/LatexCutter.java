@@ -1,4 +1,4 @@
-package aufgaben_db;
+package core;
 
 import java.awt.Insets;
 import java.awt.image.BufferedImage;

@@ -1,4 +1,4 @@
-package aufgaben_db;
+package core;
 
 
 import org.odftoolkit.odfdom.dom.element.office.OfficeTextElement;
