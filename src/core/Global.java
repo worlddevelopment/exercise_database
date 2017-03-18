@@ -6,8 +6,8 @@ import command.Command;
 import converter.Converter;
 import converter.DocConverter;
 import converter.PDFToImage;
-import converter.PdfConverter;
-import converter.RtfConverter;
+import converter.PDFConverter;
+import converter.RTFConverter;
 import converter.TextConverter;
 
 import db.MysqlHelper;

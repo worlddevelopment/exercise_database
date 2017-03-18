@@ -16,8 +16,8 @@ import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import command.Command;
 
 import converter.DocConverter;
-import converter.PdfConverter;
-import converter.RtfConverter;
+import converter.PDFConverter;
+import converter.RTFConverter;
 import converter.TextConverter;
 
 import db.UnixComandosThread;
@@ -503,16 +503,16 @@ public /*abstract*/ class ContentToImage {
 //			String encodedImage = node.getTextContent();
 //			byte[] bytes = Base64.decode(encodedImage);
 //			BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
-			this.plainText = PdfConverter.textAusPdf(filelink);
+			this.plainText = PDFConverter.textAusPdf(filelink);
 		}
 		// PDF
 		else if (ending.equals("pdf")) {
-			this.plainText = PdfConverter.textAusPdf(filelink);
+			this.plainText = PDFConverter.textAusPdf(filelink);
 			//ReadWrite.write( getPlainTextAsString(), Global.replaceEnding(filelink, "txt") );
 		}
 		// RTF
 		else if (ending.equals("rtf")) {
-			this.plainText = RtfConverter.konvertiereRtfZuText(filelink);
+			this.plainText = RTFConverter.toPlainText(filelink);
 			if (this.getClass().toString().equals("Sheetdraft")) {
 				// Sheetdraft only! Not meant for exercises:
 				System.out.println("Further handle the RTF file:");

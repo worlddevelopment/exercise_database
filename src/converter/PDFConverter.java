@@ -16,7 +16,7 @@ import java.io.FileInputStream;
  *
  * Extract plain text from PDF.
  */
-public class PdfConverter extends TextConverter {
+public class PDFConverter extends TextConverter {
 
 	// ======= ATTRIBUTES
 	PDFParser parser;
@@ -30,7 +30,7 @@ public class PdfConverter extends TextConverter {
 
 
 	// ======= CONSTRUCTOR
-	public PdfConverter() {
+	public PDFConverter() {
 	}
 
 
@@ -40,9 +40,9 @@ public class PdfConverter extends TextConverter {
 	 * @param filename Absolute file path
 	 * @return array of String
 	 */
-	public static String[] textAusPdf(String filename) {
+	public static String[] textAusPDF(String filename) {
 
-		PdfConverter pdfTextParserObj = new PdfConverter();
+		PDFConverter pdfTextParserObj = new PDFConverter();
 		String text = pdfTextParserObj.pdftoText(filename);
 		String[] textInLines = text.split("\\r?\\n");
 
@@ -110,7 +110,7 @@ public class PdfConverter extends TextConverter {
 	 * @return plain text of type String
 	 */
 	public static String pdf2text(String fileName) {
-		//return PdfKonverter.textAusPdf(fileName);
+		//return PDFConverter.textAusPDF(fileName);
 		PDFParser parser;
 		String parsedText;
 		PDFTextStripper pdfStripper;

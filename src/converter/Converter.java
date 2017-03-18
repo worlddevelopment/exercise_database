@@ -981,7 +981,7 @@ public abstract class Converter implements IConverter {
 
 		// 3) Convert OdfTextDocument to PDF
 		OutputStream out = new FileOutputStream(new File(target_flavour_filelink));
-		org.odftoolkit.odfdom.converter.pdf.PdfConverter.getInstance().convert(document, out, pdfOptions);
+		org.odftoolkit.odfdom.converter.pdf.PDFConverter.getInstance().convert(document, out, pdfOptions);
 
 		document.close();
 */
@@ -1181,7 +1181,7 @@ public abstract class Converter implements IConverter {
 		// as the uploaded file.
 
 		// Method 1) At this point a pdf file has to have been generated.
-		ReadWrite.write(PdfConverter.textAusPdf(filelink)
+		ReadWrite.write(PDFConverter.textAusPdf(filelink)
 				, target_flavour_filelink);
 
 		return generatedFlavours;
@@ -1367,11 +1367,11 @@ public abstract class Converter implements IConverter {
 		}
 
 		// Method 1) At this point a pdf file has to have been generated.
-//		ReadWrite.write(PdfConverter.textAusPdf(filelink)
+//		ReadWrite.write(PDFConverter.textAusPdf(filelink)
 //				, target_flavour_filelink);
 
 		// Method 2)
-		String[] plainText = RtfConverter.konvertiereRtfZuText(filelink);
+		String[] plainText = RTFConverter.toPlainText(filelink);
 		ReadWrite.write(plainText, target_flavour_filelink);
 
 

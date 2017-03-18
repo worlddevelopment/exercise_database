@@ -49,69 +49,69 @@ Create a class that creates a PDF document on the fly and then has its first pag
 public class PDFToImageUsingPDFViewSwing {
 	
 
-    private static ByteArrayOutputStream createPDF() throws DocumentException,
-                                                            MalformedURLException,
-                                                            IOException {
-        Document doc = new Document();
-        ByteArrayOutputStream baosPDF = new ByteArrayOutputStream();
-        PdfWriter docWriter = null;
-        docWriter = PdfWriter.getInstance(doc, baosPDF);
-        doc.open();
-        URL imageUrl = new URL(&quot;http://www.bruinenfit.nl/images/pdf-logo.jpg&quot;);
-        com.lowagie.text.Image image = com.lowagie.text.Image.getInstance(imageUrl);
+	private static ByteArrayOutputStream createPDF() throws DocumentException,
+															MalformedURLException,
+															IOException {
+		Document doc = new Document();
+		ByteArrayOutputStream baosPDF = new ByteArrayOutputStream();
+		PdfWriter docWriter = null;
+		docWriter = PdfWriter.getInstance(doc, baosPDF);
+		doc.open();
+		URL imageUrl = new URL(&quot;http://www.bruinenfit.nl/images/pdf-logo.jpg&quot;);
+		com.lowagie.text.Image image = com.lowagie.text.Image.getInstance(imageUrl);
 
-        image.scaleToFit(300,100);
-        image.setAlignment(com.lowagie.text.Image.ALIGN_CENTER);
-        doc.add(image);
-        doc.add(new Paragraph("This special PDF document was created on " +
-                              new java.util.Date()));
+		image.scaleToFit(300,100);
+		image.setAlignment(com.lowagie.text.Image.ALIGN_CENTER);
+		doc.add(image);
+		doc.add(new Paragraph("This special PDF document was created on " +
+							  new java.util.Date()));
 
-        doc.close();
-        docWriter.close();
-        return baosPDF;
-    }
+		doc.close();
+		docWriter.close();
+		return baosPDF;
+	}
 
-    public static void previewPDFDocumentInImage() throws IOException {
-        ByteBuffer buf = null;
+	public static void previewPDFDocumentInImage() throws IOException {
+		ByteBuffer buf = null;
 
-        try {
-            buf = ByteBuffer.wrap(createPDF().toByteArray());
-        } catch (DocumentException e) {
-        }
-        // use the PDF&nbsp;Renderer library on the buf which contains the in memory PDF document
-        PDFFile pdffile = new PDFFile(buf);
-        PDFPage page = pdffile.getPage(1);
+		try {
+			buf = ByteBuffer.wrap(createPDF().toByteArray());
+		} catch (DocumentException e) {
+		}
+		// use the PDF&nbsp;Renderer library on the buf which contains the in memory PDF document
+		PDFFile pdffile = new PDFFile(buf);
+		PDFPage page = pdffile.getPage(1);
 
-        //get the width and height for the doc at the default zoom
-        Rectangle rect =
-            new Rectangle(0, 0, (int)page.getBBox().getWidth(), (int)page.getBBox().getHeight());
+		//get the width and height for the doc at the default zoom
+		Rectangle rect =
+			new Rectangle(0, 0, (int)page.getBBox().getWidth(), (int)page.getBBox().getHeight());
 
-        //generate the image
-        Image img = page.getImage(rect.width, rect.height, //width &amp; height
-                rect, // clip rect
-                null, // null for the ImageObserver
-                true, // fill background with white
-                true) // block until drawing is done
-        ;
+		//generate the image
+		Image img = page.getImage(rect.width, rect.height, //width &amp; height
+				rect, // clip rect
+				null, // null for the ImageObserver
+				true, // fill background with white
+				true) // block until drawing is done
+		;
 
-        //show the image in a frame
-        JFrame frame = new JFrame("My incredible PDF document");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(new JLabel(new ImageIcon(img)));
-        frame.pack();
-        frame.setVisible(true);
-    }
+		//show the image in a frame
+		JFrame frame = new JFrame("My incredible PDF document");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.add(new JLabel(new ImageIcon(img)));
+		frame.pack();
+		frame.setVisible(true);
+	}
 
-    public static void main(final String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    try {
-                        PDFToImageUsingPDFViewSwing.previewPDFDocumentInImage();
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            });
-    }
+	public static void main(final String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					try {
+						PDFToImageUsingPDFViewSwing.previewPDFDocumentInImage();
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			});
+	}
 }
 
