@@ -1,8 +1,6 @@
 package aufgaben_db;
 
 
-import Verwaltung.HashMapVerwaltung;
-
 
 /**
  * Utility for finding the first and last word within a document (body).
@@ -166,26 +164,6 @@ public class MethodenWortSuche {
 		return ergebnis;
 	}
 
-
-
-	/**
-	 * Writes the first and last word of content into a HashMap.
-	 *
-	 * @param textdoc Array of lines of raw content.
-	 */
-	public static void schreibeErstesLetztesWortAusTextInHashMap(
-			String[] textdoc) {
-
-		String erstesWort = MethodenWortSuche
-			.sucheErstesWortImDoc(textdoc);
-		HashMapVerwaltung.erweitereHashmapString(
-				HashMapVerwaltung.docAnf, erstesWort);
-
-		String letztesWort = MethodenWortSuche
-			.sucheLetztesWortImDoc(textdoc);
-		HashMapVerwaltung.erweitereHashmapString(
-				HashMapVerwaltung.docEnde, letztesWort);
-	}
 
 
 }
