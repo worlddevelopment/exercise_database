@@ -68,6 +68,14 @@ public class Declaration {
 	 */
 	private IndexNumber index;
 
+	/**
+	 * The node where this declaration was found if any.
+	 * (To allow reprocessing the DOM after filtering | postprocessing
+	 * declarations.)
+	 */
+	//private String xpath;
+	private org.w3c.dom.Node node;
+
 
 
 
@@ -270,6 +278,7 @@ public class Declaration {
 		return matchGroup;
 	}
 
+
 	/**
 	 * @return the index
 	 */
@@ -314,6 +323,16 @@ public class Declaration {
 		// still harbors such an undesired index.
 		return false;
 	}
+
+
+
+	/**
+	 * Get the node where this declaration has been found.
+	 */
+	public org.w3c.dom.Node getNode() {
+		return this.node;
+	}
+
 
 	/**
 	 * Get a string representation of the declaration.

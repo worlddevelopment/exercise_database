@@ -44,7 +44,7 @@ public class MysqlHelper {
 
 	//final String url = "jdbc:mysql://localhost:3306/";
 	//
-	private final String db = "core";
+	private final String db = "aufgaben_db";
 
 	private final String user = "root";
 
