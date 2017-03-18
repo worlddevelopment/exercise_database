@@ -3,8 +3,6 @@ package aufgaben_db;
 
 import java.util.ArrayList;
 
-import Verwaltung.HashMapVerwaltung;
-
 
 /**
  * Represents a set of declarations that have been found with the same
@@ -365,18 +363,9 @@ public class DeclarationSet {
 								removedDeclarations[m]);
 					}
 					// Check whether they are in order now.
-					// If yes, then replace the declaration of this
+					// If yes, then replace the declarations of this
 					// set and return true.
 					if (DeclarationSet.isInOrder(workingDeclarations)) {
-						if (removedDeclarations.length == 1) {
-							HashMapVerwaltung.erweitereHashmapBoolean(
-									HashMapVerwaltung.eineAufgabeZuviel
-									, true);
-							HashMapVerwaltung.erweitereHashmapInt(
-									HashMapVerwaltung
-									.gestricheneAufgabe
-									, removedDeclarations[0] + 1);
-						}
 						this.declarations = workingDeclarations;
 						return true;
 					}
