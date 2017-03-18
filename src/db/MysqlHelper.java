@@ -21,7 +21,7 @@ public class MysqlHelper {
 	 * 1) Program container: Tomcat. To start it see $CATALINA_HOME/bin/*
 	 * 2) Program. (jars, Java, JSP, wild mix).
 	 * 3) Filesystem,
-	 * 4) and database (for relations of exercises towards their sheets).
+	 * 4) and database (for relations of parts towards their sheets).
 	*/
 	private Connection connMySQL = null;
 
@@ -151,7 +151,7 @@ public class MysqlHelper {
 
 
 
-		table = "exercise";
+		table = "part";
 		sql = "CREATE TABLE IF NOT EXISTS `" + table + "` ("
 				+ " sheetdraft_filelink VARCHAR(200) NOT NULL,"
 				+ " filelink VARCHAR(250) UNIQUE NOT NULL ON CONFLICT FAIL,"//<-- continues on failures
@@ -163,7 +163,7 @@ public class MysqlHelper {
 				+ " whencreated INT(15) NOT NULL,"
 				+ " whenchanged INT(15) NULL"
 				+ ")";
-		//ADD UNIQUE INDEX IF NOT EXISTS filelink_splitby ON exercise(filelink, splitby);
+		//ADD UNIQUE INDEX IF NOT EXISTS filelink_splitby ON part(filelink, splitby);
 		sttmnt.execute(sql);
 
 
@@ -180,19 +180,19 @@ public class MysqlHelper {
 
 
 
-		table = "draftexerciseassignment";
+		table = "draftpartassignment";
 		sql = "CREATE TABLE IF NOT EXISTS `" + table + "` ("
 				+ " sheetdraft_filelink VARCHAR(130) NOT NULL,"
 				+ " position INT(2) NOT NULL DEFAULT 0,"
-				+ " exercise_filelink VARCHAR(200) NOT NULL"
+				+ " part_filelink VARCHAR(200) NOT NULL"
 				+ ")";
 
 		sttmnt.execute(sql);
 
 //		sql = "CREATE UNIQUE INDEX IF NOT EXISTS"
-//			+ " sheetdraft_filelink__exercise_filelink"
-//			+ " ON draftexerciseassignment(sheetdraft_filelink"
-//			+ ", exercise_filelink)";
+//			+ " sheetdraft_filelink__part_filelink"
+//			+ " ON draftpartassignment(sheetdraft_filelink"
+//			+ ", part_filelink)";
 //		sttmnt.execute(sql);
 
 

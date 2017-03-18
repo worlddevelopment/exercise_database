@@ -177,7 +177,7 @@ public class TextMarkupProcessor {
 		if (linesW2.length < 1) {
 			String text = "Identifier for DocEnd: " + lastWord
 			+ " was not found in the RTF document. => Removal of last"
-			+ " exercise impossible.";
+			+ " part impossible.";
 			System.out.println(text);
 			return null;
 		}
@@ -536,7 +536,7 @@ public class TextMarkupProcessor {
 
 			System.out.println("Extracted content part: " + rtf);
 
-			// Increment earlier to write exercise 0 as 1 to disk.
+			// Increment earlier to write part 0 as 1 to disk.
 			d_index++;
 
 			// Store:

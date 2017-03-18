@@ -143,12 +143,12 @@ public class Global {
 	public static String version = "v31.15";
 
 	/**
-	 * TODO EXERCISES -> SHEET ?
+	 * TODO PARTS -> SHEET ?
 	 * TODO Model pairs|tuples by providing an extra parameter.
 	 */
 	public static enum SheetTypes {
-		EXERCISES/*_SHEET*/,
-		EXERCISES_SOLUTION,
+		PARTS/*_SHEET*/,
+		PARTS_SOLUTION,
 		EXAM,
 		EXAM_SOLUTION
 	};
@@ -343,40 +343,40 @@ public class Global {
 
 	/**
 	 *
-	 * @param exercise
+	 * @param part
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	public static void QUERY_INSERT_INTO_exercise(Exercise exercise)
+	public static void QUERY_INSERT_INTO_part(Part part)
 			throws IOException, SQLException {
-		QUERY_INSERT_INTO_exercise(
-				exercise.getFilelinkRelative()
-				, exercise.getOriginSheetdraftFilelink()
-				, exercise.getSplitBy()
-				, exercise.isNativeFormat()
+		QUERY_INSERT_INTO_part(
+				part.getFilelinkRelative()
+				, part.getOriginSheetdraftFilelink()
+				, part.getSplitBy()
+				, part.isNativeFormat()
 		);
 	}
 
 
 
-	public static void QUERY_INSERT_INTO_exercise(
-			String exercise_filelink) {
-		QUERY_INSERT_INTO_exercise(exercise_filelink, null, null, null);
+	public static void QUERY_INSERT_INTO_part(
+			String part_filelink) {
+		QUERY_INSERT_INTO_part(part_filelink, null, null, null);
 	}
 
 
 
-	public static void QUERY_INSERT_INTO_exercise(String exercise_filelink
+	public static void QUERY_INSERT_INTO_part(String part_filelink
 			, String originsheetdraftFilelink
 			, String splitby, Boolean is_native_format) {
 
 		try {
-			if (Global.sqlm.exist("exercise", "filelink"
+			if (Global.sqlm.exist("part", "filelink"
 						, " filelink = '"
-						+ Global.removeRootPath(exercise_filelink)
+						+ Global.removeRootPath(part_filelink)
 						+ "'")) {
-				System.out.println("Exercise already exists in the system: "
-						+ exercise_filelink
+				System.out.println("Part already exists in the system: "
+						+ part_filelink
 						+ "\r\nNot going to be inserted twice. Skipping ...");
 				return ;
 			}
@@ -386,8 +386,8 @@ public class Global {
 			e.printStackTrace();
 		}
 
-		String query; query = getQUERY_INSERT_INTO_exercise(
-				exercise_filelink
+		String query; query = getQUERY_INSERT_INTO_part(
+				part_filelink
 				, originsheetdraftFilelink, splitby, is_native_format);
 		//Global.addMessage("query: " + query, "info");
 		// Execute
@@ -399,68 +399,68 @@ public class Global {
 
 	/**
 	 *
-	 * @param exercise
+	 * @param part
 	 * @return
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	public static String getQUERY_INSERT_INTO_exercise(
-			Exercise exercise)
+	public static String getQUERY_INSERT_INTO_part(
+			Part part)
 			throws IOException, SQLException {
 
-		return getQUERY_INSERT_INTO_exercise(
-				exercise.getFilelinkRelative()
+		return getQUERY_INSERT_INTO_part(
+				part.getFilelinkRelative()
 				/* null as originsheetdraft implies using the
 				sheetdraft filelink for that too. */
 				, null/* Never use:
-				exercise.getOriginSheetdraftFilelink() as this
+				part.getOriginSheetdraftFilelink() as this
 				queries the db, but we don't have a entry in there.
 				*/
-				, exercise.getSplitBy()
-				, exercise.isNativeFormat()
+				, part.getSplitBy()
+				, part.isNativeFormat()
 		);
 
 	}
 
 
 
-	public static String getQUERY_INSERT_INTO_exercise(String exercise_filelink) {
-		return getQUERY_INSERT_INTO_exercise(exercise_filelink, null
+	public static String getQUERY_INSERT_INTO_part(String part_filelink) {
+		return getQUERY_INSERT_INTO_part(part_filelink, null
 				, null, null);
 	}
 
 
 
-	public static String getQUERY_INSERT_INTO_exercise(String exercise_filelink
+	public static String getQUERY_INSERT_INTO_part(String part_filelink
 			, String originsheetdraftFilelink
 			, String splitby, Boolean is_native_format) {
 
 		// Convert the absolute part to the relative one.
-		String exercise_filelink_relative = Global
-			.extractRelativePartOfFilelinkAtEndOnly(exercise_filelink);
+		String part_filelink_relative = Global
+			.extractRelativePartOfFilelinkAtEndOnly(part_filelink);
 		System.out.print(
 				//Global.addMessage(
 					"Generated relative filelink: "
-					+ exercise_filelink_relative
+					+ part_filelink_relative
 					//, "info"
 				//)
 		);
-		String exercise_sheetdraft_filelink_relative
-			= Global.extractSheetdraftFilelinkFromExerciseFilelink(
-				exercise_filelink_relative);
+		String part_sheetdraft_filelink_relative
+			= Global.extractSheetdraftFilelinkFromPartFilelink(
+				part_filelink_relative);
 		if (originsheetdraftFilelink == null) {
-			originsheetdraftFilelink = exercise_sheetdraft_filelink_relative;
+			originsheetdraftFilelink = part_sheetdraft_filelink_relative;
 		}
 		if (splitby == null) {
-			splitby = Global.extractSplitByFromFilelink(exercise_filelink_relative);
+			splitby = Global.extractSplitByFromFilelink(part_filelink_relative);
 		}
 		if (is_native_format == null) {
-			is_native_format = Global.isFilelinkNativeFormat(exercise_filelink_relative);
+			is_native_format = Global.isFilelinkNativeFormat(part_filelink_relative);
 		}
 
 
 //		if (!multipleAtOnce) {
-		String query; query = "INSERT INTO exercise ("
+		String query; query = "INSERT INTO part ("
 			+ "sheetdraft_filelink"
 			+ ", `filelink`"
 			+ ", `originsheetdraft_filelink`"
@@ -470,9 +470,9 @@ public class Global {
 			+ ", whencreated"
 			+ ")"
 			+ "VALUES ("
-		+ "'" + exercise_sheetdraft_filelink_relative + "'"
-		+ ",'" + exercise_filelink_relative + "'"
-		+ ",'" + exercise_sheetdraft_filelink_relative + "'"// origin
+		+ "'" + part_sheetdraft_filelink_relative + "'"
+		+ ",'" + part_filelink_relative + "'"
+		+ ",'" + part_sheetdraft_filelink_relative + "'"// origin
 		+ ",'" + splitby + "'"
 		//+ ",'" + Global.sqlm.mysql_real_escape_string(
 		//	al.get(i).getPlainTextAsString())
@@ -602,7 +602,7 @@ public class Global {
 
 	public static String extractFilelinkOfMothersheet(String filelink) {
 		return filelink.replaceAll(filelink
-				.substring(filelink.indexOf("__Exercise")) + "$", "");
+				.substring(filelink.indexOf("__Part")) + "$", "");
 		// TODO ALERT HARDCODED
 	}
 
@@ -615,20 +615,20 @@ public class Global {
 		String candidate;
 		String[] parts = filelink.split("[.]");
 		/*
-		1) If an exercise has a double ending at the end:
-		Then a .tex exercise results from a .originalExt$ EXERCISE.
+		1) If an part has a double ending at the end:
+		Then a .tex part results from a .originalExt$ PART.
 		*/
 		candidate = parts[parts.length - 2];
 		// No supported filetype with more than 4 digits.
 		// Safe because furthermore the filenames are much longer
-		// as they obtain splitby data, exercise position/number, ...
+		// as they obtain splitby data, part position/number, ...
 		if (candidate.length() < 5) {
 			return candidate;
 		}
 
 		/*
-		2) If an exercise has no double ending at the end:
-		Then a .tex exercise results from a SHEETDRAFT .docx|ext.TEX.
+		2) If an part has no double ending at the end:
+		Then a .tex part results from a SHEETDRAFT .docx|ext.TEX.
 		*/
 		parts = filelink.split("[.]" + parts[parts.length - 1]);
 		// There may be many dots before e.g. splitby defs, numbering.
@@ -638,7 +638,7 @@ public class Global {
 		// This is bonus only for this case:
 		// No supported filetype with more than 4 digits.
 		// Safe because furthermore the filenames are much longer
-		// as they obtain splitby data, exercise position/number, ...
+		// as they obtain splitby data, part position/number, ...
 		if (candidate.length() < 5) {
 			return candidate;
 		}
@@ -1391,7 +1391,7 @@ public class Global {
 		if (text == null || text.length == 0) {
 			System.err.print("The text's length is null or zero (0): "
 					+ text
-					+ " Please check how a exercise declaration may"
+					+ " Please check how a part declaration may"
 					+ " come to contain 0 lines or no text at all.");
 			height = 1;
 		}
@@ -1990,12 +1990,12 @@ public class Global {
 	/**
 	 * EXTRACT ORIGINSHEETDRAFT FILELINK
 	 */
-	public static String extractSheetdraftFilelinkFromExerciseFilelink(
+	public static String extractSheetdraftFilelinkFromPartFilelink(
 			String filelink) {
 		String[] parts = filelink.split("__");
 		String result = "";
-		// The last two parts belong to the exercise only:
-		// 1) __Exercise_<number>
+		// The last two parts belong to the part only:
+		// 1) __Part_<number>
 		// 2) __splitby_<splitter>.<native_ending>.<derived_ending>
 		// Thus these two are to be skipped!
 		for (int i = 0; i < parts.length - 2; i++) {
@@ -2003,7 +2003,7 @@ public class Global {
 		}
 		if (!new File(Global.root + result).exists()) {
 			System.out.println(
-					Global.addMessage("The sheetdraft the exercise"
+					Global.addMessage("The sheetdraft the part"
 						+ " originates from could not"
 						+ " be found in the filesystem."
 						+ " Review Global.getOriginsheetdraftFilelink."
@@ -2016,28 +2016,28 @@ public class Global {
 
 
 //	public String getSheetdraftFilelink() {
-//		// IT HAS TO BE ENSURED THAT __Exercise is being added at
-//		// exercise AS FIRST ADDITION.
-//		// OR USE Global.extractSheetdraftFilelinkFromExerciseFilelink
+//		// IT HAS TO BE ENSURED THAT __Part is being added at
+//		// part AS FIRST ADDITION.
+//		// OR USE Global.extractSheetdraftFilelinkFromPartFilelink
 //		int filelink_to_remove_index_start
-//			= filelink.indexOf("__Exercise");
+//			= filelink.indexOf("__Part");
 //		return filelink.substring(0, filelink_to_remove_index_start-1);
 //	}
 
 
 
 	/**
-	 * EXTRACT EXERCISE PART ONLY FROM FILE LINK
+	 * EXTRACT PART PART ONLY FROM FILE LINK
 	 */
-	public static String extractExercisePartOnlyFromExerciseFilelink(
+	public static String extractPartPartOnlyFromPartFilelink(
 			String filelink) {
 		if (filelink == null || filelink.isEmpty()) {
 			return "";
 		}
 		String[] parts = filelink.split("__");
 		String result = "";
-		// The last two parts belong to the exercise only:
-		// 1) __Exercise_<number>
+		// The last two parts belong to the part only:
+		// 1) __Part_<number>
 		// 2) __splitby_<splitter>.<native_ending>.<derived_ending>
 		// => So these two have to get concatenated!
 		for (int i = parts.length - 2; i < parts.length; i++) {
@@ -2046,9 +2046,9 @@ public class Global {
 			}
 			result += parts[i]; // The remainder is concatenated.
 		}
-		// No existence check required here as the exercise in the
+		// No existence check required here as the part in the
 		// filesystem includes the parent filelink at the beginning,
-		// the exercise only part is only a suffix
+		// the part only part is only a suffix
 		// to the filelink of the originsheetdraft.
 		return result;
 	}
@@ -2133,15 +2133,15 @@ public class Global {
 
 
 	/**
-	 * EXTRACT EXERCISE NUMBER FROM FILELINK
+	 * EXTRACT PART NUMBER FROM FILELINK
 	 */
-	public static int extractExerciseNumberFromFilelink(
+	public static int extractPartNumberFromFilelink(
 			String filelink) {
 
-		filelink = Global.extractExercisePartOnlyFromExerciseFilelink(
+		filelink = Global.extractPartPartOnlyFromPartFilelink(
 				filelink);
 
-		// Split in exercise_<number> and splitby_<splitter>:
+		// Split in part_<number> and splitby_<splitter>:
 		String[] parts = filelink.split("[_][_]");
 		int candidate;
 		if (parts != null) {
@@ -2159,61 +2159,61 @@ public class Global {
 		}
 
 		// To be extracted:
-		String exerciseNumber = "";
+		String partNumber = "";
 		//
-		String substring_beginning = "Exercise_";
+		String substring_beginning = "Part_";
 		int splitter_start_filelink_index = filelink
 			.indexOf(substring_beginning);
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = "__exercise_";
+			substring_beginning = "__part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = "-Exercise_";
+			substring_beginning = "-Part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = "-exercise_";
+			substring_beginning = "-part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		/* hopefully we have success before those emergency solutions: */
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = ".Exercise_";
+			substring_beginning = ".Part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = ".exercise_";
+			substring_beginning = ".part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = "_Exercise_";
+			substring_beginning = "_Part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = "_exercise_";
+			substring_beginning = "_part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = "Exercise_";
+			substring_beginning = "Part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		if (splitter_start_filelink_index == -1) {
-			substring_beginning = "exercise_";
+			substring_beginning = "part_";
 			splitter_start_filelink_index = filelink
 				.indexOf(substring_beginning);
 		}
 		// success?
 		int index_start = splitter_start_filelink_index;
 		if (index_start == -1) {
-			addMessage("No exercise number could be extracted!"
+			addMessage("No part number could be extracted!"
 					+ " filelink: " + filelink, "blackwhite");
 			return -1;
 		}
@@ -2245,11 +2245,11 @@ public class Global {
 						// Last was a single _ and not __, so the
 						// ending buffer stands for a space, hence
 						// we have to add it to the splitter/split_by.
-						exerciseNumber += ending_buffer;
+						partNumber += ending_buffer;
 						// Clear ending buffer as it is only a space:
 						ending_buffer = "";
 						// Add the current char, too. Easy to forget.
-						exerciseNumber += ch;
+						partNumber += ch;
 					}
 //				}
 			}
@@ -2258,7 +2258,7 @@ public class Global {
 		}
 
 		// Finally the part within __splitby_<this part>__ is extracted
-		return Integer.parseInt(exerciseNumber);
+		return Integer.parseInt(partNumber);
 	}
 
 
@@ -2266,7 +2266,7 @@ public class Global {
 	/**
 	 * EXTRACT SPLITTER
 	 *
-	 * @param filelink Must be exercise filelink. Sheetdraft
+	 * @param filelink Must be part filelink. Sheetdraft
 	 * filelinks do not contain it.
 	 * @return
 	 */
@@ -2275,7 +2275,7 @@ public class Global {
 	}
 	public static String extractSplitByFromFilelink(String filelink) {
 
-		filelink = Global.extractExercisePartOnlyFromExerciseFilelink(
+		filelink = Global.extractPartPartOnlyFromPartFilelink(
 				filelink);
 
 		// To be extracted:
@@ -2332,12 +2332,12 @@ public class Global {
 			// optionally specified custom __splitby_ in the filelink.
 			addMessage(
 					"No custom splitter specified in upload filelink."
-					+ "\r\n<br/>=>Auto-detecting exercise declarations"
+					+ "\r\n<br/>=>Auto-detecting part declarations"
 					, "blackwhite");
 			// TODO These comments are historic as now this all works.
 			// Alternatively use a per convention default splitter
 			// e.g. Aufgabe. <-- this has been successfully coded
-			//addMessage("=> USING 'Aufgabe' OR 'Exercise' instead."
+			//addMessage("=> USING 'Aufgabe' OR 'Part' instead."
 			//		"info");
 			return "";
 		}
@@ -2536,7 +2536,7 @@ public class Global {
 
 
 
-//	public String getExerciseFilelinkExtensionPattern() {
+//	public String getPartFilelinkExtensionPattern() {
 //		return "";
 //	}
 
@@ -3206,25 +3206,25 @@ public class Global {
 
 	/**
 	 *
-	 * @param exerciseFilelinks
+	 * @param partFilelinks
 	 * @param targetFiletype
 	 * @param target_sheetdraft_filelink
 	 * @throws Exception
 	 */
-	//create Global.createFile(String[] exerciseFilelinks,targetFiletype)
-	public static void joinToFile(String[] exerciseFilelinks
+	//create Global.createFile(String[] partFilelinks,targetFiletype)
+	public static void joinToFile(String[] partFilelinks
 			, String targetFiletype
 			, String target_sheetdraft_filelink) throws Exception {
 
-		joinToFile(exerciseFilelinks, targetFiletype
+		joinToFile(partFilelinks, targetFiletype
 				, target_sheetdraft_filelink, null, null);
 
 	}
-	public static void joinToFile(String[] exerciseFilelinks
+	public static void joinToFile(String[] partFilelinks
 			, String targetFiletype
 			, String target_sheetdraft_filelink
-			, String[] exercise_numbering_old
-			, String[] exercise_numbering_new)
+			, String[] part_numbering_old
+			, String[] part_numbering_new)
 		throws Exception {
 		/*
 		The file does not exist in the beginning,
@@ -3246,152 +3246,152 @@ public class Global {
 		}
 		//TODO The target sheetdraft filelink probably does not
 		// exist yet. It will be created by copying the first
-		// exercise of the draft (by loading from the first's
-		// exercise source and rewriting to the new/target
+		// part of the draft (by loading from the first's
+		// part source and rewriting to the new/target
 		// sheetdraft filelink) and renaming it in the process
 		// (to the sheetdraft's target filelink).
 		//
-		// Then the subsequent exercises will be appended under
+		// Then the subsequent parts will be appended under
 		// examination of conflicting relations and while merging
 		// of styles.
 
-		//1. CALL_TARGET_CONVERSION_FOR_EACH_EXERCISE
+		//1. CALL_TARGET_CONVERSION_FOR_EACH_PART
 		//   SAVE_THOSE_IN_FILESYSTEM_FOR_BEING_EDITABLE
-		List<String> successfullyGeneratedExercises_filelinks;
-		successfullyGeneratedExercises_filelinks = new ArrayList<String>();
+		List<String> successfullyGeneratedParts_filelinks;
+		successfullyGeneratedParts_filelinks = new ArrayList<String>();
 
-		int exercise_number = 0;
-		for (String exercise_filelink : exerciseFilelinks) {
+		int part_number = 0;
+		for (String part_filelink : partFilelinks) {
 
-			//exercise filelink exists?
-			File sourceFile = new File(Global.root + exercise_filelink);
+			//part filelink exists?
+			File sourceFile = new File(Global.root + part_filelink);
 			if (sourceFile.exists()) {
 				//Convert to desired target filetype:
-				String exercise_part = Global
-					.extractExercisePartOnlyFromExerciseFilelink(
-							exercise_filelink);
-				if (exercise_part.equals("")) {
+				String part_part = Global
+					.extractPartPartOnlyFromPartFilelink(
+							part_filelink);
+				if (part_part.equals("")) {
 					System.out.println(Global.addMessage(
 							"Probably joining a sheetdraft and"
-							+ " exercises OR even sheetdrafts only"
-							+ " because there was no exercise part"
+							+ " parts OR even sheetdrafts only"
+							+ " because there was no part part"
 							+ " found at the end of the filelink: "
-							+ exercise_filelink
+							+ part_filelink
 							+ "\n<br/>This sheetdraft thus is skipped."
 							+ " TODO Support sheetdrafts joining as a"
 							+ " whole in Global.java in joinToFile."
 							, "warning"));
-					continue;// Only join exercises. TODO: +sheets
+					continue;// Only join parts. TODO: +sheets
 				}
 				String target_filelink_for_deriving_flavours;
 				target_filelink_for_deriving_flavours
 						= target_sheetdraft_filelink
-						+ "__" + exercise_part;
+						+ "__" + part_part;
 
 				List<String> generated_target_filelinks
 					= new ArrayList<String>();
 
 				// Can conversion be skipped?
-				if (!exercise_filelink.equals(
+				if (!part_filelink.equals(
 							Global.replaceEnding(
 								target_filelink_for_deriving_flavours
 								, targetFiletype))
-						/*!exercise_filelink.endsWith(targetFiletype)*/
+						/*!part_filelink.endsWith(targetFiletype)*/
 						) {
 					// The conversion to hopefully a statue of Rhodes:
 					// a list is returned but it contains only one URI
 					generated_target_filelinks = Global.convertFile(
 							// regenerating it currently. So not
 							// checking if it already exists.
-							Global.root + exercise_filelink
+							Global.root + part_filelink
 							, targetFiletype
 							, target_filelink_for_deriving_flavours
 					);
 				}
 				else {
-					System.out.println("Exercise to be joined already"
+					System.out.println("Part to be joined already"
 							+ " in target format and in correct"
 							+ " position in filesystem: "
-							+ exercise_filelink
+							+ part_filelink
 							+ ". Skipped conversion. Could lead to"
 							+ " declaration anomaly.");
-					generated_target_filelinks.add(exercise_filelink);
+					generated_target_filelinks.add(part_filelink);
 				}
-				successfullyGeneratedExercises_filelinks
+				successfullyGeneratedParts_filelinks
 					.addAll(generated_target_filelinks);
-				String exercise_in_target_format_filelink;
+				String part_in_target_format_filelink;
 				if (generated_target_filelinks.size() > 0) {
 
-					exercise_in_target_format_filelink
+					part_in_target_format_filelink
 						= generated_target_filelinks.get(0);
 
-					// 2.INSERT THE NEW EXERCISES INTO THE EXERCISES DB
+					// 2.INSERT THE NEW PARTS INTO THE PARTS DB
 					// TABLE REFERENCING THE DRAFT AS MOTHERSHEETDRAFT:
-					QUERY_INSERT_INTO_exercise(
-							exercise_in_target_format_filelink
+					QUERY_INSERT_INTO_part(
+							part_in_target_format_filelink
 							, Global.extractFilelinkOfMothersheet(
 								// null means determine automatically:
-								exercise_filelink), null, null);
+								part_filelink), null, null);
 
 
 					// 3.OPTIONALLY UNIFY_SPLITTER
 
 					// 4.ADAPT_POSITION (MORE PRECISELY: CHANGE THE
-					// EXERCISE NUMBERING TO THE GIVEN POSITION)
-					if (exercise_numbering_old != null
-							&& exercise_numbering_new != null
-							&& exercise_number < exercise_numbering_old.length
-							&& exercise_numbering_old[exercise_number] != null
-							&& exercise_number < exercise_numbering_new.length
-							&& exercise_numbering_new[exercise_number] != null
+					// PART NUMBERING TO THE GIVEN POSITION)
+					if (part_numbering_old != null
+							&& part_numbering_new != null
+							&& part_number < part_numbering_old.length
+							&& part_numbering_old[part_number] != null
+							&& part_number < part_numbering_new.length
+							&& part_numbering_new[part_number] != null
 							) {
 
-						if (!exercise_numbering_new[exercise_number]
-								.equals(exercise_numbering_old[exercise_number])) {
+						if (!part_numbering_new[part_number]
+								.equals(part_numbering_old[part_number])) {
 
-							Global.adaptExerciseNumbering(
-									exercise_in_target_format_filelink
-									, exercise_numbering_new[exercise_number]
+							Global.adaptPartNumbering(
+									part_in_target_format_filelink
+									, part_numbering_new[part_number]
 									, Muster.INTDOT
 							);
 
 						}
 
 					}
-					else if (exercise_numbering_new != null
-							&& exercise_number < exercise_numbering_new.length
-							&& exercise_numbering_new[exercise_number] != null
+					else if (part_numbering_new != null
+							&& part_number < part_numbering_new.length
+							&& part_numbering_new[part_number] != null
 							/*
-							&& !exercise_numbering_new[exercise_number]
+							&& !part_numbering_new[part_number]
 							.isEmpty()
 							<-- omitted because it could be desired
-							to reset/remove the exercise numbering
+							to reset/remove the part numbering
 							(e.g. for unifying the numbering to lists)
 							*/) {
 
-						Global.adaptExerciseNumbering(
-								exercise_in_target_format_filelink
-								, exercise_numbering_new[exercise_number]
+						Global.adaptPartNumbering(
+								part_in_target_format_filelink
+								, part_numbering_new[part_number]
 								, Muster.INTDOT
 						);
 
 					}
 					else {
 
-						Global.adaptExerciseNumbering(
-								exercise_in_target_format_filelink
-								, (++exercise_number) + ""
+						Global.adaptPartNumbering(
+								part_in_target_format_filelink
+								, (++part_number) + ""
 								, Muster.INTDOT
 						);
 
 					}
-					// TODO update / remove from draft exercise
+					// TODO update / remove from draft part
 					// assignment database table here?
-					/* To be able to regenerate/overwrite the exercises
+					/* To be able to regenerate/overwrite the parts
 					 * we copied over here and perhaps edited,
 					   we should just update the sheetdraft filelink
 					   (which now has a real ending).
-					   The draftexerciseassignment should stay as is.
+					   The draftpartassignment should stay as is.
 					 */
 
 					// 5.APPEND TO THE SHEETDRAFT FILESYSTEM FILE.
@@ -3401,18 +3401,18 @@ public class Global {
 //							= Global.root + target_sheetdraft_filelink;
 //					}
 
-					// First successful exercise?
-					if (successfullyGeneratedExercises_filelinks.size() == 1) {
-						// Then use this exercise file as start point.
+					// First successful part?
+					if (successfullyGeneratedParts_filelinks.size() == 1) {
+						// Then use this part file as start point.
 						FileUtils.copyFile(
-								new File(exercise_in_target_format_filelink)
+								new File(part_in_target_format_filelink)
 								, new File(target_sheetdraft_filelink)
 								);
 					}
 					else {
 						// Then append:
 						Global.mergeSourceFileIntoTargetFile(
-								exercise_in_target_format_filelink
+								part_in_target_format_filelink
 								, target_sheetdraft_filelink
 						);
 
@@ -3424,36 +3424,36 @@ public class Global {
 
 			}
 			else {
-				Global.addMessage("Exercise file not exists at this"
-						+ " location: " + exercise_filelink
+				Global.addMessage("Part file not exists at this"
+						+ " location: " + part_filelink
 						, "nosuccess");
 			}
 		}
 
 
-		System.out.println("Joined " + exercise_number
-				+ " exercises. Generating images ...");
+		System.out.println("Joined " + part_number
+				+ " parts. Generating images ...");
 
 
-		// Only the successfully converted exercises can be
+		// Only the successfully converted parts can be
 		// joined/merged as a uniform datatype is required.
-		for (String exercise_filelink : successfullyGeneratedExercises_filelinks) {
-			// 2. INSERT THE NEW EXERCISES INTO THE EXERCISES DB
+		for (String part_filelink : successfullyGeneratedParts_filelinks) {
+			// 2. INSERT THE NEW PARTS INTO THE PARTS DB
 			// TABLE REFERENCING THE DRAFT AS MOTHERSHEETDRAFT:
 			// 3. OPTIONALLY UNIFY_SPLITTER
-			// 4. ADAPT EXERCISE NUMBERING TO THE POSITION
+			// 4. ADAPT PART NUMBERING TO THE POSITION
 			// 5. and append
 			/* NOTE: All this is already done above via Global.merge().
 			Only postprocess here: */
 
-			if (!exercise_filelink.endsWith("html")) {
-				Global.convertFile(exercise_filelink, "pdf"
-						, Global.replaceEnding(exercise_filelink, "pdf"));
+			if (!part_filelink.endsWith("html")) {
+				Global.convertFile(part_filelink, "pdf"
+						, Global.replaceEnding(part_filelink, "pdf"));
 			}
-			Global.convertFile(exercise_filelink
+			Global.convertFile(part_filelink
 					, Global.imageTypeToGenerate
-					, Global.getImageLinkFromFile(exercise_filelink));
-			Global.convertFile(exercise_filelink
+					, Global.getImageLinkFromFile(part_filelink));
+			Global.convertFile(part_filelink
 					, PartDB.commonFormat.name().toLowerCase());
 		}
 
@@ -3996,8 +3996,8 @@ public class Global {
 				/*
 				org.odftoolkit.simple.text.list.List list = odt.addList();
 				String[] items;
-				items[0] = "Exercise 1";
-				items[1] = "Exercise 2";
+				items[0] = "Part 1";
+				items[1] = "Part 2";
 				list.addItem(0, "");
 				//list.addItems(0, new String[] {""});
 				list.addItems(items);
@@ -4014,7 +4014,7 @@ public class Global {
 			// PDF
 			else if (target_type.equalsIgnoreCase("PDF")) {
 				// no data format that is handled for joining
-				// exercises directly. Data format
+				// parts directly. Data format
 				// for handling is OpenDocumentFormat (ODF Text).
 			}
 			// RTF
@@ -4138,13 +4138,13 @@ public class Global {
 		}
 
 
-		// Merge all subsequent exercise files into merge target file:
+		// Merge all subsequent part files into merge target file:
 		for (String source_filelink : source_filelinks) {
 
 			String source_ending = Global.extractEnding(source_filelink);
 			if (!source_ending.equals(merge_target_ending)) {
 				System.out.println(Global.addMessage(
-							"Exercise could not be merged"
+							"Part could not be merged"
 							+ " into target because the filetype is"
 							+ " not the same even though there were"
 							+ " though there were efforts to convert"
@@ -4333,7 +4333,7 @@ public class Global {
 					|| merge_target_ending.equalsIgnoreCase("HTM")) {
 
 				System.out.println("Trying to load sheetdraft and"
-						+ " exercise contents.");
+						+ " part contents.");
 				String old = Global.arrayToString(ReadWrite
 						.loadText(merge_target_filelink));
 				if (old != null) {
@@ -4344,7 +4344,7 @@ public class Global {
 					old.replaceAll("[<][/]body[>].*[<][/]html[>]", "");
 				}
 				else {
-					old = "<html><head><title>AVS merged HTML-exercises</title></head>"
+					old = "<html><head><title>AVS merged HTML-parts</title></head>"
 						+ System.getProperty("line.separator")
 						+ "<body>";
 				}
@@ -4380,13 +4380,13 @@ public class Global {
 			else if (merge_target_ending.equalsIgnoreCase("TXT")) {
 
 				System.out.println("Trying to load sheetdraft and"
-						+ " exercise contents.");
+						+ " part contents.");
 //				String old = Global.arrayToString(
 //						ReadWrite.loadText(merge_target_filelink));
 				String toAppend = Global.arrayToString(
 						ReadWrite.loadText(source_filelink));
 				// TODO join arrays instead?
-				System.out.println("Trying to append txt-exercise: ");
+				System.out.println("Trying to append txt-part: ");
 				// That's already performed in the callee function.
 				//if (old.isEmpty() || old.trim().length()
 				//		!= toAppend.trim().length()) {
@@ -4413,7 +4413,7 @@ public class Global {
 				// so that it is always at the bottom.
 				//TODO
 				System.out.println("Trying to load sheetdraft and"
-						+ " exercise contents.");
+						+ " part contents.");
 				String old = Global.arrayToString(
 						ReadWrite.loadText(merge_target_filelink));
 				if (old != null) {
@@ -4469,39 +4469,39 @@ public class Global {
 
 	/**
 	 *
-	 * @param exercise_filelink
-	 * @param new_exercise_numbering
+	 * @param part_filelink
+	 * @param new_part_numbering
 	 * @param targetNumberingPattern
 	 * @throws Exception
 	 */
-	public static void adaptExerciseNumbering(String exercise_filelink
-			, String new_exercise_numbering
+	public static void adaptPartNumbering(String part_filelink
+			, String new_part_numbering
 			, Muster targetNumberingPattern)
 		throws Exception {
 
-		//if (exercise_container is list for each exercise
-		//		=> so exercise numbering is correct automatically
+		//if (part_container is list for each part
+		//		=> so part numbering is correct automatically
 		//		unless no specific starting number is specified
 		//		) {
 			//delete specific starting numbering
 		//}
 
-		Exercise exercise = new Exercise(exercise_filelink);
+		Part part = new Part(part_filelink);
 		//<-- calls determineDeclaration
 		String oldWordWithNumber = null;
 
 		String replacementNumbering
-				= determineExerciseNumberReplacement(
-						new_exercise_numbering
+				= determinePartNumberReplacement(
+						new_part_numbering
 						, targetNumberingPattern);
 
 		String newWordWithNumber = replacementNumbering;
 		// Is preceding old word to be added?
-		if (exercise != null && exercise.getDeclaration() != null
-				&& exercise.getDeclaration()
+		if (part != null && part.getDeclaration() != null
+				&& part.getDeclaration()
 				.getWordContainingNumbering() != null) {
 
-			oldWordWithNumber = exercise.getDeclaration()
+			oldWordWithNumber = part.getDeclaration()
 				.getWordContainingNumbering();
 			String oldNumbering = toNumbering(oldWordWithNumber);
 
@@ -4510,35 +4510,35 @@ public class Global {
 		}
 
 
-		String exercise_ending = Global.extractEnding(exercise_filelink);
+		String part_ending = Global.extractEnding(part_filelink);
 
-		if (exercise_ending.equalsIgnoreCase("ODT")) {
+		if (part_ending.equalsIgnoreCase("ODT")) {
 			TextDocument odt; odt = null;
-			odt = TextDocument.loadDocument(new File(exercise_filelink));
+			odt = TextDocument.loadDocument(new File(part_filelink));
 			/*
-			Assumption: There really is only one exercise in
-			an exercise file.
+			Assumption: There really is only one part in
+			an part file.
 			*/
 
-			// 1. find element where exercise declaration was found
-			exercise.travelDownUntilDeclarationFound(
+			// 1. find element where part declaration was found
+			part.travelDownUntilDeclarationFound(
 					odt.getContentRoot()
-					, exercise.getDeclaration());
+					, part.getDeclaration());
 
 
 			// 3. adapt the numbering:
-			// exercise_container is of type list but it's
-			// not guaranteed for all exercises
-			if (exercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
+			// part_container is of type list but it's
+			// not guaranteed for all parts
+			if (part.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
 					!= null) {
 				// set specific starting number
-				if (exercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
+				if (part.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
 						instanceof org.w3c.dom.Node) {
 
 					  // find first valid (non-text) node that
 					  // contains the numbering:
 					  Object deepest_node_containing_numbering
-						  = exercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
+						  = part.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
 					  org.w3c.dom.Node parent;
 					  while (deepest_node_containing_numbering != null
 							  && ( parent = ((org.w3c.dom.Node)
@@ -4596,9 +4596,9 @@ public class Global {
 					// only one sibling too far to be sure:
 					org.w3c.dom.Text textNode
 						= (org.w3c.dom.Text)Global
-						.getTextNodeThatContainsExerciseNumberDirectlyRecursively(
+						.getTextNodeThatContainsPartNumberDirectlyRecursively(
 							deepest_node_containing_numbering
-							/*getPreviousSibling()*/, exercise);
+							/*getPreviousSibling()*/, part);
 
 					if (textNode != null) {
 						if (oldWordWithNumber != null
@@ -4606,7 +4606,7 @@ public class Global {
 							textNode.replaceWholeText(
 									textNode.getWholeText()
 									.replaceFirst(
-										oldWordWithNumber/*exercise
+										oldWordWithNumber/*part
 										.getDeclaration().getIndex()
 										.toString()*/
 										, newWordWithNumber)
@@ -4622,7 +4622,7 @@ public class Global {
 					}
 					else {
 						System.out.println("Could not get the Text"
-								+ " Node that contains the exercise"
+								+ " Node that contains the part"
 								+ " declaration: oldWordWithNumber: "
 								+ oldWordWithNumber + ". textNode: "
 								+ textNode
@@ -4637,20 +4637,20 @@ public class Global {
 			}
 			else {
 				System.out.println("No element found containing the"
-						+ " exercise declaration directly.");
+						+ " part declaration directly.");
 			}
 
 			// save changes
-			odt.save(new File(exercise_filelink));
+			odt.save(new File(part_filelink));
 
 		}
 
 
-		else if (exercise_ending.equalsIgnoreCase("DOCX")) {
+		else if (part_ending.equalsIgnoreCase("DOCX")) {
 
 			WordprocessingMLPackage wmlPackage; wmlPackage = null;
 			wmlPackage = WordprocessingMLPackage
-				.load(new File(exercise_filelink));
+				.load(new File(part_filelink));
 			MainDocumentPart mainDocumentPart
 				= wmlPackage.getMainDocumentPart();
 			org.docx4j.wml.Document wmlDocumentEl
@@ -4658,29 +4658,29 @@ public class Global {
 				.getJaxbElement();
 
 			/*
-			Assumption: There really is only one exercise in an
-			exercise file.
+			Assumption: There really is only one part in an
+			part file.
 			*/
-			// 1. find element where exercise declaration was found
+			// 1. find element where part declaration was found
 			Body rootElement = wmlDocumentEl.getBody();
 			// To prevent still having the old data in there:
-			exercise.clearTraversedAndTextBuffer();
-			//exer.travelDownUntilDeclarationFound(exercise_rootElement);
-			Exercise.Docx4JTravelCallback exercise_traveller
-				= exercise.new Docx4JTravelCallback();
-//			exercise_traveller.setDeclaration(exercise.getDeclaration());
-			new TraversalUtil(rootElement, exercise_traveller);
+			part.clearTraversedAndTextBuffer();
+			//exer.travelDownUntilDeclarationFound(part_rootElement);
+			Part.Docx4JTravelCallback part_traveller
+				= part.new Docx4JTravelCallback();
+//			part_traveller.setDeclaration(part.getDeclaration());
+			new TraversalUtil(rootElement, part_traveller);
 
 
 			// 3. adapt the numbering:
 			/*
-			exercise_container is of type list but it's
-			not guaranteed for all exercises
+			part_container is of type list but it's
+			not guaranteed for all parts
 			*/
-			if (exercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
+			if (part.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
 					!= null) {
 				// set specific starting number
-				if (XmlUtils.unwrap(exercise
+				if (XmlUtils.unwrap(part
 							.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat)
 						instanceof Child) {
 
@@ -4688,7 +4688,7 @@ public class Global {
 					// if e.g. numbering and declaration text are
 					// in different table columns.)
 					Object deepest_valid_node
-						= exercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
+						= part.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
 					while (deepest_valid_node != null
 							&& ((Child)XmlUtils.unwrap(
 									deepest_valid_node)).getParent()
@@ -4731,15 +4731,15 @@ public class Global {
 					}
 
 					org.docx4j.wml.Text textNode = (org.docx4j.wml.Text)XmlUtils.unwrap(Global
-							.getTextNodeThatContainsExerciseNumberDirectlyRecursively(
-									deepest_valid_node, exercise));
+							.getTextNodeThatContainsPartNumberDirectlyRecursively(
+									deepest_valid_node, part));
 
 					if (textNode != null) {
 						if (oldWordWithNumber != null
 								&& !oldWordWithNumber.isEmpty()) {
 							textNode.setValue(textNode.getValue()
 									.replaceFirst(
-									oldWordWithNumber/*exercise
+									oldWordWithNumber/*part
 									.getDeclaration().getIndex()
 									.toString()*/
 									, newWordWithNumber)//".")
@@ -4757,7 +4757,7 @@ public class Global {
 					}
 					else {
 						System.out.println("Could not get the Text"
-								+ " Node that contains the exercise"
+								+ " Node that contains the part"
 								+ " declaration: oldWordWithNumber: "
 								+ oldWordWithNumber + ". textNode: "
 								+ textNode
@@ -4772,21 +4772,21 @@ public class Global {
 			}
 			else {
 				System.out.println("No element found containing"
-						+ " the exercise declaration directly.");
+						+ " the part declaration directly.");
 			}
 
 			// save changes
-//			Docx4J.save(wmlPackage, new File(exercise_filelink), FLAGS);
-			wmlPackage.save(new File(exercise_filelink));
+//			Docx4J.save(wmlPackage, new File(part_filelink), FLAGS);
+			wmlPackage.save(new File(part_filelink));
 
 
 		}
 
 
-		else if (exercise_ending.equalsIgnoreCase("TXT")
-				|| exercise_ending.equalsIgnoreCase("HTML")) {
+		else if (part_ending.equalsIgnoreCase("TXT")
+				|| part_ending.equalsIgnoreCase("HTML")) {
 
-			String[] oldText = ReadWrite.loadText(exercise_filelink);
+			String[] oldText = ReadWrite.loadText(part_filelink);
 			String newText = newWordWithNumber
 				+ System.getProperty("line.separator")
 					+ Global.arrayToString(oldText);
@@ -4796,16 +4796,16 @@ public class Global {
 					.replaceFirst(oldWordWithNumber, newWordWithNumber);
 			}
 			//else is default init see above newText.
-			ReadWrite.write(newText, exercise_filelink);
+			ReadWrite.write(newText, part_filelink);
 
 		}
 
 
-		else if (exercise_ending.equalsIgnoreCase("TEX")) {
+		else if (part_ending.equalsIgnoreCase("TEX")) {
 
 			// As it's only a content change, the tex will stay
 			// compilable unless no encoding problems occur.
-			String[] oldText = ReadWrite.loadText(exercise_filelink);
+			String[] oldText = ReadWrite.loadText(part_filelink);
 			String newText = newWordWithNumber
 				+ System.getProperty("line.separator")
 				+ Global.arrayToString(oldText);
@@ -4815,19 +4815,19 @@ public class Global {
 					.replaceFirst(oldWordWithNumber, newWordWithNumber);
 			}
 			//else is default init see above newText.
-			ReadWrite.write(newText, exercise_filelink);
+			ReadWrite.write(newText, part_filelink);
 
 		}
 
 
-//		else if (exercise_ending.equalsIgnoreCase("RTF")) {
+//		else if (part_ending.equalsIgnoreCase("RTF")) {
 //
 //		}
 
 
 		else {
 			System.out.println(Global.addMessage("Merging "
-						+ exercise_ending
+						+ part_ending
 						+ "-files does either not make sense or"
 						+ " is not supported yet. (ODT, DOCX, TXT, TEX"
 						+ " are seen as useful currently.)"
@@ -4941,37 +4941,37 @@ public class Global {
 
 	/**
 	 *
-	 * @param new_exercise_number
+	 * @param new_part_number
 	 * @param targetNumberingPattern
 	 * @return
 	 */
-	public static String determineExerciseNumberReplacement(
-			String new_exercise_number, Muster targetNumberingPattern
+	public static String determinePartNumberReplacement(
+			String new_part_number, Muster targetNumberingPattern
 			) {
 
-		boolean isMatchingTargetPattern = new_exercise_number.matches(
+		boolean isMatchingTargetPattern = new_part_number.matches(
 				targetNumberingPattern/*Muster.AUFGABE*/
 				.getPatternString());
 
 		if (isMatchingTargetPattern) {
-			return new_exercise_number;
+			return new_part_number;
 		}
 
-		if (Global.isInt(new_exercise_number)
+		if (Global.isInt(new_part_number)
 				// and only integer and nothing else?
-				&& (Global.getInt(new_exercise_number) + "").length()
-				== new_exercise_number.length()) {
+				&& (Global.getInt(new_part_number) + "").length()
+				== new_part_number.length()) {
 
 			return targetNumberingPattern.convertNumbering(
-					new_exercise_number
-					// Forced exercise number for performance reasons:
-					, Global.getInt(new_exercise_number)
+					new_part_number
+					// Forced part number for performance reasons:
+					, Global.getInt(new_part_number)
 					);
 
 		}
 
 		return targetNumberingPattern.convertNumbering(
-				new_exercise_number);
+				new_part_number);
 
 	}
 
@@ -4980,13 +4980,13 @@ public class Global {
 	/**
 	 *
 	 * @param candidate
-	 * @param exercise
+	 * @param part
 	 * @return
 	 * @throws Exception
 	 */
-	public static Object getTextNodeThatContainsExerciseNumberDirectlyRecursively(
+	public static Object getTextNodeThatContainsPartNumberDirectlyRecursively(
 			Object candidate
-			, Exercise exercise) throws Exception {
+			, Part part) throws Exception {
 
 		String value = "";
 		if (candidate instanceof org.w3c.dom.Text/*Node*/) {
@@ -5001,8 +5001,8 @@ public class Global {
 
 		// Termination condition:
 		if (value.contains(
-				//exercise.getDeclaration().getIndex().toString()
-				Global.toNumbering(exercise.getDeclaration()
+				//part.getDeclaration().getIndex().toString()
+				Global.toNumbering(part.getDeclaration()
 					.getWordContainingNumbering()))
 				) {
 			return candidate;
@@ -5022,18 +5022,18 @@ public class Global {
 			}
 			childNodes_index = childNodes.getLength();
 			while (--childNodes_index > -1) {
-				org.w3c.dom.Node nodeContainingExerciseNumber
+				org.w3c.dom.Node nodeContainingPartNumber
 					= childNodes.item(childNodes_index);
-				if (nodeContainingExerciseNumber != null) {
-//					if (nodeContainingExerciseNumber
+				if (nodeContainingPartNumber != null) {
+//					if (nodeContainingPartNumber
 //							instanceof org.w3c.dom.Text) {
-//						return nodeContainingExerciseNumber;
+//						return nodeContainingPartNumber;
 //						// <-that text node value now has to be adapted
 //					}
 //					else {
 						candidate
-						= getTextNodeThatContainsExerciseNumberDirectlyRecursively(
-								nodeContainingExerciseNumber, exercise);
+						= getTextNodeThatContainsPartNumberDirectlyRecursively(
+								nodeContainingPartNumber, part);
 						if (candidate != null) {
 							// found => have to bring our found now
 							// back to the top level by level depth!
@@ -5058,17 +5058,17 @@ public class Global {
 			}
 			childNodes_index = childNodes.size();
 			while (--childNodes_index > -1) {
-				Object nodeContainingExerciseNumber
+				Object nodeContainingPartNumber
 					= childNodes.get(childNodes_index);
-				if (nodeContainingExerciseNumber != null) {
-//					if (nodeContainingExerciseNumber
+				if (nodeContainingPartNumber != null) {
+//					if (nodeContainingPartNumber
 //							instanceof org.docx4j.wml.Text) {
-//						return nodeContainingExerciseNumber;
+//						return nodeContainingPartNumber;
 //						// <-that text node value now has to be adapted
 //					}
 //					else {
-						candidate = getTextNodeThatContainsExerciseNumberDirectlyRecursively(
-								childNodes.get(childNodes_index), exercise);
+						candidate = getTextNodeThatContainsPartNumberDirectlyRecursively(
+								childNodes.get(childNodes_index), part);
 						if (candidate != null) {
 							// found => have to bring our found now
 							// back to the top level by level depth!
@@ -5356,48 +5356,48 @@ public class Global {
 
 	/**
 	 */
-	public static String resolveCorrespondingFilelinkTo(String exercise_filelink) throws IOException, SQLException {
+	public static String resolveCorrespondingFilelinkTo(String part_filelink) throws IOException, SQLException {
 
 		String sql;
 
 		// 0. Determine metadata:
 		String semester
-			= Global.extractSemesterFromFilelink(exercise_filelink);
+			= Global.extractSemesterFromFilelink(part_filelink);
 		String course
-			= Global.extractCourseFromFilelink(exercise_filelink);
+			= Global.extractCourseFromFilelink(part_filelink);
 		String lecturer
-			= Global.extractLecturerFromFilelink(exercise_filelink);
+			= Global.extractLecturerFromFilelink(part_filelink);
 		String type
-			= Global.extractTypeFromFilelink(exercise_filelink);
+			= Global.extractTypeFromFilelink(part_filelink);
 
 		// 1. Determine mothersheet:
-		String mothersheetFilelink = Global.extractFilelinkOfMothersheet(exercise_filelink);
+		String mothersheetFilelink = Global.extractFilelinkOfMothersheet(part_filelink);
 		String mothersheetFilename = Global.extractFilename(mothersheetFilelink);
 
 		/*
 		First guess: all equal but the splitby criteria (pattern).
 		 */
-		String exercisePart
-			= Global.extractExercisePartOnlyFromExerciseFilelink(
-					exercise_filelink);
+		String partPart
+			= Global.extractPartPartOnlyFromPartFilelink(
+					part_filelink);
 		String splitby
-			= Global.extractSplitByFromFilelink(exercise_filelink);
-		Muster exercise_split_pattern
+			= Global.extractSplitByFromFilelink(part_filelink);
+		Muster part_split_pattern
 			= Muster.getMusterByName(splitby);
 
 		for (Muster m : Muster.values()) {
 
-			// One is solution pattern the other exercise pattern?
-			if (exercise_split_pattern.isSolutionPattern()
+			// One is solution pattern the other part pattern?
+			if (part_split_pattern.isSolutionPattern()
 					!= m.isSolutionPattern()) {
 				// => then this might be the corresponding filelink.
 
 				// Don't skip this pattern m because it's not the
 				// same (impossible any TODO examine)?
 //				if (!m.name().equals(splitby)
-//						|| !m.equals(exercise_split_pattern)) {
+//						|| !m.equals(part_split_pattern)) {
 					String candidate = mothersheetFilelink + "__"
-						+ exercisePart.replaceAll(splitby, m.name());
+						+ partPart.replaceAll(splitby, m.name());
 					if (new File(Global.root + candidate).exists()) {
 						return candidate;
 						// <- best bet for the corresponding filelink.
@@ -5407,23 +5407,23 @@ public class Global {
 
 		}
 		System.out.print("Could not find corresponding"
-				+ " exercise/solution filelink on the first guess.");
+				+ " part/solution filelink on the first guess.");
 
 
 		/*
 		Next guess: (General solution)
-		Only assumption: Exercise sheet and corresponding solution
+		Only assumption: Part sheet and corresponding solution
 		sheet filename contain the same number.
 		*/
-		// 2. Type is exercise_solution or exam_solution ?
+		// 2. Type is part_solution or exam_solution ?
 		// (see Global.sheetTypes)
 		String target_type; target_type = type.replace("_SOLUTION", "");
-		// <- result:EXAM or EXERCISE
+		// <- result:EXAM or PART
 
 		target_type = type.replace("_solution", "");
-		// <- result:exam or exercise
+		// <- result:exam or part
 
-		// Has already been EXAM or EXERCISE?
+		// Has already been EXAM or PART?
 		if (type.equals(target_type)) {
 			target_type = type + "_SOLUTION";
 			//target_type = type + "_solution";
@@ -5433,17 +5433,17 @@ public class Global {
 			= mothersheetFilelink.replaceFirst(type, target_type);
 		for (Muster m : Muster.values()) {
 
-			// One is solution pattern the other exercise pattern?
-			if (exercise_split_pattern.isSolutionPattern()
+			// One is solution pattern the other part pattern?
+			if (part_split_pattern.isSolutionPattern()
 					!= m.isSolutionPattern()) {
 				// => then this might be the corresponding filelink.
 
 				// Don't skip this pattern m because it's not the same (impossible any TODO examine)?
 //				if (!m.name().equals(splitby)
-//						|| !m.equals(exercise_split_pattern)) {
+//						|| !m.equals(part_split_pattern)) {
 					String candidate
 						= mothersheetFilelink_with_target_type + "__"
-						+ exercisePart.replaceAll(splitby, m.name());
+						+ partPart.replaceAll(splitby, m.name());
 					if (new File(Global.root + candidate).exists()) {
 						return candidate;
 						// <- best bet for the corresponding filelink.
@@ -5453,7 +5453,7 @@ public class Global {
 
 		}
 		System.out.print("Could not find corresponding"
-				+ " exercise/solution filelink by adapting the"
+				+ " part/solution filelink by adapting the"
 				+ " on upload selected sheet type and the above"
 				+ " splitby variation.");
 
@@ -5477,22 +5477,22 @@ public class Global {
 		// 3. Try to get a number out of the mothersheet's filename.
 		String mothersheetFilename_semesterRemoved
 			= mothersheetFilename.replaceAll("[wWsS][sS][0-9]+", "");
-		int exercise_sheet_number = Global
+		int part_sheet_number = Global
 			.getInt(mothersheetFilename_semesterRemoved);
 
-		if (exercise_sheet_number != Integer.MAX_VALUE) {
+		if (part_sheet_number != Integer.MAX_VALUE) {
 
-			String secondMatch = exercise_sheet_number + "";
+			String secondMatch = part_sheet_number + "";
 			if (Global.debug) {
 				System.out.println("Figured number label of sheet to be "
-						+ exercise_sheet_number);
+						+ part_sheet_number);
 			}
-			// Select all exercises to this mothersheet:
-			sql = "SELECT filelink FROM exercise"
+			// Select all parts to this mothersheet:
+			sql = "SELECT filelink FROM part"
 				+ " WHERE sheetdraft_filelink LIKE '"
 				+ firstMatch + "%'"
 				+ " AND sheetdraft_filelink LIKE '%" + secondMatch + "%'";
-			// This should match e.g. 'Loesung to exercise1' too.
+			// This should match e.g. 'Loesung to part1' too.
 
 
 		}
@@ -5504,14 +5504,14 @@ public class Global {
 					+ " '-solution' appended or not.");
 			/*
 			Specific solution:
-			Assumption: An exercise sheet may be called
-			exercise_8_to_course.<ending>.
+			Assumption: An part sheet may be called
+			part_8_to_course.<ending>.
 			Then the solution must be indicated by appending
 			Lsg or solution.
 			*/
-			// After the first match we only have exercises from
+			// After the first match we only have parts from
 			// the same semester, course & lecturer.
-			sql = "SELECT filelink FROM exercise"
+			sql = "SELECT filelink FROM part"
 				+ " WHERE sheetdraft_filelink LIKE '" + firstMatch + "%'"
 				+ " AND (";
 
@@ -5569,12 +5569,12 @@ public class Global {
 
 		}
 
-		String correspondingExerciseFilelink = null;
+		String correspondingPartFilelink = null;
 		ResultSet resForCorrespondingCandidates = Global.query(sql);
 		List<String> correspondingCandidates = new ArrayList<String>();
-			int exercisePartNumber = Global.getInt(
-				Global.extractExercisePartOnlyFromExerciseFilelink(
-					exercise_filelink)
+			int partPartNumber = Global.getInt(
+				Global.extractPartPartOnlyFromPartFilelink(
+					part_filelink)
 		);
 		while (resForCorrespondingCandidates.next()) {
 
@@ -5582,13 +5582,13 @@ public class Global {
 				= resForCorrespondingCandidates.getString("filelink");
 			String candidateFilename
 				= Global.extractFilename(candidateFilelink);
-			String candidateExercisePart
-				= Global.extractExercisePartOnlyFromExerciseFilelink(
+			String candidatePartPart
+				= Global.extractPartPartOnlyFromPartFilelink(
 						candidateFilelink);
 
-			int candidateExercisePartNumber
-				= Global.getInt(candidateExercisePart);
-			if (candidateExercisePartNumber == exercisePartNumber) {
+			int candidatePartPartNumber
+				= Global.getInt(candidatePartPart);
+			if (candidatePartPartNumber == partPartNumber) {
 				correspondingCandidates.add(candidateFilelink);
 			}
 
@@ -5599,7 +5599,7 @@ public class Global {
 		int correspondingCandidates_index = correspondingCandidates.size();
 		if (correspondingCandidates_index > 1) {
 			if (Global.debug) {
-				System.out.println("Too many corresponding exercises"
+				System.out.println("Too many corresponding parts"
 						+ " found. There is no similarity algorithm"
 						+ " yet. So we take the first candidate.");
 			}
@@ -5608,30 +5608,30 @@ public class Global {
 		// As it's possible that the number is not enough we also
 		// check the other parts (splitter).
 		while (--correspondingCandidates_index > -1
-				&& correspondingExerciseFilelink == null) {
+				&& correspondingPartFilelink == null) {
 
 			String candidateFilelink = correspondingCandidates
 				.get(correspondingCandidates_index);
 			//String candidateFilename = Global
 			//	.extractFilename(candidateFilelink);
-			String candidateExercisePart = Global
-				.extractExercisePartOnlyFromExerciseFilelink(
+			String candidatePartPart = Global
+				.extractPartPartOnlyFromPartFilelink(
 						candidateFilelink);
 
 			/*
-			At this point the candidateExercisePartNumber and
-			the exercisePartNumber are equal.
+			At this point the candidatePartPartNumber and
+			the partPartNumber are equal.
 			*/
 			String[] parts
-				= candidateExercisePart.split(exercisePartNumber + "");
+				= candidatePartPart.split(partPartNumber + "");
 
-			String candidateExerciseSplitter
+			String candidatePartSplitter
 				= Global.extractSplitByFromFilelink(candidateFilelink);
-			String exerciseSplitter
-				= Global.extractSplitByFromFilelink(exercise_filelink);
+			String partSplitter
+				= Global.extractSplitByFromFilelink(part_filelink);
 
-			if (candidateExerciseSplitter.equals(exerciseSplitter)) {
-//				correspondingExerciseFilelink = candidateFilelink;
+			if (candidatePartSplitter.equals(partSplitter)) {
+//				correspondingPartFilelink = candidateFilelink;
 				return candidateFilelink;
 			}
 
@@ -5648,27 +5648,27 @@ public class Global {
 		So I think this will give incorrect results.
 		Next guess: (now the split criteria doesn't matter anymore,
 		we pick the next best that is not us and has the same ending.)
-		Assumption: Exercise sheet and corresponding solution sheet
+		Assumption: Part sheet and corresponding solution sheet
 		filename contain the same number.
-		And Exercise number/position is equal too.
+		And Part number/position is equal too.
 		*/
 		// IN PRINCIPLE EQUAL TO FIRST GUESS BUT MORE TOLERANT.
 //		String candidate = mothersheetFilelink + "__"
-//			+ exercisePart.replaceAll("", "");
+//			+ partPart.replaceAll("", "");
 //		for (Muster m : Muster.values()) {
 //
-//			// One is solution pattern the other exercise pattern?
-////			if (exercise_split_pattern.isSolutionPattern()
+//			// One is solution pattern the other part pattern?
+////			if (part_split_pattern.isSolutionPattern()
 ////						!= m.isSolutionPattern()) {
 //				// => Then this might be the corresponding filelink.
 //
 //				// Don't skip this pattern m because it's not the
 //				// same (impossible any TODO examine)?
 //				if (!m.name().equals(splitby)
-//						|| !m.equals(exercise_split_pattern)) {
+//						|| !m.equals(part_split_pattern)) {
 //
 //					candidate = mothersheetFilelink + "__"
-//						+ exercisePart.replaceAll(splitby, m.name());
+//						+ partPart.replaceAll(splitby, m.name());
 //					if (new File(Global.root + candidate).exists()) {
 //						return candidate;
 //						// <- best bet for the corresponding filelink.
@@ -5678,7 +5678,7 @@ public class Global {
 //
 //		}
 //		System.out.print("Could not find corresponding"
-//		+ " exercise/solution filelink if all equal but the split criteria.");
+//		+ " part/solution filelink if all equal but the split criteria.");
 //
 
 
@@ -5687,12 +5687,12 @@ public class Global {
 		/*
 		Next guess: (find system wide by searching either in the
 		filesystem or in the database. Generic.)
-		Assumption: Exercise sheet and corresponding solution sheet
+		Assumption: Part sheet and corresponding solution sheet
 		filename contain the same number.
-		And Exercise position number is equal too.
+		And Part position number is equal too.
 		*/
-		int exercise_number
-			= Global.extractExerciseNumberFromFilelink(exercisePart);
+		int part_number
+			= Global.extractPartNumberFromFilelink(partPart);
 		// It's been extracted anyway and yet we give the correct part.
 		char mothersheet_number = '0';
 		if (Global.isInt(mothersheetFilename)) {
@@ -5715,20 +5715,20 @@ public class Global {
 //				= Global.replaceEnding(mothersheetFilename
 //				.substring(0, number_position - 1), "");
 //		}
-//		sql = "SELECT filelink FROM exercise WHERE filelink LIKE '%"
+//		sql = "SELECT filelink FROM part WHERE filelink LIKE '%"
 //			+ TODO + "'";
 
 
 		String sheet_double_ending
 			= Global.extractEndingDouble(mothersheetFilelink);
-		String exercise_double_ending
-			= Global.extractEndingDouble(exercise_filelink);
-		//.*<sheet_number>.*<ending>[.]<ending>__Exercise_<exercise_number>.*[.]<ending>[.]<ending>
-		sql = "SELECT filelink FROM exercise"
-			+ " WHERE filelink <> '" + exercise_filelink + "'"
+		String part_double_ending
+			= Global.extractEndingDouble(part_filelink);
+		//.*<sheet_number>.*<ending>[.]<ending>__Part_<part_number>.*[.]<ending>[.]<ending>
+		sql = "SELECT filelink FROM part"
+			+ " WHERE filelink <> '" + part_filelink + "'"
 			+ " AND filelink REGEXP '.*" + mothersheet_number + ".*"
-			+ sheet_double_ending + "__Exercise_" + exercise_number
-			+ ".*" + exercise_double_ending + "$'";
+			+ sheet_double_ending + "__Part_" + part_number
+			+ ".*" + part_double_ending + "$'";
 
 		ResultSet res_corresponding_regexp = Global.query(sql);
 		while (res_corresponding_regexp != null
@@ -5742,11 +5742,11 @@ public class Global {
 			// isn't the corresponding file then but a redundant double
 			String candidate_type
 				= Global.extractTypeFromFilelink(candidate);
-			if (/*!candidate.equals(exercise_filelink)
+			if (/*!candidate.equals(part_filelink)
 			      <--already checked for in database query. &&*/
 					!candidate_type.equals(type)
 					&& !Global.extractFilename(candidate)
-					.equals(Global.extractFilename(exercise_filelink))
+					.equals(Global.extractFilename(part_filelink))
 					) {
 				return candidate;
 			}
@@ -5754,7 +5754,7 @@ public class Global {
 		}
 
 
-		return correspondingExerciseFilelink;
+		return correspondingPartFilelink;
 
 	}
 

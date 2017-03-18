@@ -681,7 +681,7 @@ public class UnixComandosThread extends Thread /* implements Runnable */ {
 
 		//TODO Invoke another class which takes the HTML file location
 		// as argument of the constructor and which performs the
-		// construction of the html to exercise interactive extraction
+		// construction of the html to part interactive extraction
 		// of the HTML content - hopefully maintaining style and
 		// formulas. (mathematical not chemical formulas so far;)
 	}

@@ -310,7 +310,7 @@ public class RTFProcessor extends TextMarkupProcessor {
 
 			System.out.println("Extracted content part: " + rtf);
 
-			// Increment earlier to write exercise 0 as 1 to disk.
+			// Increment earlier to write part 0 as 1 to disk.
 			d_index++;
 
 			// Store:

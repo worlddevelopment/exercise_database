@@ -36,30 +36,30 @@ import docx4j_library.DocxUtils;
 
 
 /**
- * A sheetdraft Exercise is defined by a resulting String extracted
+ * A sheetdraft Part is defined by a resulting String extracted
  * from the sheet it belonged to.
  *
  * @author J.R.I.Balzer-Wein, worlddevelopment
  *
  */
-public class Exercise extends ContentToImage {
+public class Part extends ContentToImage {
 
 
 	// ======= ATTRIBUTES
 //	private int sheetdraft_id;
-//	//private Sheetdraft sheetdraft_exercise_is_from;
-//	private String sheetdraft_filelink_exercise_is_from;//easier to keep integrity
+//	//private Sheetdraft sheetdraft_part_is_from;
+//	private String sheetdraft_filelink_part_is_from;//easier to keep integrity
 	/*
 	Now even easier: a method determines the sheetdraft_filelink on
-	the fly. This is possible because the filelink of the exercise
+	the fly. This is possible because the filelink of the part
 	contains the filelink to the sheetdraft it belongs to.
 	*/
 
 
 	// In content to image:
 	//private String filelink;
-	// Within the exercise filelink:
-	//private String sheetdraft_filelink = 0;//the exercise belongs to currently
+	// Within the part filelink:
+	//private String sheetdraft_filelink = 0;//the part belongs to currently
 	//private String originsheetdraft_filelink; better not store this
 	// => load it from db if needed via getOriginsheetdraftFromDB
 
@@ -67,15 +67,15 @@ public class Exercise extends ContentToImage {
 	 * From splitter/split by hint in the filelink we determine the
 	 * best fitting pattern of enum Muster.java.
 	 * We also first try to determine the pattern/Muster on the fly
-	 * with automatism for several exercise declarations.
+	 * with automatism for several part declarations.
 	 * The finally successful declarations with all the extra data
-	 * like line of file, ... will be stored here AND in the Exercise
+	 * like line of file, ... will be stored here AND in the Part
 	 * objects redundantly!
 	 * Of a splitby/splitter is given, determine best fitting declaration
 	 */
 	private Declaration splitbyDeclaration;
 
-	private String header; // Each exercise goes with individual formatting
+	private String header; // Each part goes with individual formatting
 	//private int is_native_format;// for joining here not needs be in D
 
 
@@ -126,30 +126,30 @@ public class Exercise extends ContentToImage {
 	Object sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
 	int sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index;
 
-	Object deepestAllExercisesCommonParentElement;
-	//Element deepestAllExercisesCommonParentElement;
+	Object deepestAllPartsCommonParentElement;
+	//Element deepestAllPartsCommonParentElement;
 	// The below can be used to find the one above, too:
 	// (is set while emergine)
-	Object deepestAllExercisesCommonParentElement_sChildContainingThisExercise;
+	Object deepestAllPartsCommonParentElement_sChildContainingThisPart;
 	//int elementsTraversed_deepestCommonParentElement_index;
-	//int elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index;
+	//int elementsTraversed_deepestCommonParentElement_sChildContainingThisPart_index;
 
-	// Required for being able to dive deeper to remove exercises that
+	// Required for being able to dive deeper to remove parts that
 	// share a branch (i.e. deepestParentElement_sChild)
-	// because several exercises could be spread across different tables
+	// because several parts could be spread across different tables
 	// and lists within a document.
 	// ArrayList for having an array underneath to get reliable and
 	// quick (constant time) index access.
 	List<Object> wayTowardsRoot = new ArrayList<Object>();
 
-	Object highestParentElementContainingThisExerciseOnly;
+	Object highestParentElementContainingThisPartOnly;
 
 
 	/**
 	 * Determines element reached when declaration finally was found in
 	 * the XML.
 	 *
-	 * Could be used on the exercise's XML too but currently is only
+	 * Could be used on the part's XML too but currently is only
 	 * used on the sheetdraft's markup. That's why the
 	 * sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
 	 * has the preceding 'sheetdraft'.
@@ -284,16 +284,16 @@ public class Exercise extends ContentToImage {
 			Have we found the Declaration in the native format markup
 			again?
 			Do not use match because point (.) could be contained e.g.
-			'1. Exercise' and would be interpreted as regex .,
+			'1. Part' and would be interpreted as regex .,
 			allowing to match things that must not match.
 			*/
 			if (textBuffer.toString().replaceAll("(\r\n)+|[\r\n]+", " ")
 					.replaceAll("[ ][ ]+", " ")
 					.contains(dec_plain_text)
-					&& !isThisElementAlreadyTheDeclarationOfAnotherExercise(o)) {
+					&& !isThisElementAlreadyTheDeclarationOfAnotherPart(o)) {
 				/*<-- if a similar declaration occurs twice, and one
 				of those before were of this kind, then we have to skip
-				the first occurrence in the exercise textBuffer and
+				the first occurrence in the part textBuffer and
 				match the second (Note: we should even then be aware that
 				there might be even more than two similar declarations,
 				so TODO skip a dynamic amount of declarations).
@@ -326,12 +326,12 @@ public class Exercise extends ContentToImage {
 
 
 
-//	public org.w3c.dom.Node getDeepestAllExercisesCommonParentElement() {
-//		return (deepestAllExercisesCommonParentElement_sChildContainingThisExercise)
+//	public org.w3c.dom.Node getDeepestAllPartsCommonParentElement() {
+//		return (deepestAllPartsCommonParentElement_sChildContainingThisPart)
 //				.getParentNode();
 //		if (elementsTraversed_deepestCommonParentElement_index < 1) {
 //			System.out.print(
-//				Global.addMessage("No deepest to all exercises common parent element has been looked for."
+//				Global.addMessage("No deepest to all parts common parent element has been looked for."
 //						+ "The index in all traversed elements currently is: " + elementsTraversed_deepestCommonParentElement_index, "danger")
 //			);
 //			return null;
@@ -342,13 +342,13 @@ public class Exercise extends ContentToImage {
 
 
 	/**
-	 * Deletes non-exercise related xml content and the then no longer
+	 * Deletes non-part related xml content and the then no longer
 	 * referenced refs.
 	 *
 	 * Called from Sheetdraft.java.
 	 *
 	 * @param sheetdraftDeepestCommonParentElement_index
-	 * @param exception <-- The deepest common parent element's child containing this exercise('s declaration).
+	 * @param exception <-- The deepest common parent element's child containing this part('s declaration).
 	 * @throws Exception
 	 */
 	public void deleteAllChildrenOfExceptFor(int sheetdraftDeepestCommonParentElement_index)
@@ -356,17 +356,17 @@ public class Exercise extends ContentToImage {
 		deleteAllChildrenOfExceptFor(sheetdraftDeepestCommonParentElement_index, null);
 	}
 	public void deleteAllChildrenOfExceptFor(int sheetdraftDeepestCommonParentElement_index
-			, Exercise exerciseSucceding)
+			, Part partSucceding)
 			throws Exception {
-		// As the elementsTraversed are equal for the exercise and the
+		// As the elementsTraversed are equal for the part and the
 		// sheetdraft the following is correct so that we can get the
 		// deepest common parent element despite aiming at the XML of
-		// this exercise:
+		// this part:
 		org.w3c.dom.Node candidate
 			= (org.w3c.dom.Node)sheetdraftElementsTraversed
 			.get(sheetdraftDeepestCommonParentElement_index);
 		if (candidate != ((org.w3c.dom.Node)
-					deepestAllExercisesCommonParentElement_sChildContainingThisExercise)
+					deepestAllPartsCommonParentElement_sChildContainingThisPart)
 				.getParentNode()) {
 			System.out.print(
 				Global.addMessage("DeleteAllChildrenNodesOfExceptFor discovered a discrepancy: Redebug this method!",
@@ -375,36 +375,36 @@ public class Exercise extends ContentToImage {
 		}
 		deleteAllChildrenOfExceptFor(
 				candidate,
-				// For all exercises individually determined while
+				// For all parts individually determined while
 				// emerging up while looking for the deepest to all
-				// exercises common parent(Safer than decrementing index)
-				(org.w3c.dom.Node) deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-				//<-- for each exercise determined while emerging up
-				// while looking for the deepest to all exercises
+				// parts common parent(Safer than decrementing index)
+				(org.w3c.dom.Node) deepestAllPartsCommonParentElement_sChildContainingThisPart
+				//<-- for each part determined while emerging up
+				// while looking for the deepest to all parts
 				// common parent element.
 				/* nolongerTODO For not cleanly formatted documents
 				 * check if this element still is available
-				 * in any other exercise's traversed elements list.
+				 * in any other part's traversed elements list.
 				 */
 				//, sheetdraftElementsTraversed.get(
 				//		sheetdraftDeepestCommonParentElement_index + 1)
-				, exerciseSucceding
+				, partSucceding
 		);
 	}
 
 
 
-	public void removeAllSiblingsOf(org.w3c.dom.Node deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-			, Exercise exerciseAfterThis) throws Exception {
-		deleteAllChildrenOfExceptFor(deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+	public void removeAllSiblingsOf(org.w3c.dom.Node deepestAllPartsCommonParentElement_sChildContainingThisPart
+			, Part partAfterThis) throws Exception {
+		deleteAllChildrenOfExceptFor(deepestAllPartsCommonParentElement_sChildContainingThisPart
 				.getParentNode()
-				, deepestAllExercisesCommonParentElement_sChildContainingThisExercise, exerciseAfterThis);
+				, deepestAllPartsCommonParentElement_sChildContainingThisPart, partAfterThis);
 	}
 
 
 
 	public void deleteAllChildrenOfExceptFor(org.w3c.dom.Node deepestCommonParentElement
-			, org.w3c.dom.Node exception, Exercise exerciseAfterThis)
+			, org.w3c.dom.Node exception, Part partAfterThis)
 			throws Exception {
 
 		if (deepestCommonParentElement == null) {
@@ -414,21 +414,21 @@ public class Exercise extends ContentToImage {
 
 		/*
 		DEPRECATED, now doing this when travelling down to
-		determine where exercise declaration can be found!
+		determine where part declaration can be found!
 
 		// Travel down to find the deepest element that o n l y
-		// contains this exercise and no other exercises anymore!
-		// because the deepestAllExercisesCommonParentElement
-		// containing all exercises does not imply that the child
-		// nodes only contain one exercise each!
-		boolean isElementContainingOneExerciseOnly;
-		isElementContainingOneExerciseOnly = false;
+		// contains this part and no other parts anymore!
+		// because the deepestAllPartsCommonParentElement
+		// containing all parts does not imply that the child
+		// nodes only contain one part each!
+		boolean isElementContainingOnePartOnly;
+		isElementContainingOnePartOnly = false;
 		int wayTowardsRoot_index;
 		wayTowardsRoot_index = wayTowardsRoot.size();// - 1;
-		while (!isElementContainingOneExerciseOnly
+		while (!isElementContainingOnePartOnly
 				&& --wayTowardsRoot_index > 0) {
 			// way _index equals zero once the element when the
-			// exercise declaration was found is reached.
+			// part declaration was found is reached.
 			// TODO at least that should be the case?
 			org.w3c.dom.Node parentElement;
 			if (wayTowardsRoot.get(wayTowardsRoot_index)
@@ -436,25 +436,25 @@ public class Exercise extends ContentToImage {
 				parentElement = (org.w3c.dom.Node) wayTowardsRoot
 					.get(wayTowardsRoot_index);
 			}
-			// Assumption that only one exercise is contained
+			// Assumption that only one part is contained
 			// (so this node is safe to be removed)
-			isElementContainingOneExerciseOnly = true;
+			isElementContainingOnePartOnly = true;
 			//for (org.w3c.dom.Node sibling : parentElement
 					//.getParentNode()
 					.getChildNodes().) {
-			for (Exercise exercise : sheetdraft.allExercisesRawContent
+			for (Part part : sheetdraft.allPartsRawContent
 					.values()) {
 				//if (sibling.equals(siblingToSpare)) {
 				//	continue;
 				//}
-				if (exercise.equals(this)) {
+				if (part.equals(this)) {
 					continue;
 				}
-				if (exercise.wayTowardsRoot.contains(parentElement)) {
-					isElementContainingOneExerciseOnly = false;
+				if (part.wayTowardsRoot.contains(parentElement)) {
+					isElementContainingOnePartOnly = false;
 					break;
 				}
-				//TODO save this first element where only exercise within
+				//TODO save this first element where only part within
 			}
 
 		}
@@ -473,10 +473,10 @@ public class Exercise extends ContentToImage {
 		SAXBuilder sax = new SAXBuilder();
 		Document doc
 			= sax.build(Global.getInputStream(filelink, "content.xml"));
-		TextDocument exercise_textDocument
+		TextDocument part_textDocument
 			= TextDocument.loadDocument(filelink);
-		org.w3c.dom.Node exercise_rootElement
-			= exercise_textDocument.getContentRoot();
+		org.w3c.dom.Node part_rootElement
+			= part_textDocument.getContentRoot();
 		*/
 
 
@@ -489,24 +489,24 @@ public class Exercise extends ContentToImage {
 
 
 
-		// First get the elements in the markup of this exercise
+		// First get the elements in the markup of this part
 		// filesystem representation.
 
 		// Start with root Element and find deepest common parent
 		// element again in this file:
-		//getDeepestAllExercisesCommonParentElement();
+		//getDeepestAllPartsCommonParentElement();
 		//= findDeepestCommonParentElementEquivalentRecursively(
 		//		doc.getRootElement()
 		//		, sheetdraftDeepestCommonParentElement);
 
 
 
-		if (exerciseAfterThis == null) {
-			// GUESS WHAT STILL BELONGS TO THE EXERCISE IF NOT ALL
-			// CONTENT OF THIS EXERCISE IS CONTAINED WITHIN ONE
+		if (partAfterThis == null) {
+			// GUESS WHAT STILL BELONGS TO THE PART IF NOT ALL
+			// CONTENT OF THIS PART IS CONTAINED WITHIN ONE
 			// XML-TAG!
 			// Remove all below/deeper than the deepest common parent
-			// element but not the exercise xml markup:
+			// element but not the part xml markup:
 			boolean keep_next_element_because_the_before_was_a_heading
 				= false;
 			//for (Element child : sheetdraftDeepestCommonParentElement
@@ -515,7 +515,7 @@ public class Exercise extends ContentToImage {
 				.getChildNodes();
 			for (int i = 0; i < childNodes.getLength(); i++) {
 				org.w3c.dom.Node child = childNodes.item(i);
-				// Spare the exception, that is the exercise that
+				// Spare the exception, that is the part that
 				// shall remain:
 				if (!child.equals(exception)) {
 
@@ -544,7 +544,7 @@ public class Exercise extends ContentToImage {
 					}
 
 					// Does this to a high probability belong the
-					// exercise declaration?
+					// part declaration?
 					if (keep_next_element_because_the_before_was_a_heading) {
 						// This time it was not a heading neither one
 						// of the standalone elements above?
@@ -556,7 +556,7 @@ public class Exercise extends ContentToImage {
 						continue;
 					}
 					//child.getParentNode().removeChild(child);
-					//this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+					//this.deepestAllPartsCommonParentElement_sChildContainingThisPart
 					//	getParentNode()
 					org.w3c.dom.Node deletedNode
 						= deepestCommonParentElement.removeChild(child);
@@ -568,19 +568,19 @@ public class Exercise extends ContentToImage {
 
 //					if (child instanceof org.odftoolkit.odfdom
 //							.dom.element.text.TextAElement) {
-//						this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+//						this.deepestAllPartsCommonParentElement_sChildContainingThisPart
 //							.getParentNode().removeChild((TextAElement)child);
 //					}
 //					else if (child instanceof org.odftoolkit.odfdom
 //							.dom.element.text.TextHElement) {
 //						((OfficeTextElement)(this
-//								.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+//								.deepestAllPartsCommonParentElement_sChildContainingThisPart
 //								.getParentNode()))
 //							.removeChild((TextHElement)child);
 //					}
 //					else if (child instanceof org.odftoolkit.odfdom
 //							om.element.text.TextPElement) {
-//						this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+//						this.deepestAllPartsCommonParentElement_sChildContainingThisPart
 //								.getParentNode().removeChild(
 //									(TextPElement)child);
 //					}
@@ -593,7 +593,7 @@ public class Exercise extends ContentToImage {
 					//deleteElementRecursively(child);
 				}
 				// Is this a heading? Then better keep the next
-				// p(aragraph) too as an exercise
+				// p(aragraph) too as an part
 				// will not exist in a heading alone!?
 				else {//child.getNodeName().equals("text:h")) {
 					keep_next_element_because_the_before_was_a_heading
@@ -604,12 +604,12 @@ public class Exercise extends ContentToImage {
 
 		}
 
-		// No follow up exercise given or this is the last one?
+		// No follow up part given or this is the last one?
 		else {
-			// USE THE GIVEN THIS EXERCISE FOLLOWING EXERCISE FOR
+			// USE THE GIVEN THIS PART FOLLOWING PART FOR
 			// ACCESS TO ITS DECLARATION ELEMENT.
-			boolean reachedThisExerciseDeclarationElement = false;
-			boolean reachedNextExerciseDeclarationElement = false;
+			boolean reachedThisPartDeclarationElement = false;
+			boolean reachedNextPartDeclarationElement = false;
 			//for (Element child : sheetdraftDeepestCommonParentElement
 			//		.getChildren()) {
 			if (deepestCommonParentElement.getChildNodes() == null) {
@@ -622,19 +622,19 @@ public class Exercise extends ContentToImage {
 			for (int i = 0; i < childNodes.getLength(); i++) {
 				org.w3c.dom.Node child = childNodes.item(i);
 
-				if (reachedThisExerciseDeclarationElement
-						/*&& !reachedNextExerciseDeclarationElement*/) {
+				if (reachedThisPartDeclarationElement
+						/*&& !reachedNextPartDeclarationElement*/) {
 					// ALREADY PERFORMED IN FOLLOWING CHECK
-					//if (child.equals(exerciseAfterThis.deepestAllExercisesCommonParentElement_sChildContainingThisExercise)) {
-						reachedNextExerciseDeclarationElment //= true;
-						= checkIfNextExerciseAlreadyReached(
-								child, child, exerciseAfterThis);
+					//if (child.equals(partAfterThis.deepestAllPartsCommonParentElement_sChildContainingThisPart)) {
+						reachedNextPartDeclarationElment //= true;
+						= checkIfNextPartAlreadyReached(
+								child, child, partAfterThis);
 //					}
 				}
-				//spare the exception, that is the exercise that shall remain
-				if (!child.equals(exception)/*Because once we reached the follow up exercise we can remove again.*/
-						&& (!reachedThisExerciseDeclarationElement
-							|| reachedNextExerciseDeclarationElement)) {
+				//spare the exception, that is the part that shall remain
+				if (!child.equals(exception)/*Because once we reached the follow up part we can remove again.*/
+						&& (!reachedThisPartDeclarationElement
+							|| reachedNextPartDeclarationElement)) {
 
 					/*
 					IF deletion of references that are no longer
@@ -680,16 +680,16 @@ public class Exercise extends ContentToImage {
 					//deleteElementRecursively(child);
 				}
 				else {
-					reachedThisExerciseDeclarationElement = true;
+					reachedThisPartDeclarationElement = true;
 					/*
-					Is the next exercise within the same branch as
-					this exercise?
+					Is the next part within the same branch as
+					this part?
 					Then we have reached begin and end of the elements
 					to spare at once and only have
 					to skip one element. The rest has to be removed.
 					*/
-					reachedNextExerciseDeclarationElement
-					= checkIfNextExerciseAlreadyReached(child, child, exerciseAfterThis);
+					reachedNextPartDeclarationElement
+					= checkIfNextPartAlreadyReached(child, child, partAfterThis);
 				}
 
 			}
@@ -705,7 +705,7 @@ public class Exercise extends ContentToImage {
 				, "content.xml");
 		*/
 		/*
-		exercise_textDocument.save(filelink);
+		part_textDocument.save(filelink);
 		*/
 
 
@@ -721,17 +721,17 @@ public class Exercise extends ContentToImage {
 	 * IT'S NOW A HELPER FUNCTION ONLY.
 	 *
 	 * The goal is to find the equivalent to the deepest to all
-	 * exercises common parent xml content element that is equivalent
-	 * to the sheetdraft one as initially the exercise's and
+	 * parts common parent xml content element that is equivalent
+	 * to the sheetdraft one as initially the part's and
 	 * sheetdraft's xml content is equal/the same.
 	 *
-	 * This is needed to delete or remove content from this exercise
+	 * This is needed to delete or remove content from this part
 	 * filesystem native format representation (e.g.
-	 * Exercise_1__splitby_INTDOT.odt.odt Note the last extension!).
+	 * Part_1__splitby_INTDOT.odt.odt Note the last extension!).
 	 *
 	 * @param element Starting at root element, recurring down the tree
 	 * @param sheetdraftElementToFindTheEqualOne The equivalent to
-	 * find in this exercise's xml.
+	 * find in this part's xml.
 	 * @return The element equivalent to
 	 * sheetdraftElementToFindTheEqualOneTo or null.
 	 */
@@ -791,7 +791,7 @@ public class Exercise extends ContentToImage {
 
 	public Declaration findDeclaration(String filelink)
 		throws Exception {
-		// Redetermine the declaration of this exercise:
+		// Redetermine the declaration of this part:
 		extractPlainText();
 		String splitter = Global.extractSplitByFromFilelink(filelink);
 		java.util.regex.Pattern splitterPattern = Global
@@ -801,29 +801,29 @@ public class Exercise extends ContentToImage {
 			.findDeclarationSets(getPlainText(), false);
 		/*
 		The problem is: the pattern is the same for all declarations
-		of one kind, ie. exercises or solutions
+		of one kind, ie. parts or solutions
 		or solutions. => we have to examine all possible declaration
 		sets not only the most successful one. The most successful
 		one might furthermore be different when looked for in the
-		exercise's text instead of on the sheetdraft's text.
+		part's text instead of on the sheetdraft's text.
 		*/
 		for (DeclarationSet declarationSet: declarationSets) {
 			// The pattern check can't go here nomore as the set's
-			// patterns are wildly mixed (exercise + solution).
+			// patterns are wildly mixed (part + solution).
 			for (Declaration d : declarationSet.declarations) {
-				// => Exercise or Solution? Does the pattern match?
+				// => Part or Solution? Does the pattern match?
 				if (d.getMatchedPattern().name()
 						.equalsIgnoreCase(splitter)
 						|| d.getMatchedPattern().getPattern()
 						.equals(splitterPattern)) {
 					/*<-- relevant only if more than one splitter found
 					and that would be a bad sign anyway as only one
-					exercise is expected.*/
+					part is expected.*/
 					return d;
 				}
 			}
 		}
-		System.out.println("No declaration could be found in exercise"
+		System.out.println("No declaration could be found in part"
 				+ " file : " + filelink);
 //				+ "\r\nNow deriving it from the splitby expression"
 //				+ " as stored in the filelink: ");
@@ -842,18 +842,18 @@ public class Exercise extends ContentToImage {
 
 
 	// ======= CONSTRUCTOR
-	// CREATE NEW EXERCISE.
-	public Exercise(String filelink) throws Exception {
-		// Redetermine the declaration of this exercise:
+	// CREATE NEW PART.
+	public Part(String filelink) throws Exception {
+		// Redetermine the declaration of this part:
 		this(filelink, Global.extractSplitByFromFilelink(filelink), "");
 		this.splitbyDeclaration = findDeclaration(filelink);
 	}
 
 
 
-	public Exercise(String filelink, String splitby, String header
+	public Part(String filelink, String splitby, String header
 			/*, Sheetdraft sheetdraft*/) throws FileNotFoundException {
-		// CREATE EXERCISE FROM DATABASE (plainText to be read from
+		// CREATE PART FROM DATABASE (plainText to be read from
 		// filesystem) if wee need sheetdraft filelink, here it is:
 		// getSheetdraftFilelink()
 		this(
@@ -871,10 +871,10 @@ public class Exercise extends ContentToImage {
 		);
 
 	}
-	public Exercise(String filelink, Declaration splitterDeclaration
+	public Part(String filelink, Declaration splitterDeclaration
 			, String header, long whencreated, long whenchanged
 			/*, Sheetdraft sheetdraft*/) throws FileNotFoundException {
-		// CREATE EXERCISE FROM DATABASE (plainText to be read from
+		// CREATE PART FROM DATABASE (plainText to be read from
 		// filesystem). If we need sheetdraft filelink, here it is:
 		// getSheetdraftFilelink()
 		this(
@@ -893,10 +893,10 @@ public class Exercise extends ContentToImage {
 
 
 
-	public Exercise(String filelink, Declaration splitterDeclaration
+	public Part(String filelink, Declaration splitterDeclaration
 			, String header
 			/*, Sheetdraft sheetdraft*/) throws FileNotFoundException {
-		// CREATE EXERCISE FROM DATABASE (plainText to be read from
+		// CREATE PART FROM DATABASE (plainText to be read from
 		// filesystem)
 		this(
 				filelink
@@ -914,10 +914,10 @@ public class Exercise extends ContentToImage {
 
 
 
-	public Exercise(String filelink, Declaration splitbyDeclaration
+	public Part(String filelink, Declaration splitbyDeclaration
 			, String[] plainText/*, String[] rawContent*/
 			, String header/*, Sheetdraft sheetdraft*/) {
-		// CREATE EXERCISE
+		// CREATE PART
 		this(
 				filelink
 				, splitbyDeclaration
@@ -933,7 +933,7 @@ public class Exercise extends ContentToImage {
 
 
 
-	public Exercise(/*String sheetdraft_id,*/ String filelink
+	public Part(/*String sheetdraft_id,*/ String filelink
 			/*, String originsheetdraft_filelink*/,
 			Declaration declarationSplitbySuccessfully
 			, String[] plainText/*, String[] rawContent*/
@@ -960,12 +960,12 @@ public class Exercise extends ContentToImage {
 
 		// Create files for rawContent and plainText.
 		// This 'redundancy' allows preview generation.
-		// Also online editing of exercises at a later point and still
+		// Also online editing of parts at a later point and still
 		// having the original document content in the original file.
 		//
 		// WARNING: THIS IMPLIES THAT CHANGES DON'T PROPAGATE UPWARDS
 		// TO THE SHEET. TODO: BUTTON FOR QUICKLY CREATING NEW DRAFT
-		// OUT OF THE MODIFIED EXERCISE.
+		// OUT OF THE MODIFIED PART.
 		File file = new File(filelink);
 		if (!file.exists()) {
 			//file.mkdirs();// ATTENTION:CREATES THE FILE AS DIRECTORY!
@@ -981,15 +981,15 @@ public class Exercise extends ContentToImage {
 
 	// ======= METHODS
 	/**
-	 * Prior to that you have to set the NEW filelink to this exercise
+	 * Prior to that you have to set the NEW filelink to this part
 	 * object!
 	 */
 	public void moveToNewFilelink(String newFilelink) {
 		// Update/set the filelink according to the sheetdraft's filelink!
 		this.setFilelink(newFilelink);
 
-		//Move the exercise files to the new location according to
-		//the newly set exercise-filelinks.
+		//Move the part files to the new location according to
+		//the newly set part-filelinks.
 		Global.renameFile(
 				Global.root + this.getFilelinkPrevious(),
 				Global.root + this.getFilelink()
@@ -1005,7 +1005,7 @@ public class Exercise extends ContentToImage {
 
 		Global.renameAllDerivativesOfFilelink(filelink, newFilelink);
 
-		System.out.println((Global.message += "*done* Exercise moved"));
+		System.out.println((Global.message += "*done* Part moved"));
 		System.out.println("----------------------------------------");
 
 
@@ -1015,7 +1015,7 @@ public class Exercise extends ContentToImage {
 
 	/**
 	 * Prior to that you have to set the NEW filelink to this
-	 * exercise object!
+	 * part object!
 	 * @throws SQLException
 	 * @throws IOException
 	 */
@@ -1023,12 +1023,12 @@ public class Exercise extends ContentToImage {
 		, IOException {
 
 		// Update the new filelinks in the database too.
-		System.out.println((Global.message += "Updating exercise"
+		System.out.println((Global.message += "Updating part"
 					+ " filelinks in database."));
 		System.out.println("----------------------------------------");
 		System.out.println((Global.message += "Checking if filelink"
 					+ " already exists in database."));
-		if (!Global.query("SELECT `filelink` FROM `exercise`"
+		if (!Global.query("SELECT `filelink` FROM `part`"
 					+ " WHERE `filelink` = '"
 					+ this.getFilelink() + "'").wasNull()) {
 			// Attention, query was NOT empty!
@@ -1038,7 +1038,7 @@ public class Exercise extends ContentToImage {
 			+ "' already exists in database.");
 			System.out.println("->Aborting ...");
 			System.out.println("=>Thus those databases will be joined.");
-			System.out.println("That means the database exercise"
+			System.out.println("That means the database part"
 					+ " filelink synchronization will be skipped."
 					+ " Thus the potential two candidates are joined!"
 					+ " Nevertheless this is no problem and could"
@@ -1049,13 +1049,13 @@ public class Exercise extends ContentToImage {
 
 		System.out.println("->GREEN, no problem, filelink is unique. *Done*");
 		System.out.println("----------------------------------------");
-		System.out.println("Updating the exercise's filelink.");
-		// update exercise
-		Global.query("UPDATE exercise SET filelink='"
+		System.out.println("Updating the part's filelink.");
+		// update part
+		Global.query("UPDATE part SET filelink='"
 				+ this.getFilelink() + "' " + " WHERE filelink='"
 				+ this.getFilelinkPrevious() + "' ");
-		// update draftexerciseassignment
-		Global.query("UPDATE draftexerciseassignment SET filelink='"
+		// update draftpartassignment
+		Global.query("UPDATE draftpartassignment SET filelink='"
 				+ this.getFilelink() + "' " + " WHERE filelink='"
 				+ this.getFilelinkPrevious() + "' ");
 
@@ -1089,24 +1089,24 @@ public class Exercise extends ContentToImage {
 
 
 	// This result can also be achieved via Global
-	// .extractSheetdraftFilelinkFromExerciseFilelink.
+	// .extractSheetdraftFilelinkFromPartFilelink.
 	public String getSheetdraftFilelinkFromId()
 		throws SQLException, IOException {
-		return Global.extractSheetdraftFilelinkFromExerciseFilelink(
+		return Global.extractSheetdraftFilelinkFromPartFilelink(
 				filelink);
 		// The below is only needed if IDs are used for sheetdrafts!
 		// Currently not the case!
 //		java.sql.ResultSet res =
 //		Global.query("SELECT sheetdraft.filelink"
-//				+ " FROM sheetdraft, exercise"
-//				+ " WHERE sheetdraft.id = exercise.sheetdraft_id");
+//				+ " FROM sheetdraft, part"
+//				+ " WHERE sheetdraft.id = part.sheetdraft_id");
 //		while (res.next()) {
 //			return res.getString("filelink");
 //		}
 //		// Tackle memory leaks by closing result set and its statement:
 //		Global.queryTidyUp(res);
 //
-//		Global.addMessage("No sheetdraft! Concerned exercise: "
+//		Global.addMessage("No sheetdraft! Concerned part: "
 //				+ filelink + ". Returning empty string.", "warning");
 //		return "";
 	}
@@ -1114,13 +1114,13 @@ public class Exercise extends ContentToImage {
 
 
 	// The entry in the database has once been stored using the
-	// Sheetdraft filelink from the generated exercise filelink
-	// at exercise creation/extraction time!
+	// Sheetdraft filelink from the generated part filelink
+	// at part creation/extraction time!
 	public String getOriginSheetdraftFilelink()
 		throws IOException, SQLException {
 		java.sql.ResultSet res =
 		Global.query("SELECT originsheetdraft_filelink"
-				+ " FROM exercise WHERE filelink = " //TODO missing '
+				+ " FROM part WHERE filelink = " //TODO missing '
 				+ this.getFilelinkRelative());
 		if (res != null && res.next()) {
 			return res.getString("originsheetdraft_filelink");
@@ -1129,7 +1129,7 @@ public class Exercise extends ContentToImage {
 		Global.queryTidyUp(res);
 
 		Global.addMessage("No originsheetdraft found in database:"
-				+ " Concerned exercise: "
+				+ " Concerned part: "
 				+ filelink + ". Returning empty string.", "warning");
 		return "";
 	}
@@ -1144,23 +1144,23 @@ public class Exercise extends ContentToImage {
 
 
 //	Declaration declaration;
-	DeclarationSet declarationsOfAllExercises;//for skipping the first occurrence of a declaration if there is a double (i.e. if one exercise exists twice or more often).
+	DeclarationSet declarationsOfAllParts;//for skipping the first occurrence of a declaration if there is a double (i.e. if one part exists twice or more often).
 	int levelDepth;
 //	public void setDeclaration(Declaration declaration) {
 //		this.declaration = declaration;
 //	}
-	public void setDeclarationsOfAllExercises(DeclarationSet declarationSet) {
-		this.declarationsOfAllExercises = declarationSet;
+	public void setDeclarationsOfAllParts(DeclarationSet declarationSet) {
+		this.declarationsOfAllParts = declarationSet;
 	}
 
 
 
-	private boolean isThisElementAlreadyTheDeclarationOfAnotherExercise(Object o) {
-		if (declarationsOfAllExercises == null) {
-			System.out.println("No declarations of other exercises given. So assuming there are no doubles.");
+	private boolean isThisElementAlreadyTheDeclarationOfAnotherPart(Object o) {
+		if (declarationsOfAllParts == null) {
+			System.out.println("No declarations of other parts given. So assuming there are no doubles.");
 			return false;
 		}
-		for (Declaration otherDeclaration : declarationsOfAllExercises.declarations) {
+		for (Declaration otherDeclaration : declarationsOfAllParts.declarations) {
 			if (otherDeclaration == this.splitbyDeclaration) {
 				continue;/*only other declarations are relevant*/
 			}
@@ -1299,7 +1299,7 @@ public class Exercise extends ContentToImage {
 				// Have we found the Declaration in the native format
 				// markup again?
 				// Do not use match because point (.) could be
-				// contained e.g. '1. Exercise' and would be
+				// contained e.g. '1. Part' and would be
 				// be interpreted as regex ., allowing to match
 				// things that must not match.
 				// TODO make possible to match things like 'Ue bung'
@@ -1307,9 +1307,9 @@ public class Exercise extends ContentToImage {
 				if (textBuffer.toString().replaceAll("(\r\n)+|[\r\n]+"
 							, " ").replaceAll("[ ][ ]+", " ")
 						.contains(dec_plain_text)
-						/* For exercises that are doubles of a
-						previous exercise: */
-						&& !isThisElementAlreadyTheDeclarationOfAnotherExercise(o)
+						/* For parts that are doubles of a
+						previous part: */
+						&& !isThisElementAlreadyTheDeclarationOfAnotherPart(o)
 						) {
 					/*
 					This is redundant because as we stop here the
@@ -1696,14 +1696,14 @@ public class Exercise extends ContentToImage {
 
 
 		/**
-		 * Deletes non-exercise related XML content and the then no
+		 * Deletes non-part related XML content and the then no
 		 * longer referenced refs.
 		 *
 		 * Called from Sheetdraft.java.
 		 *
 		 * @param sheetdraftDeepestCommonParentElement_index
 		 * @param exception The deepest common parent element's child
-		 * containing this exercise('s declaration).
+		 * containing this part('s declaration).
 		 * @throws Exception
 		 */
 		public void deleteAllChildrenOfExceptFor(
@@ -1717,14 +1717,14 @@ public class Exercise extends ContentToImage {
 
 		public void deleteAllChildrenOfExceptFor(
 				int sheetdraftDeepestCommonParentElement_index
-				, Exercise exerciseSucceding) throws Exception {
+				, Part partSucceding) throws Exception {
 
-			// As the elementsTraversed are equal for the exercise
+			// As the elementsTraversed are equal for the part
 			// and the sheetdraft the following is correcto so that
 			// we can get to the deepest common parent element despite
-			// aiming at this exercise's XML:
+			// aiming at this part's XML:
 			Child candidate = (Child) sheetdraftElementsTraversed.get(sheetdraftDeepestCommonParentElement_index);
-			if (candidate != ((Child)deepestAllExercisesCommonParentElement_sChildContainingThisExercise).getParent()) {
+			if (candidate != ((Child)deepestAllPartsCommonParentElement_sChildContainingThisPart).getParent()) {
 				System.out.print(Global
 						.addMessage("DeleteAllChildrenNodesOfExceptFor"
 							+ " discovered a discrepancy: Redebug this"
@@ -1734,29 +1734,29 @@ public class Exercise extends ContentToImage {
 			}
 			deleteAllChildrenOfExceptFor(
 					candidate,
-					// For all exercises individually determined while
+					// For all parts individually determined while
 					// emerging up while looking for the deepest to
-					// all exercises common parent.(safer than
+					// all parts common parent.(safer than
 					// decrementing index)
-					deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-					//<-- for each exercise determined while emerging
+					deepestAllPartsCommonParentElement_sChildContainingThisPart
+					//<-- for each part determined while emerging
 					// up while looking for the deepest to all
-					// exercises common parent element.
+					// parts common parent element.
 					/*
 					nolongerTODO For not cleanly formatted documents
 					check if this element is still available in any
-					other exercise's traversed elements list.
+					other part's traversed elements list.
 					*/
 					//, sheetdraftElementsTraversed.get(
 					//	sheetdraftDeepestCommonParentElement_index + 1)
-					, exerciseSucceding
+					, partSucceding
 			);
 		}
 
 
 
 		public void removeAllSiblingsOf(Object elementNotToRemove
-				, Exercise exerciseAfterThis)
+				, Part partAfterThis)
 				throws Exception {
 			/*
 			XmlUtils.unwrap only unwraps if it is a JAXBElement.
@@ -1768,7 +1768,7 @@ public class Exercise extends ContentToImage {
 						((Child)XmlUtils.unwrap(elementNotToRemove))
 						.getParent()
 						, elementNotToRemove
-						, exerciseAfterThis
+						, partAfterThis
 				);
 			}
 			//org.w3c.dom.Node
@@ -1778,7 +1778,7 @@ public class Exercise extends ContentToImage {
 
 
 
-		public void deleteAllChildrenOfExceptFor(Object parentElement, Object exception, Exercise exerciseAfterThis)
+		public void deleteAllChildrenOfExceptFor(Object parentElement, Object exception, Part partAfterThis)
 				throws Exception {
 
 			if (parentElement == null) {
@@ -1788,13 +1788,13 @@ public class Exercise extends ContentToImage {
 			}
 
 			/*
-			First get the elements in the markup of this exercise's
+			First get the elements in the markup of this part's
 			filesystem representation.
 			*/
 
 			// Start with root Element and find deepest common parent
 			// element again in this file
-			//getDeepestAllExercisesCommonParentElement();
+			//getDeepestAllPartsCommonParentElement();
 			//= findDeepestCommonParentElementEquivalentRecursively(
 			//		doc.getRootElement()
 			//		, sheetdraftDeepestCommonParentElement);
@@ -1805,20 +1805,20 @@ public class Exercise extends ContentToImage {
 
 			if (childNodes == null) {
 				System.out.println("ERROR:"
-						+ " deepestToAllExercisesCommonParentElement"
+						+ " deepestToAllPartsCommonParentElement"
 						+ "/parentElement has no childNodes!"
 						+ " deepestCommon: " + parentElement);
 				return ;
 			}
 
-			// No follow up exercise given or this is the last one?
-			if (exerciseAfterThis == null) {
-				// SOMEWHAT GUESS WHAT STILL BELONGS TO THE EXERCISE
-				// IF NOT ALL CONTENT OF THIS EXERCISE IS CONTAINED
+			// No follow up part given or this is the last one?
+			if (partAfterThis == null) {
+				// SOMEWHAT GUESS WHAT STILL BELONGS TO THE PART
+				// IF NOT ALL CONTENT OF THIS PART IS CONTAINED
 				// WITHIN ONE XML-TAG!
 
 				// Remove all below/deeper than the deepest common
-				// parent element but not the exercise xml markup:
+				// parent element but not the part xml markup:
 				boolean keep_next_element_because_the_before_was_a_heading
 					= false;
 				//for (Element child
@@ -1848,7 +1848,7 @@ public class Exercise extends ContentToImage {
 						System.out.println("No child node: o = " + o);
 						continue; // no child node available
 					}
-					// Spare the exception, that is the exercise that
+					// Spare the exception, that is the part that
 					// shall remain:
 					if ( !child.equals(XmlUtils.unwrap(exception)) ) {
 
@@ -1872,7 +1872,7 @@ public class Exercise extends ContentToImage {
 						}
 
 						// Does this to a high probability belong the
-						// the exercise declaration?
+						// the part declaration?
 						if (keep_next_element_because_the_before_was_a_heading) {
 							// This time it was not a heading neither
 							// one of the standalone elements above?
@@ -1885,7 +1885,7 @@ public class Exercise extends ContentToImage {
 							continue;
 						}
 						//child.getParentNode().removeChild(child);
-						//this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise.getParentNode()
+						//this.deepestAllPartsCommonParentElement_sChildContainingThisPart.getParentNode()
 						boolean deletedNode
 						// WORKING BUT THE LOOP IS NOT NECESSARY AS
 						// WE HAVE THE CORRESPONDING JAXBELEMENT
@@ -1906,20 +1906,20 @@ public class Exercise extends ContentToImage {
 
 	//					if (child instanceof org.odftoolkit.odfdom
 	//							.dom.element.text.TextAElement) {
-	//						this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+	//						this.deepestAllPartsCommonParentElement_sChildContainingThisPart
 	//							.getParentNode()
 	//							.removeChild((TextAElement)child);
 	//					}
 	//					else if (child instanceof org.odftoolkit.odfdom
 	//							.dom.element.text.TextHElement) {
 	//						((OfficeTextElement)(this
-	//								.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+	//								.deepestAllPartsCommonParentElement_sChildContainingThisPart
 	//								.getParentNode()))
 	//								.removeChild((TextHElement)child);
 	//					}
 	//					else if (child instanceof org.odftoolkit.odfdom
 	//							.dom.element.text.TextPElement) {
-	//						this.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+	//						this.deepestAllPartsCommonParentElement_sChildContainingThisPart
 	//							.getParentNode()
 	//							.removeChild((TextPElement)child);
 	//					}
@@ -1932,7 +1932,7 @@ public class Exercise extends ContentToImage {
 						//deleteElementRecursively(child);
 					}
 					// Is this a heading? Then better keep the next
-					// p(aragraph) too as an exercise
+					// p(aragraph) too as an part
 					// will not exist in a heading alone!?
 					else {//child.getNodeName().equals("text:h")) {
 						//<- else only now because if child equals
@@ -1947,10 +1947,10 @@ public class Exercise extends ContentToImage {
 
 
 			else {
-				// USE THE GIVEN THIS EXERCISE FOLLOWING EXERCISE FOR
+				// USE THE GIVEN THIS PART FOLLOWING PART FOR
 				// ACCESS TO ITS DECLARATION ELEMENT.
-				boolean reachedThisExerciseDeclarationElement = false;
-				boolean reachedNextExerciseDeclarationElement = false;
+				boolean reachedThisPartDeclarationElement = false;
+				boolean reachedNextPartDeclarationElement = false;
 				//for (Element child : sheetdraftDeepestCommonParentElement.getChildren()) {
 				for (int i = 0; i < childNodes.size(); i++) {
 					Object o = childNodes.get(i);
@@ -1978,24 +1978,24 @@ public class Exercise extends ContentToImage {
 					}
 
 
-					// Reached this exercise but not the next one?
-					if (reachedThisExerciseDeclarationElement
-							&& !reachedNextExerciseDeclarationElement
+					// Reached this part but not the next one?
+					if (reachedThisPartDeclarationElement
+							&& !reachedNextPartDeclarationElement
 							/* && !child.equals(this
 							.deepestElement_sChild  performance not
 							necessarily improved because we have too
 							many more comparisons! */
 							) {
-						reachedNextExerciseDeclarationElement
-						= checkIfNextExerciseAlreadyReached(o, child, exerciseAfterThis);
+						reachedNextPartDeclarationElement
+						= checkIfNextPartAlreadyReached(o, child, partAfterThis);
 					}
-					// Spare the exception, that is the exercise
+					// Spare the exception, that is the part
 					// that shall remain:
 					if (!child.equals(XmlUtils.unwrap(exception))
 							// Because once we reached the follow up
-							// exercise we can remove again.
-							&& (!reachedThisExerciseDeclarationElement
-								|| reachedNextExerciseDeclarationElement)
+							// part we can remove again.
+							&& (!reachedThisPartDeclarationElement
+								|| reachedNextPartDeclarationElement)
 							) {
 
 						/*
@@ -2045,17 +2045,17 @@ public class Exercise extends ContentToImage {
 						//deleteElementRecursively(child);
 					}
 					else {
-						reachedThisExerciseDeclarationElement = true;
+						reachedThisPartDeclarationElement = true;
 						/*
-						Is the next exercise within the same branch
-						as this exercise?
+						Is the next part within the same branch
+						as this part?
 						Then we have reached begin and end of the
 						elements to spare at once and only have to
 						one element. The rest has to be removed.
 						*/
-						reachedNextExerciseDeclarationElement
-						= checkIfNextExerciseAlreadyReached(
-								o, child, exerciseAfterThis);
+						reachedNextPartDeclarationElement
+						= checkIfNextPartAlreadyReached(
+								o, child, partAfterThis);
 					}
 
 				}
@@ -2066,7 +2066,7 @@ public class Exercise extends ContentToImage {
 
 			/*
 
-			exercise_textDocument.save(filelink);
+			part_textDocument.save(filelink);
 			 */
 
 
@@ -2074,32 +2074,32 @@ public class Exercise extends ContentToImage {
 
 
 
-//		public boolean checkIfNextExerciseAlreadyReached(
-//				Object o, Child child, Exercise exerciseAfterThis) {
+//		public boolean checkIfNextPartAlreadyReached(
+//				Object o, Child child, Part partAfterThis) {
 //			/*
-//			Check whether next exercise's declaration element's
+//			Check whether next part's declaration element's
 //			branch is already reached.
 //			*/
 //			// The simple case: Only within this level/depth.
-//			if ( child.equals(XmlUtils.unwrap(exerciseAfterThis
-//					.deepestAllExercisesCommonParentElement_sChildContainingThisExercise))
+//			if ( child.equals(XmlUtils.unwrap(partAfterThis
+//					.deepestAllPartsCommonParentElement_sChildContainingThisPart))
 //				) {
-//				//reachedNextExerciseDeclarationElement = true;
+//				//reachedNextPartDeclarationElement = true;
 //				// From this point it plays no role anymore what the
-//				// value of reachedThisExerciseDeclarationElement is.
+//				// value of reachedThisPartDeclarationElement is.
 //				return true;
 //			}
-//			else if (o.equals(exerciseAfterThis
-//					.highestParentElementContainingThisExerciseOnly)) {
-//				//reachedNextExerciseDeclarationElement = true;
+//			else if (o.equals(partAfterThis
+//					.highestParentElementContainingThisPartOnly)) {
+//				//reachedNextPartDeclarationElement = true;
 //				return true;
 //			}
 //			// Look throughout the child elements for the other
-//			// exercise highest only-one-exercise-containing element:
+//			// part highest only-one-part-containing element:
 //			else {
 //
-//				boolean isExerciseWithinThisBranch;
-//				isExerciseWithinThisBranch = false;
+//				boolean isPartWithinThisBranch;
+//				isPartWithinThisBranch = false;
 //
 //				//Object child_schild = child;
 //				//TODO: Perhaps better use recursion therefore put it
@@ -2123,23 +2123,23 @@ public class Exercise extends ContentToImage {
 //						.get(index);
 //
 //					// Cancel condition propagation from inner loop
-//					if (isExerciseWithinThisBranch) {
+//					if (isPartWithinThisBranch) {
 //						break;
 //					}
 //					if (child_schildNodes == null) {
 //						continue;
 //					}
 //					// Look within these child element nodes whether
-//					// other exercise is contained or not:
+//					// other part is contained or not:
 //					for (Object child_schild : child_schildNodes) {
 //						//for (Object wayelement
-//						//		: exerciseAfterThis.wayTowardsRoot) {
+//						//		: partAfterThis.wayTowardsRoot) {
 //						if ( XmlUtils.unwrap(child_schild)
 //								.equals(XmlUtils
-//									.unwrap(exerciseAfterThis
-//									.highestParentElementContainingThisExerciseOnly)
+//									.unwrap(partAfterThis
+//									.highestParentElementContainingThisPartOnly)
 //								) ) {//wayelement)) {
-//							isExerciseWithinThisBranch = true;
+//							isPartWithinThisBranch = true;
 //							break;
 //						}
 //
@@ -2158,8 +2158,8 @@ public class Exercise extends ContentToImage {
 //					child_schildNodesList.remove(child_schildNodes);
 //					--index;
 //				}
-//				if (isExerciseWithinThisBranch) {
-//					//reachedNextExerciseDeclarationElement = true;
+//				if (isPartWithinThisBranch) {
+//					//reachedNextPartDeclarationElement = true;
 //					return true;
 //				}
 //			}
@@ -2174,7 +2174,7 @@ public class Exercise extends ContentToImage {
 
 	/**
 	 * Helper for allowing w3c and jaxb to use the same
-	 * checkIfNextExerciseAlreadyReached function.
+	 * checkIfNextPartAlreadyReached function.
 	 * @param nodeList
 	 * @return An unordered List containing the ordered NodeList's nodes.
 	 */
@@ -2193,37 +2193,37 @@ public class Exercise extends ContentToImage {
 	 *
 	 * @param o		-- the parent node!?
 	 * @param child -- the child node (for convenience?).
-	 * @param exerciseAfterThis
-	 * @return true if next exercise already reached else false.
+	 * @param partAfterThis
+	 * @return true if next part already reached else false.
 	 */
-	public boolean checkIfNextExerciseAlreadyReached(Object o, Object child, Exercise exerciseAfterThis) {
+	public boolean checkIfNextPartAlreadyReached(Object o, Object child, Part partAfterThis) {
 		/*
-		Check if next exercise's declaration element's branch
+		Check if next part's declaration element's branch
 		is already reached.
 		*/
 		// The simple case: Only within this level/depth.
 		if (/*child instanceof Child && */child.equals(
-					XmlUtils.unwrap(exerciseAfterThis
-						.deepestAllExercisesCommonParentElement_sChildContainingThisExercise))
+					XmlUtils.unwrap(partAfterThis
+						.deepestAllPartsCommonParentElement_sChildContainingThisPart))
 				/*|| child instanceof org.w3c.dom.Node && not even
 				necessary, the same input object is returned if unwrap
 				couldn't detect it being of type JAXBElement. */
 				) {
-			//reachedNextExerciseDeclarationElement = true;
+			//reachedNextPartDeclarationElement = true;
 			// From this point on it plays no role anymore what the
-			// value of reachedThisExerciseDeclarationElement is.
+			// value of reachedThisPartDeclarationElement is.
 			return true;
 		}
-		else if (o.equals(exerciseAfterThis.highestParentElementContainingThisExerciseOnly)) {
-			//reachedNextExerciseDeclarationElement = true;
+		else if (o.equals(partAfterThis.highestParentElementContainingThisPartOnly)) {
+			//reachedNextPartDeclarationElement = true;
 			return true;
 		}
-		// Look throughout the child elements for the other exercise
-		// highest only-one-exercise-containing element:
+		// Look throughout the child elements for the other part
+		// highest only-one-part-containing element:
 		else {
 
-			boolean isExerciseWithinThisBranch;
-			isExerciseWithinThisBranch = false;
+			boolean isPartWithinThisBranch;
+			isPartWithinThisBranch = false;
 
 			//Object child_schild = child;
 			// TODO: Perhaps better use recursion therefore put it
@@ -2252,23 +2252,23 @@ public class Exercise extends ContentToImage {
 				child_schildNodes = child_schildNodesList.get(index);
 
 				// Cancel condition propagation from inner loop
-				if (isExerciseWithinThisBranch) {
+				if (isPartWithinThisBranch) {
 					break;
 				}
 				if (child_schildNodes == null) {
 					continue;
 				}
 				// Look within these child element nodes whether
-				// other exercise is contained or not:
+				// other part is contained or not:
 				for (Object child_schild : child_schildNodes) {
-					//for (Object wayelement : exerciseAfterThis
+					//for (Object wayelement : partAfterThis
 					//		.wayTowardsRoot) {
 					if ( XmlUtils.unwrap(child_schild)
 							.equals(
-								XmlUtils.unwrap(exerciseAfterThis
-									.highestParentElementContainingThisExerciseOnly)
+								XmlUtils.unwrap(partAfterThis
+									.highestParentElementContainingThisPartOnly)
 							) ) {//wayelement)) {
-						isExerciseWithinThisBranch = true;
+						isPartWithinThisBranch = true;
 						break;
 					}
 
@@ -2298,8 +2298,8 @@ public class Exercise extends ContentToImage {
 				child_schildNodesList.remove(child_schildNodes);
 				--index;
 			}
-			if (isExerciseWithinThisBranch) {
-				//reachedNextExerciseDeclarationElement = true;
+			if (isPartWithinThisBranch) {
+				//reachedNextPartDeclarationElement = true;
 				return true;
 			}
 		}

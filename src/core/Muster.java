@@ -14,27 +14,27 @@ import aufgaben_db.Global.SheetTypes;
  *
  * Solution support limitations:
  * * If there is only one type of
- * TODO Generalize to content part instead of exercise, solution.
+ * TODO Generalize to content part instead of part, solution.
  */
 public enum Muster {
 
 	/**
 	 * Patterns used for determining content part declarations of type:
-	 * SOLUTION (paired with EXERCISE)
+	 * SOLUTION (paired with PART)
 	 *
-	 * This is specific to sheets containing both exercise, solution
+	 * This is specific to sheets containing both part, solution
 	 * declarations mixed. If there are only solution declarations
 	 * then the solutions are written to files labelled as
-	 * ...__Exercise_<number>__... which is not correct but should
-	 * still allow to assign solutions to exercises as the type SOLUTION
+	 * ...__Part_<number>__... which is not correct but should
+	 * still allow to assign solutions to parts as the type SOLUTION
 	 * should have been chosen and stored during upload.
-	 * Warning: This depends on user input content part type (exercise
-	 * solution, civilization, ...) to be correct. Actually exercise
+	 * Warning: This depends on user input content part type (part
+	 * solution, civilization, ...) to be correct. Actually part
 	 * <-> solution is a paired content part.
 	 * TODO Model content part pairs into the existing design,generalize
 	 */
 	LOESUNG("L(oe|\u00F6)sung", PatternType.SOLUTION, "aufgabe"),
-	SOLUTION("Solution", PatternType.SOLUTION, "exercise"),
+	SOLUTION("Solution", PatternType.SOLUTION, "part"),
 	//CHARLOESUNG("[\\S]*loesung[\\S]*", /*kind*/0),// allow a prefix
 
 	LOESCOLON("^[Ll](oe|\u00F6)s[\\S]*[ ]*[\\d]*[:]"
@@ -52,15 +52,15 @@ public enum Muster {
 
 
 	/**
-	 * EXERCISE (Paired|complemented with SOLUTION):
+	 * PART (Paired|complemented with SOLUTION):
 	 *
 	 * TODO Allow more complements|tuple members.
 	 * TODO Allow extension without overriding using properties|interface?
 	 */
-	AUFGABE("Aufgabe", PatternType.EXERCISE, "loesung"),
-	EXERCISE("Exercise", PatternType.EXERCISE, "solution"),
+	AUFGABE("Aufgabe", PatternType.PART, "loesung"),
+	PART("Part", PatternType.PART, "solution"),
 	// Allow prefix, e.g. Uebungsaufgabe, Aufgabenteil, ...:
-	CHARUFGABE("[\\S]*ufgabe[\\S]*", PatternType.EXERCISE),
+	CHARUFGABE("[\\S]*ufgabe[\\S]*", PatternType.PART),
 
 
 
@@ -118,7 +118,7 @@ public enum Muster {
 		/* CONTENT CODED (text, media, ...) */
 		// Target specific content parts:
 		//@DEPRECATED
-		EXERCISE, // TODO Allow replacing it with CONTENT_SPECIFIC_*
+		PART, // TODO Allow replacing it with CONTENT_SPECIFIC_*
 		SOLUTION, // TODO Allow replacing it with CONTENT_SPECIFIC_*
 
 		// Note: hierarchical|markup (e.g. MD,ODT,DOCX,...) can also
@@ -214,12 +214,12 @@ public enum Muster {
 	 * Converts a numbering of another pattern to this pattern.
 	 *
 	 * @param new_numbering_but_not_converted
-	 * @param forced_new_exercise_position
+	 * @param forced_new_part_position
 	 * @return the converted numbering|index.
 	 */
 	public String convertNumbering(
 			String new_numbering_but_not_converted
-			, int forced_new_exercise_position) {
+			, int forced_new_part_position) {
 
 //		 if (this.isWordedPattern()) {
 //			 if (!numbering.contains(this.patternString)) {
@@ -228,7 +228,7 @@ public enum Muster {
 //		 }
 
 		/*
-		Usually the exercise number (exercise position in a sheet|draft)
+		Usually the part number (part position in a sheet|draft)
 		is not given and therefore often is null when
 		new_numbering_but_not_converted is a different numbering format
 		than INT. It is only given if we convert
@@ -240,7 +240,7 @@ public enum Muster {
 				, 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
 		};
 
-		if (forced_new_exercise_position != -1) {
+		if (forced_new_part_position != -1) {
 			// => convert forced_number from integer to character
 			// e.g. 1=>a, 2=>b, ...
 
@@ -259,7 +259,7 @@ public enum Muster {
 						= new_numbering_but_not_converted_chars[first_number_index];
 					if (Character.isLetter(candidate)) {
 						new_numbering_but_not_converted_chars[first_number_index]
-							= ("" + forced_new_exercise_position).charAt(0);
+							= ("" + forced_new_part_position).charAt(0);
 						// Convert char array to string on the fly:
 						return new String(new_numbering_but_not_converted_chars);
 						//return new_numbering_but_not_converted.replaceFirst(String.valueOf(candidate), replacement);
@@ -268,15 +268,15 @@ public enum Muster {
 				}
 			}
 /*
-			int exercise_position = -1;
-			while (++exercise_position < forced_new_exercise_position) {
+			int part_position = -1;
+			while (++part_position < forced_new_part_position) {
 				// How many digits? => 1 always. It's not possible to
 				// know which are on another level. And even more
 				// difficult say how many they are.
 				// Not relevant if only 1 digit! TODO: How many
 				// declarations per digit/level? A limit? Always ten|3?
 			}
-			exercise_position + 1;
+			part_position + 1;
 */
 			/*
 			At this point it's only interesting which type to deliver
@@ -304,9 +304,9 @@ public enum Muster {
 			// CHAR
 			if (Pattern.compile("^char").matcher(thisPattern).find()) {
 
-				if (forced_new_exercise_position < chars.length) {
+				if (forced_new_part_position < chars.length) {
 					numbering_converted += String.valueOf(
-							chars[forced_new_exercise_position - 1]);
+							chars[forced_new_part_position - 1]);
 				}
 
 			}
@@ -314,32 +314,32 @@ public enum Muster {
 			else if (Pattern.compile("^aufgabe").matcher(thisPattern)
 					.find()) {
 				numbering_converted += "Aufgabe "
-					+ forced_new_exercise_position;
+					+ forced_new_part_position;
 
 			}
-			// EXERCISE
-			else if (Pattern.compile("^exercise")
+			// PART
+			else if (Pattern.compile("^part")
 					.matcher(thisPattern).find()) {
-				numbering_converted += "Exercise "
-					+ forced_new_exercise_position;
+				numbering_converted += "Part "
+					+ forced_new_part_position;
 
 			}
 			// SOLUTION
 			else if (Pattern.compile("^solution").matcher(thisPattern)
 					.find()) {
 				numbering_converted += "Solution "
-					+ forced_new_exercise_position;
+					+ forced_new_part_position;
 
 			}
 			// LOESUNG
 			else if (Pattern.compile("^loesung").matcher(thisPattern)
 					.find()) {
-				numbering_converted += "L\u00F6sung " + forced_new_exercise_position;
+				numbering_converted += "L\u00F6sung " + forced_new_part_position;
 
 			}
 			// INT
 			else {
-				numbering_converted += forced_new_exercise_position;
+				numbering_converted += forced_new_part_position;
 			}
 
 
@@ -372,7 +372,7 @@ public enum Muster {
 			}
 
 
-			return String.valueOf(forced_new_exercise_position);
+			return String.valueOf(forced_new_part_position);
 
 		}
 		//else convert old to new declaration pattern.
@@ -394,7 +394,7 @@ public enum Muster {
 		}
 
 
-		// 1) get the exercise_position that corresponds to
+		// 1) get the part_position that corresponds to
 		// the new_but_not_converted_numbering.
 		/*
 		NOTE: THAT'S IMPOSSIBLE TO DERIVE. IF WE HAVE E.G. 1.3.4.
@@ -408,7 +408,7 @@ public enum Muster {
 		// Start from the right side with least important digit:
 		int digit = digit_count;
 		int number_system_base = 10; //=>int weight = 1, 10, 100, .. ;
-		int exercise_position = 0;
+		int part_position = 0;
 		while (--digit > -1) {
 			// seek it:
 			char candidate = new_numbering_but_not_converted.charAt(digit);
@@ -423,7 +423,7 @@ public enum Muster {
 			if (chars_index != -1 && chars_index < chars.length) {
 				// => it's a char!
 				//numbering_converted = TODO use for conversion directly
-				exercise_position += chars_index * (number_system_base ^ digit);
+				part_position += chars_index * (number_system_base ^ digit);
 				continue ;
 			}
 			//else it's an integer already hopefully, so check if it's not some other non-enlisted char:
@@ -433,7 +433,7 @@ public enum Muster {
 			}
 
 
-			exercise_position += chars_index * (number_system_base ^ digit);
+			part_position += chars_index * (number_system_base ^ digit);
 
 
 		}
@@ -452,7 +452,7 @@ public enum Muster {
 		target numbering pattern.
 		If, on the other hand, a new numbering is not specified
 		explicitely (thus it is not user defined|custom), then it
-		makes no sense to convert INTDOT exercises to 1.1, 1.2,2.1,2.2.
+		makes no sense to convert INTDOT parts to 1.1, 1.2,2.1,2.2.
 		Instead it is converted to 1.1, 1.2, 1.3, 1.4,... for INTDOTINT.
 		*/
 		String[] parts = null;
@@ -470,9 +470,9 @@ public enum Muster {
 				empties to the end but it does not matter for now. */
 		int numbers_index = -1;
 
-		// Forced a certain exercise position?
-		if (forced_new_exercise_position != -1) {
-			numbers = new int[] { forced_new_exercise_position };
+		// Forced a certain part position?
+		if (forced_new_part_position != -1) {
+			numbers = new int[] { forced_new_part_position };
 		}
 		// Get numbers out of splitted parts:
 		else {
@@ -484,7 +484,7 @@ public enum Muster {
 			case LOESUNG:
 			case SOLUTION:
 			case AUFGABE:
-			case EXERCISE:
+			case PART:
 				String relevant = new_numbering_but_not_converted
 					.replaceFirst("[Ll](oe|\u00F6)sung[ ]*", "");
 				relevant = new_numbering_but_not_converted
@@ -539,7 +539,7 @@ public enum Muster {
 			/*
 			For example to convert from 1.1, 1.2, 2. to 1., 2., 3., ...
 			it is required to know how many previous
-			exercises there have been.
+			parts there have been.
 			*/
 			switch (this) {
 
@@ -563,8 +563,8 @@ public enum Muster {
 				if (numbers_index != 0) {
 					numbering_converted += delimiter;
 				}
-				if (forced_new_exercise_position != -1) {
-					numbering_converted += forced_new_exercise_position;
+				if (forced_new_part_position != -1) {
+					numbering_converted += forced_new_part_position;
 					return numbering_converted;
 				}
 				numbering_converted += number;
@@ -585,7 +585,7 @@ public enum Muster {
 			case SOLUTION:
 			//case CHARLOESUNG:
 			case AUFGABE:
-			case EXERCISE:
+			case PART:
 			case CHARUFGABE:
 				if (numbers_index == 0) {
 					numbering_converted += Global.toFairy(delimiter);
@@ -739,9 +739,9 @@ public enum Muster {
 	// TODO Consider the new patterns.
 	// TODO Rename to isContentPatternGuaranteedIndexless or
 	// isContentPhraseFilterGuaranteedIndexless see also:
-	// https://github.com/worlddevelopment/exercise_database/issues/1
+	// https://github.com/worlddevelopment/part_database/issues/1
 	public boolean isWordedPattern() {
-//		if ( this.equals(AUFGABE | EXERCISE | CHARUFGABE | LOESUNG | SOLUTION) ) {
+//		if ( this.equals(AUFGABE | PART | CHARUFGABE | LOESUNG | SOLUTION) ) {
 		return this.patternString.toLowerCase().contains(
 				this.name().toLowerCase())
 			|| this.equals(CHARUFGABE);
@@ -766,7 +766,7 @@ public enum Muster {
 
 		case AUFGABE:
 			return 1000;
-		case EXERCISE:
+		case PART:
 			return 800;
 		case CHARUFGABE:
 			return 500;// <-It might be too risky to allow higher value.
@@ -822,7 +822,7 @@ public enum Muster {
 
 	/**
 	 * This is for quickly determining the Muster to a pattern if any.
-	 * e.g. for checking if a pattern is covered in the default repository of exercise declaration patterns.
+	 * e.g. for checking if a pattern is covered in the default repository of part declaration patterns.
 	 * @param pattern
 	 * @return
 	 */

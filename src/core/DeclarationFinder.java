@@ -6,7 +6,7 @@ import java.util.List;
 
 
 /**
- * Serves to find a exercise and solution declarations within a sheet.
+ * Serves to find a part and solution declarations within a sheet.
  *
  * @author Schweiner, J.R.I.B.-Wein, worlddevelopment
  *
@@ -17,7 +17,7 @@ public class DeclarationFinder {
 
 	/**
 	 * Searches the given sheetdraft using regular expressions (see
-	 * also Muster.java) for exercise declarations and puts them into
+	 * also Muster.java) for part declarations and puts them into
 	 * a the corresponding set of declarations (the possible candidates).
 	 *
 	 * Prerequisite:
@@ -57,7 +57,7 @@ public class DeclarationFinder {
 
 	/**
 	 * Searches the given sheetdraft using regular expressions (see
-	 * also Muster.java) for exercise declarations and puts them into
+	 * also Muster.java) for part declarations and puts them into
 	 * a the corresponding set of declarations (the possible candidates).
 	 *
 	 * Prerequisite:
@@ -145,7 +145,7 @@ public class DeclarationFinder {
 
 		// With all sets that feature a word match with the first word
 		// it is checked whether they are also followed by an index
-		// as it is expected for many gentle exercises.
+		// as it is expected for many gentle parts.
 		// (i.e. something like Aufgabe 1, Aufgabe 2 or Aufgabe 3.5 etc)
 //		for (DeclarationSet set: foundDeclarationSets) {
 //			set.clearWordedDeclarationsWithoutIndices();
@@ -157,7 +157,7 @@ public class DeclarationFinder {
 		// are in the correct sort order.
 		// Important: If not, then likely somewhere at the beginning of
 		// a line in the document there is a false candidate, e.g.
-		// an index that does not declare an exercise despite looking
+		// an index that does not declare an part despite looking
 		// as if it would.
 		// To mitigate it, a progressively increasing number of
 		// declarations is left out to check if the remaining
@@ -175,7 +175,7 @@ public class DeclarationFinder {
 
 		DeclarationSet setWithHighestScoreSolution = null;
 		/* = foundDeclarationSets.get(0); <-- null by default
-		Hence only exercise declarations are expected by default.*/
+		Hence only part declarations are expected by default.*/
 		DeclarationSet setWithHighestScore = null;
 		// = foundDeclarationSets.get(0);
 		double score = 0;
@@ -209,7 +209,7 @@ public class DeclarationFinder {
 			}
 			else {
 
-				// set of exercise declarations:
+				// set of part declarations:
 				if (setWithHighestScore == null
 						|| foundDeclarationSets.get(i).getScore()
 						> setWithHighestScore.getScore()) {
@@ -222,20 +222,20 @@ public class DeclarationFinder {
 		}
 
 
-		// Check if neither exercise nor solution have been found.
+		// Check if neither part nor solution have been found.
 		if (!(setWithHighestScore != null
 					|| setWithHighestScoreSolution != null)) {
-			System.out.println("Neither exercise nor solution found.");
+			System.out.println("Neither part nor solution found.");
 			return null;
 		}
 		// No solution declarations exist/ were found?
 		else if (setWithHighestScoreSolution == null) {
 			// => Then there is nothing to merge and we can return:
-			System.out.println("Exercise score: " + setWithHighestScore
+			System.out.println("Part score: " + setWithHighestScore
 					.getScore() + setWithHighestScore.getPattern());
 			return setWithHighestScore;
 		}
-		// No exercise declarations found?
+		// No part declarations found?
 		else if (setWithHighestScore == null) {
 			System.out.println("Solution score: "
 					+ setWithHighestScoreSolution.getScore()
@@ -244,8 +244,8 @@ public class DeclarationFinder {
 		}
 		//else
 
-		// both solutions and exercises exist. => we have to merge.
-		System.out.println("Exercise score: "
+		// both solutions and parts exist. => we have to merge.
+		System.out.println("Part score: "
 				+ setWithHighestScore.getScore()
 				+ setWithHighestScore.getPattern());
 		System.out.println("Solution score: "
@@ -254,21 +254,21 @@ public class DeclarationFinder {
 
 
 		/*
-		Merge both the exercise declarations and those for the solutions
+		Merge both the part declarations and those for the solutions
 		according to the line number where they were found.
 		If that's equal then the word count will be compared.
 		An earlier found declaration should come earlier in the merged
 		declaration list to keep order.
 		*/
-		DeclarationSet mergedExerciseAndSolutionDeclarationSet
+		DeclarationSet mergedPartAndSolutionDeclarationSet
 			= new DeclarationSet();
-		int setWithHighestScoreExercises_count = 0;
+		int setWithHighestScoreParts_count = 0;
 		int setWithHighestScoreSolutions_start_index = 0;
 		// In the end this must be equal to the set's size!
 
 		// Note: Here we use that each set's declarations are already
 		// sorted by occurrence, i.e. line number!
-		for (Declaration exercise_dec : setWithHighestScore
+		for (Declaration part_dec : setWithHighestScore
 				.declarations) {
 
 			// Examine the not-yet-stored-in-merged-set solutions'
@@ -285,39 +285,39 @@ public class DeclarationFinder {
 					.get(setWithHighestScoreSolutions_index);
 
 				// Is this solution occurring earlier in the text
-				// than the exercise declaration?
+				// than the part declaration?
 				// If it's equal then we have to examine the word count.
 				// (important if all decs were found in one single line)
 				if (solution_dec.getLineNumber()
-						< exercise_dec.getLineNumber()
+						< part_dec.getLineNumber()
 						/*TODO Add if required for all in a signle line:
-						  || solution_dec.getWordPriorToDeclarationCount() < exercise_dec.getWordPriorToDeclarationCount()*/) {
+						  || solution_dec.getWordPriorToDeclarationCount() < part_dec.getWordPriorToDeclarationCount()*/) {
 
 					// Then add/store the solution declaration.
-					mergedExerciseAndSolutionDeclarationSet.declarations.add(solution_dec);
+					mergedPartAndSolutionDeclarationSet.declarations.add(solution_dec);
 					// Increase the start index as this Declaration is
 					// now out/already stored:
 					++setWithHighestScoreSolutions_start_index;
 					// == dec_index + 1
 
-					//break;<-- check next exercise solution too.
+					//break;<-- check next part solution too.
 
 					/*
 					Too early to tell that the next solution is not
 					earlier too! (the occurrence should be followed
-					strictly no matter whether each exercise has a
+					strictly no matter whether each part has a
 					solution in the end or not.)
 					*/
 				}
-				// If instead the exercise occurred prior to this
+				// If instead the part occurred prior to this
 				// solution dec then we can stop examining solution
 				// decs as they are already sorted by occurrence.
 				else /*TODO if (solution_dec.getLineNumber()
-						> exercise_dec.getLineNumber())*/ {
-					break; // Only if the exercise is earlier than the
-					// solution, we stop to store the exercise.
+						> part_dec.getLineNumber())*/ {
+					break; // Only if the part is earlier than the
+					// solution, we stop to store the part.
 					// If both line numbers, i.e. occurrences, are equal
-					// then we prefer the exercise. TODO determine if
+					// then we prefer the part. TODO determine if
 					// this is rigid enough or whether we need to
 					// examine the word count too.
 				}
@@ -329,36 +329,36 @@ public class DeclarationFinder {
 
 			/*
 			Then now the earliest still available/non-stored
-			declaration is this exercise declaration,
+			declaration is this part declaration,
 			so we add/store it in the merged set:
 			*/
-			mergedExerciseAndSolutionDeclarationSet.declarations.add(exercise_dec);
+			mergedPartAndSolutionDeclarationSet.declarations.add(part_dec);
 
 		}
 
 
 		/*
 		Add missing solution declarations that have occurred later
-		than the last exercise (hence the loop stopped with some or all
+		than the last part (hence the loop stopped with some or all
 		the solution declarations still not having been added.):
 		*/
 		int solution_declarations_index
 		= setWithHighestScoreSolutions_start_index - 1; /* because we
 		increment instantly below in the while loop condition: */
 		while (++solution_declarations_index < setWithHighestScoreSolution.declarations.size()) {
-			mergedExerciseAndSolutionDeclarationSet.declarations.add(
+			mergedPartAndSolutionDeclarationSet.declarations.add(
 					setWithHighestScoreSolution.declarations.get(solution_declarations_index)
 			);
 		}
 
 
 		/*
-		At this point the merged Exercise And Solution Declaration Set
+		At this point the merged Part And Solution Declaration Set
 		should contain
 		all declarations in the order of occurrence in the plain text.
 		 */
 
-		return mergedExerciseAndSolutionDeclarationSet;
+		return mergedPartAndSolutionDeclarationSet;
 
 	}
 

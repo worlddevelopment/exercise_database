@@ -460,7 +460,7 @@ public class SQL_Methods{
 //
 //												out.print("<ul>");
 //
-//												String str_query5 = "SELECT DISTINCT filelink FROM exercise, sheetdraft, semester, course,lecturer,typ WHERE course.id =  sheetdraft.ver_id AND semester = '" + varvalue1 + "' AND course = '" +
+//												String str_query5 = "SELECT DISTINCT filelink FROM part, sheetdraft, semester, course,lecturer,typ WHERE course.id =  sheetdraft.ver_id AND semester = '" + varvalue1 + "' AND course = '" +
 //														varvalue2 +"' AND  sheetdraft.lecturer_id = lecturer.id AND semester.id =  sheetdraft.sem_id AND typ.id =  sheetdraft.typ_id AND name = '"+ varvalue3 + "' AND type = '" + varvalue4 + "';";
 //														ResultSet res5 = statement5.executeQuery(str_query5);
 //														j = i;
@@ -585,7 +585,7 @@ public class SQL_Methods{
 //
 //											out.print("<ul>");
 //
-//											String str_query5 = "SELECT DISTINCT filelink FROM exercise, sheetdraft, semester, course,lecturer,typ WHERE course.id =  sheetdraft.ver_id AND semester = '" + varvalue3 + "' AND course = '" +
+//											String str_query5 = "SELECT DISTINCT filelink FROM part, sheetdraft, semester, course,lecturer,typ WHERE course.id =  sheetdraft.ver_id AND semester = '" + varvalue3 + "' AND course = '" +
 //													varvalue2 +"' AND  sheetdraft.lecturer_id = lecturer.id AND semester.id =  sheetdraft.sem_id AND typ.id =  sheetdraft.typ_id AND name = '"+ varvalue1 + "' AND type = '" + varvalue4 + "';";
 //													ResultSet res5 = statement5.executeQuery(str_query5);
 //													j = i;
@@ -702,7 +702,7 @@ public class SQL_Methods{
 //
 //											out.print("<ul>");
 //
-//											String str_query5 = "SELECT DISTINCT filelink FROM exercise, sheetdraft, semester, course,lecturer,typ WHERE course.id =  sheetdraft.ver_id AND semester = '" + varvalue3 + "' AND course = '" +
+//											String str_query5 = "SELECT DISTINCT filelink FROM part, sheetdraft, semester, course,lecturer,typ WHERE course.id =  sheetdraft.ver_id AND semester = '" + varvalue3 + "' AND course = '" +
 //													varvalue1 +"' AND  sheetdraft.lecturer_id = lecturer.id AND semester.id =  sheetdraft.sem_id AND typ.id =  sheetdraft.typ_id AND name = '"+ varvalue2 + "' AND type = '" + varvalue4 + "';";
 //													ResultSet res5 = statement5.executeQuery(str_query5);
 //													j = i;
@@ -1026,10 +1026,10 @@ public class SQL_Methods{
 							/* LAST UL -BEGIN */
 							String lastUL = "<ul>";
 
-							// THIS IS FIXED - not dynamic! - exercise listing in table.ajax.jsp!
+							// THIS IS FIXED - not dynamic! - part listing in table.ajax.jsp!
 							// Here: sheetdraft listing of filelinks.
 							String str_query5 = "SELECT DISTINCT sheetdraft.filelink AS filelink"
-									+ " FROM /*exercise,*/ sheetdraft, lecturer" // List here all to be possibly joined tables, always!
+									+ " FROM /*part,*/ sheetdraft, lecturer" // List here all to be possibly joined tables, always!
 									+ " WHERE " + varname_chosen + " = '" + varvalue1 + "'"
 									+ " AND " + varname2 + " = '" + varvalue2 +"'"
 									+ " AND " + varname3 + " = '"+ varvalue3 + "'"
@@ -1062,7 +1062,7 @@ public class SQL_Methods{
 								lastUL += ("<a href='#' id='ajaxlink0" + j + "'"
 										+ " rel='" + Global.convertToImageLink(varvalue5_sheetdraft_filelink) + "'"
 										+ " class='screenshot'"
-										+ " onclick = \"ajax_get_listing_exercises("
+										+ " onclick = \"ajax_get_listing_parts("
 											+ "'" + varvalue5_sheetdraft_filelink + "'"
 											+ ", '" + varvaluesMap.get("lecturer") + "'"
 											//+ varvalue1 + "','" + varvalue2 + "','" + varvalue3
@@ -1133,7 +1133,7 @@ public class SQL_Methods{
 										+ ", (this.nextElementSibling ? this.nextElementSibling.nextElementSibling : this.nextSibling ? this.nextSibling.nextSibling : undefined)"
 										+ ", this"
 										+ ");"
-										// Hide all the possibly shown exercises listings (also loaded via ajax and cached as of v31.13):
+										// Hide all the possibly shown parts listings (also loaded via ajax and cached as of v31.13):
 										// They start with the same index as their mothersheet (j) with a preceding 0.
 										+ "for (var o, j_ = " + i + "; j_ < " + j + "; j_++) {"
 											+ "o = document.getElementById('ajaxlink0' + j_ + '_listing'); if (!o) continue/*return would cancel everything.*/; o.style.display='none';"

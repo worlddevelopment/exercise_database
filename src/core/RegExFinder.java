@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
  * Functionality from here is called from e.g. DeclarationFinder.
  * TODO As it uses isWordedPattern extensively, this needs to be
  * updated heavily following (best a bit more dynamic approach)
- * https://github.com/worlddevelopment/exercise_database/issues/1
+ * https://github.com/worlddevelopment/part_database/issues/1
  *
  * @author sabine, J.R.I. Balzer-Wein, worlddevelopment
  */
@@ -17,16 +17,16 @@ public class RegExFinder {
 
 
 	/**
-	50 exercises are a maximum to be expected, especially as this
+	50 parts are a maximum to be expected, especially as this
 	here only serves as a safety feature against the case that all
 	words of the document are within one line. If we assume that
 	multiple sheets or multiple pages of one sheet could produce
 	one line for each sheet/page, then this 10 page limit with each
-	3 exercises per page will be taken as an upper bound.
-	This results in 10 * 3 = 30 exercises to store. Now to be safe
+	3 parts per page will be taken as an upper bound.
+	This results in 10 * 3 = 30 parts to store. Now to be safe
 	10 * 5 = 50 is taken as upper bound.
 	*/
-	final static int EXERCISE_COUNT_EXPECTED_MAXIMUM_IF_ALL_TEXT_IN_ONE_LINE = 50;
+	final static int PART_COUNT_EXPECTED_MAXIMUM_IF_ALL_TEXT_IN_ONE_LINE = 50;
 
 
 
@@ -52,7 +52,7 @@ public class RegExFinder {
 						+ " empty! Aborting ...", "danger"));
 			return null;
 		}
-		// FIXME Hard coded: To cover e.g. 'Solution to Exercise 1:'
+		// FIXME Hard coded: To cover e.g. 'Solution to Part 1:'
 		int woerter_to_analyse_maximum = 4;
 		if (text.length == 1) {
 			// Then text extraction did not manage to insert line breaks!
@@ -62,10 +62,10 @@ public class RegExFinder {
 
 		int ergebnisFuerHashMap_length = text.length;
 		if (ergebnisFuerHashMap_length
-				< EXERCISE_COUNT_EXPECTED_MAXIMUM_IF_ALL_TEXT_IN_ONE_LINE
+				< PART_COUNT_EXPECTED_MAXIMUM_IF_ALL_TEXT_IN_ONE_LINE
 				) {
 			rgebnisFuerHashMap_length
-				EXERCISE_COUNT_EXPECTED_MAXIMUM_IF_ALL_TEXT_IN_ONE_LINE;
+				PART_COUNT_EXPECTED_MAXIMUM_IF_ALL_TEXT_IN_ONE_LINE;
 		}
 
 		if (muster.isWordedPattern()) {
@@ -94,7 +94,7 @@ public class RegExFinder {
 					}
 					System.out.println(message);
 					//if (wort.equals("")
-					///*&& TODO!emptyLineAcceptedAsExerciseSplitter*/)
+					///*&& TODO!emptyLineAcceptedAsPartSplitter*/)
 					//	continue;
 					Matcher matcher = pattern.matcher(wort);
 					gleich = matcher.matches();
@@ -158,7 +158,7 @@ public class RegExFinder {
 			// Because multiple sheets could be joined in one document:
 			// The heading on the new page has to be dismissed should
 			// it not match the declaration 1 as else this heading
-			// prevails, e.g. '1. (Exercise)' vs. '1. Uebungsblatt'.
+			// prevails, e.g. '1. (Part)' vs. '1. Uebungsblatt'.
 			int sheetheadingDeclaration_index = 0;
 
 			for (int zeile = 0; zeile < text.length; zeile++) {
@@ -237,7 +237,7 @@ public class RegExFinder {
 						because we need the doubles to remain because
 						otherwise there is no chance to detect the
 						sheetheading for documents where there are
-						multiple identical exercises, more sheetheadings.
+						multiple identical parts, more sheetheadings.
 						*/
 						if (is_this_a_double) {
 							/*
@@ -283,7 +283,7 @@ public class RegExFinder {
 
 		boolean moreLines = true;
 		String[] headWords;
-		// Skip short lines? Why? Exercise bodies could be short too so
+		// Skip short lines? Why? Part bodies could be short too so
 		// if we look for those this way it makes no sense.
 		//while (headWords.length < 5) {
 		// => nothing is skipped anymore, all lines are exermined
@@ -297,11 +297,11 @@ public class RegExFinder {
 		} catch (Exception e) {
 			moreLines = false;
 		}
-		// Now this is the first line where there are 6 or more words, so potentially the exercise body
+		// Now this is the first line where there are 6 or more words, so potentially the part body
 		if (!moreLines) {
 			// TODO Why <em>only</em> if there are more lines left? The
 			// content part's head should be independent of that!?
-			System.out.println("Warning: No more lines after exercise"
+			System.out.println("Warning: No more lines after part"
 					+ " declaration!");
 		}
 
@@ -323,11 +323,11 @@ public class RegExFinder {
 			, foundDeclarations, loopDeclaration) {
 
 		// One of the cases where the sheet's main heading
-		// (e.g. Exercisesheet xy) could be recognized as exercise?
+		// (e.g. Partsheet xy) could be recognized as part?
 		if (!muster.isWordedPattern()) {
 			/*
 			A solution for that is achieved by investigating the
-			numbers of 1st and 2nd exercise:
+			numbers of 1st and 2nd part:
 			*/
 			// Start with potentially removing the total first
 			// declaration (probably '1. Uebungsblatt').
@@ -341,10 +341,10 @@ public class RegExFinder {
 					.declarations.size() - 2;
 				// loopDeclaration is at position size() - 1
 
-				// Determine whether removing of a false exercise
+				// Determine whether removing of a false part
 				// declaration because of sheetheadings is required:
 				// only if the loopDeclaration is the immediately
-				// following one after the questionable exercise
+				// following one after the questionable part
 				// declaration that probably rather is a sheetdraft
 				// heading!
 				boolean removed_declaration;
@@ -362,12 +362,12 @@ public class RegExFinder {
 //							== foundDeclarations.declarations.get(1)
 //								.getIndex().getNumber(0)
 							) {
-					// Filter out headings like 9. Exercise, whenever
-					// the number is higher than the exercises start
+					// Filter out headings like 9. Part, whenever
+					// the number is higher than the parts start
 					// with.
 					// First check if it can be parsed to integer,
 					// then check if this parsed value is greater than
-					// the next exercise's numbering:
+					// the next part's numbering:
 					String wordContainingNumbering = foundDeclarations
 						.declarations.get(sheetheadingDeclaration_index)
 						.getWordContainingNumbering();
@@ -464,7 +464,7 @@ public class RegExFinder {
 					}
 
 					// Because it is desired to tolerate several
-					// exercises having the same enumeration number:
+					// parts having the same enumeration number:
 					//String first_word_previous = foundDeclarations
 					//	.declarations.get(index_of_previously_found_dec)
 					//	.getFirstWord();
@@ -480,7 +480,7 @@ public class RegExFinder {
 
 				// Now used because of the feature of multiple sheets
 				// in one document where after e.g. '1. Uebungsblatt',
-				// ..., '3. Exercise', '1. Uebungsblatt' reoccurs.
+				// ..., '3. Part', '1. Uebungsblatt' reoccurs.
 				// Then we need to filter out the '1. Uebungsblatt'
 				// again:
 				if (
@@ -490,7 +490,7 @@ public class RegExFinder {
 						/*
 						=> calling indexNumber is smaller
 						=> previous declaration found is smaller, e.g.
-						3. Exercise previously and now 1. Uebung
+						3. Part previously and now 1. Uebung
 						*/
 						//||
 						/*
@@ -500,7 +500,7 @@ public class RegExFinder {
 						which theoretically is possible.
 						i.e. transition from 2. Part to 8. Uebungsblatt
 						AND the other way round too e.g. transition
-						from 8. Exercise to 2. Uebungsblatt.
+						from 8. Part to 2. Uebungsblatt.
 
 						AS WELL AS transitions e.g.from 2.Part to 2.Sheet
 						(Only 2.Part to 3. is spared!, not 2. Part to 4.
@@ -511,7 +511,7 @@ public class RegExFinder {
 						/*
 						Note: The first number of the index is the
 						only important one here because x. Uebung
-						and x.1.1 Exercise, x.1.2 Exercise, ..
+						and x.1.1 Part, x.1.2 Part, ..
 						TODO Unless there is no x.y.z Sheet of course!
 						*/
 						/*
@@ -525,7 +525,7 @@ public class RegExFinder {
 						- loopDeclaration.getIndex().getNumber(0)
 						!= -1
 						) {
-					// Then the new exercise declaration candidate
+					// Then the new part declaration candidate
 					// to be removed - because it's a sheet heading
 					// instead - potentially is:
 					if (!is_this_a_double) {

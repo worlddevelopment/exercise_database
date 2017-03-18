@@ -40,8 +40,8 @@ public /*abstract*/ class ContentToImage {
 //	protected HttpServletResponse response;
 	/**
 	 * The filelink, an identifier for each object. It's unique!
-	 * i.e. exercise A has a filelink different from
-	 * exercise B or sheetdraft 1.
+	 * i.e. part A has a filelink different from
+	 * part B or sheetdraft 1.
 	 * It's not a static variable!
 	 */
 	protected String filelink;
@@ -58,7 +58,7 @@ public /*abstract*/ class ContentToImage {
 	//protected String[] rawContent;
 	/**
 	 * The lines of the file from the filesystem. The rawContent for
-	 * sheetdrafts is not in the DB, exercises are!
+	 * sheetdrafts is not in the DB, parts are!
 	 * It's not needed twice.
 	 */
 	protected String[] plainText; //<-- plain text is text only
@@ -514,7 +514,7 @@ public /*abstract*/ class ContentToImage {
 		else if (ending.equals("rtf")) {
 			this.plainText = RTFConverter.toPlainText(filelink);
 			if (this.getClass().toString().equals("Sheetdraft")) {
-				// Sheetdraft only! Not meant for exercises:
+				// Sheetdraft only! Not meant for parts:
 				System.out.println("Further handle the RTF file:");
 				new processors.RTFProcessor((Sheetdraft)this);
 			}

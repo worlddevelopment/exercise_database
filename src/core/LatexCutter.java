@@ -30,11 +30,11 @@ public class LatexCutter {
  * DeclarationSet.
  *
  * @param sheetdraft
- * @return ArrayList of the split result (exercises) with header
+ * @return ArrayList of the split result (parts) with header
  * and \begin | \end{document}, and in theory directly compilable.
  * @throws IOException
  */
-	public static ArrayList<Exercise> cutExercises(Sheetdraft sheetdraft) throws IOException {
+	public static ArrayList<Part> cutParts(Sheetdraft sheetdraft) throws IOException {
 
 		System.out.println("LatexCutter was called.");
 
@@ -44,18 +44,18 @@ public class LatexCutter {
 		int indexOfFirstIdentifier = 0;
 		int indexOfLastIdentifier = 0 ;
 		int indexOfBeginDoc = 0;
-//		File cutExercise;
+//		File cutPart;
 		int indexOfFirstCut = 0;
 		int indexOfLastCut = 0;
 		boolean lastIdentifierFound = false;
 
 
 		// ArrayList der zu schneidenen Aufgaben
-		ArrayList<Exercise> outputTexExercises = new ArrayList<Exercise>();
+		ArrayList<Part> outputTexParts = new ArrayList<Part>();
 
 		// Have no declarations been found in the sheet?.
 		if (sheetdraft.getDeclarationSet().declarations.size() == 0) {
-			return outputTexExercises;
+			return outputTexParts;
 		}
 
 		// Using the content part heads create a list with the line
@@ -126,26 +126,26 @@ public class LatexCutter {
 		}
 
 
-		// Create an exercise from the content inbetween two heads.
-		// Prepends and appends the header to every found exercise.
+		// Create an part from the content inbetween two heads.
+		// Prepends and appends the header to every found part.
 		// Store the found content parts.
 		for (int i = 0; i < linesToCut.size() - 1; i++) {
-			ArrayList<String> cutExercise = new ArrayList<String>();
+			ArrayList<String> cutPart = new ArrayList<String>();
 			// cut from current cut index to the next cut index.
 			for (int j = linesToCut.get(i); j < linesToCut.get(i + 1); j++ ) {
-				cutExercise.add(allTexLines[j]);
+				cutPart.add(allTexLines[j]);
 			}
 			// Prepend header to each TODO for performance add it first.
 			for (int j = header.size() - 1; j > -1; j--) {
-				cutExercise.add(0, header.get(j));
+				cutPart.add(0, header.get(j));
 			}
 			// Append end
-			cutExercise.add(new String("\\end{document}"));
+			cutPart.add(new String("\\end{document}"));
 
 			// Convert to an array
-			String[] exerciseText = new String[cutExercise.size()];
-			for (int j = 0; j < exerciseText.length; j++) {
-				exerciseText[j] = ersetzeUmlaute(cutExercise.get(j));
+			String[] partText = new String[cutPart.size()];
+			for (int j = 0; j < partText.length; j++) {
+				partText[j] = ersetzeUmlaute(cutPart.get(j));
 			}
 			Declaration dec = lineDecReference.get(linesToCut.get(i));
 			// Creating file for it on harddrive in writeToHarddisk.
@@ -155,36 +155,36 @@ public class LatexCutter {
 
 			// write to filesystem
 			String new_ex_filelink = sheetdraft
-				.getFilelinkForExerciseFromPosWithoutEnding(
+				.getFilelinkForPartFromPosWithoutEnding(
 					ex_count_and_pos, ex_count_and_pos)
 				+ sheetdraft.getFileEnding();
-			ReadWrite.write(exerciseText, new_ex_filelink);
+			ReadWrite.write(partText, new_ex_filelink);
 
-			// Create Exercise instance for eventual further handling.
-//			Exercise loopExercise = new Exercise(
+			// Create Part instance for eventual further handling.
+//			Part loopPart = new Part(
 //					new_ex_filelink
 //					, dec
-//					, exercisePlainText
-//					//, exerciseText
+//					, partPlainText
+//					//, partText
 //					, headermixture
 //			);
-//			outputTexExercises.add(loopExercise);
+//			outputTexParts.add(loopPart);
 
 		}
 
-		System.out.println("*done* LatexCutter: cutExercises");
-		return outputTexExercises;
+		System.out.println("*done* LatexCutter: cutParts");
+		return outputTexParts;
 	}
 
 
 
-	static void createImagesForExercises(Sheetdraft sheetdraft) throws FileNotFoundException {
-		createImagesForExercises(sheetdraft.getAllExercises().values());
+	static void createImagesForParts(Sheetdraft sheetdraft) throws FileNotFoundException {
+		createImagesForParts(sheetdraft.getAllParts().values());
 	}
 
-	static void createImagesForExercises(Collection<Exercise> exercises) throws FileNotFoundException {
-		for (Exercise exercise : exercises) {
-			Converter.tex2image(exercise.filelink);
+	static void createImagesForParts(Collection<Part> parts) throws FileNotFoundException {
+		for (Part part : parts) {
+			Converter.tex2image(part.filelink);
 		}
 	}
 

@@ -31,7 +31,7 @@ import org.apache.poi.hssf.usermodel.examples.NewSheet;
  *
  */
 
-public class ExerciseExtractor {
+public class PartExtractor {
 
 
 	/**

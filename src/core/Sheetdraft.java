@@ -66,14 +66,14 @@ import org.jdom2.Element;
 import org.junit.Assert;
 import org.jvnet.jaxb2_commons.ppp.Child;
 
-import aufgaben_db.Exercise.Docx4JTravelCallback;
+import aufgaben_db.Part.Docx4JTravelCallback;
 import aufgaben_db.LatexCutter;
 
 import org.odftoolkit.odfdom.pkg.OdfPackage;
 import org.odftoolkit.odfdom.pkg.OdfPackageDocument;
 import org.odftoolkit.simple.TextDocument;
 import org.odftoolkit.simple.text.Paragraph;
-/*For generating images from tex-chunks, i.e. LaTeX exercises.*/
+/*For generating images from tex-chunks, i.e. LaTeX parts.*/
 //import org.scilab.forge.jlatexmath.TeXConstants;
 //import org.scilab.forge.jlatexmath.TeXFormula;
 //import org.scilab.forge.jlatexmath.TeXIcon;
@@ -90,7 +90,7 @@ import aufgaben_db.DeclarationFinder;
 
 
 /**
- * A Draft is is a container for multiple exercises.
+ * A Draft is is a container for multiple parts.
  *
  * @author Jan R.I.B.-Wein, worlddevelopment
  *
@@ -132,19 +132,19 @@ public class Sheetdraft extends ContentToImage {
 	private Calendar whenchanged = Calendar.getInstance();
 
 	/**
-	 * For easy fetching of exercises using filelink as key.
+	 * For easy fetching of parts using filelink as key.
 	 * Store raw, plain text content parts separate for correct counting.
 	 */
-	private Map<String, Exercise> allExercisesPlainText
-		= new TreeMap<String, Exercise>();
+	private Map<String, Part> allPartsPlainText
+		= new TreeMap<String, Part>();
 
-	private Map<String, Exercise> allExercisesRawFormat
-		= new TreeMap<String, Exercise>();
+	private Map<String, Part> allPartsRawFormat
+		= new TreeMap<String, Part>();
 
-	private Map<String, Exercise> allExercisesCommonFormat
-		= new TreeMap<String, Exercise>();
+	private Map<String, Part> allPartsCommonFormat
+		= new TreeMap<String, Part>();
 
-	private Map<String, String> exerciseEndingsAsKeysSplitterAsValues
+	private Map<String, String> partEndingsAsKeysSplitterAsValues
 		= new HashMap<String, String>();
 
 
@@ -160,10 +160,10 @@ public class Sheetdraft extends ContentToImage {
 
 	/**
 	As in an ArrayList the order gets confused, store last found
-	Exercise explicitely.
-	(Needed for getting deepest all exercises' common parent element!)
+	Part explicitely.
+	(Needed for getting deepest all parts' common parent element!)
 	*/
-	private Exercise lastExercisePlainText;
+	private Part lastPartPlainText;
 
 
 
@@ -310,18 +310,18 @@ public class Sheetdraft extends ContentToImage {
 
 
 
-	public void loadAllExercises() throws SQLException, IOException {
+	public void loadAllParts() throws SQLException, IOException {
 		// Look for this sheetdraft's content parts (all formats):
 		ResultSet res = Global.query(
-				"SELECT * FROM exercise WHERE sheetdraft_filelink = '"+ filelink
+				"SELECT * FROM part WHERE sheetdraft_filelink = '"+ filelink
 				+"';");
 
 		while (res.next()) {
-			// For easy fetching of exercises by filelink as key.
-			allExercisesRawFormat.put(
+			// For easy fetching of parts by filelink as key.
+			allPartsRawFormat.put(
 				res.getString("filelink")
 					,
-				new Exercise(
+				new Part(
 //					res.getString("sheetdraft_id"),
 					res.getString("filelink")
 //					,res.getString("originsheetdraft_filelink")
@@ -352,27 +352,27 @@ public class Sheetdraft extends ContentToImage {
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public void synchronizeExercisesLocationToFilelink()
+	public void synchronizePartsLocationToFilelink()
 		throws SQLException, IOException {
 
-		//int exercisesL = this.getAllExercises().size();
+		//int partsL = this.getAllParts().size();
 		int i = 0;
-		for(Exercise e : this.getAllExercises().values()) {
+		for(Part e : this.getAllParts().values()) {
 
 			for (String ending
-					: this.exerciseEndingsAsKeysSplitterAsValues.keySet()
+					: this.partEndingsAsKeysSplitterAsValues.keySet()
 					) {
 				System.out.print(
 						(Global.message += "<br /><span>Moving"
-						+ " exercises with ending '" + ending
+						+ " parts with ending '" + ending
 						+ "'" +  " that were split by pattern:<br />\r\n"
-						+ this.exerciseEndingsAsKeysSplitterAsValues
+						+ this.partEndingsAsKeysSplitterAsValues
 						.get(ending))
 				);
 
 
 				// Update/set the filelink according to the sheetdraft's!
-				e.moveToNewFilelink(this.filelink + "__Exercise_" + (++i)
+				e.moveToNewFilelink(this.filelink + "__Part_" + (++i)
 						+ "__splitby_" + e.getSplitBy()
 						+ "." + e.getFileEnding());
 
@@ -399,7 +399,7 @@ public class Sheetdraft extends ContentToImage {
 
 	public void synchronizeDatabaseToThisInstance(
 			// whether to make this draft independent
-			boolean include_exercises_thus_possibly_copying_all_referenced_exercises)
+			boolean include_parts_thus_possibly_copying_all_referenced_parts)
 		throws IOException, SQLException {
 
 		// For determining whether this sheetdraft exists:
@@ -453,20 +453,20 @@ public class Sheetdraft extends ContentToImage {
 
 
 		// Include content parts?
-		if (include_exercises_thus_possibly_copying_all_referenced_exercises) {
+		if (include_parts_thus_possibly_copying_all_referenced_parts) {
 			/*
-			Add all exercises (including assigned ones) from this
-			instance to the DB as individual exercises, effectively
-			deleting assignments i.e. to table `exercise` and not
-			to `draftexerciseassignment`!
+			Add all parts (including assigned ones) from this
+			instance to the DB as individual parts, effectively
+			deleting assignments i.e. to table `part` and not
+			to `draftpartassignment`!
 
-			If no more draftexerciseassignments are left!
+			If no more draftpartassignments are left!
 			ATTENTION this can include related ones, i.e. those
 			assigned by reference which are in draftreferenceassignment.
 			*/
 			Global.addMessage("Synchronizing from an instance/object"
 					+ " to the DB not supported. (Would make"
-					+ " exercise assignments real standalone.)"
+					+ " part assignments real standalone.)"
 					, "nosuccess");
 
 		}
@@ -476,16 +476,16 @@ public class Sheetdraft extends ContentToImage {
 
 
 	/**
-	 * Synchronize with database, become identical, load all exercises.
+	 * Synchronize with database, become identical, load all parts.
 	 *
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public Sheetdraft synchronizeWithDatabaseBecomeIdenticalAndLoadAllExercises()
+	public Sheetdraft synchronizeWithDatabaseBecomeIdenticalAndLoadAllParts()
 		throws IOException, SQLException {
 
 		return synchronizeWithDatabaseLoadFromItBecomeIdentical()
-				.loadAssignedAndReferencedSingleSourceExercisesFromDatabase();
+				.loadAssignedAndReferencedSingleSourcePartsFromDatabase();
 
 	}
 
@@ -525,7 +525,7 @@ public class Sheetdraft extends ContentToImage {
 		other sheetdraft given.
 
 		Of course if this sheet/draft's filelink already exists in the
-		database then this will simply load all exercises.
+		database then this will simply load all parts.
 		*/
 		// Synchronize the draft with itself:
 		// Create a new draft in database:
@@ -628,7 +628,7 @@ public class Sheetdraft extends ContentToImage {
 	(3)
 	While semester could be updated to the new one, because this
 	would make life easy for lecturers/authors to take over old
-	exercise sheets to a new location, unfortunately this REQUIRED
+	part sheets to a new location, unfortunately this REQUIRED
 	copy by reference.
 	So this (3) is not implemented yet, and it would not be useful
 	really because of this application not being for students but
@@ -643,12 +643,12 @@ public class Sheetdraft extends ContentToImage {
 	useful for sheets but it is definitely good for drafts, containing
 	a mix of other sheets/drafts or being a collection of many sheets
 	|drafts in one document.
-	Then these loaded exercises may be assigned in
-	draftexerciseassignment or simply get dropped.
+	Then these loaded parts may be assigned in
+	draftpartassignment or simply get dropped.
 
-	=> This method loads allExercises of a sheetdraft to a (1) draft.
+	=> This method loads allParts of a sheetdraft to a (1) draft.
 	This method can be called several times in a row to collect more
-	exercises until one thinks it is ready.
+	parts until one thinks it is ready.
 	*/
 //	public Sheetdraft synchronizeWithDatabaseLoadFromIt(
 //			int this_or_foreign_id_to_copy_from)
@@ -729,7 +729,7 @@ public class Sheetdraft extends ContentToImage {
 	 */
 	private boolean wereDeclarationsFound() {
 
-		// Already looked for exercise declarations?
+		// Already looked for part declarations?
 		if (this.getDeclarationSet().declarations == null) {
 			Global.addMessage("Declarations were null. (Look into"
 					+ " DeclarationFinder to debug.)"
@@ -739,7 +739,7 @@ public class Sheetdraft extends ContentToImage {
 			this.declarationSet
 				= DeclarationFinder.findeDeklarationen(this);
 		}
-		// Any exercise declarations found?
+		// Any part declarations found?
 		if (this.getDeclarationSet().declarations.size() == 0) {
 			Global.addMessage("Sheet or Draft was not splittable"
 					+ " because no Declarations were found."
@@ -747,7 +747,7 @@ public class Sheetdraft extends ContentToImage {
 			return false;
 		}
 
-		// Exercise declarations were found!
+		// Part declarations were found!
 		return true;
 
 	}
@@ -757,51 +757,51 @@ public class Sheetdraft extends ContentToImage {
 	// ------- SHEETDRAFT ONLY METHODS
 
 	/**
-	 * EXTRACT EXERCISES PLAIN TEXT
+	 * EXTRACT PARTS PLAIN TEXT
 	 *
 	 * @throws IOException
 	 */
-	public void extractExercisesPlainText() throws IOException {
+	public void extractPartsPlainText() throws IOException {
 
 		// Sheets, in denen keine Deklarationen gefunden wurden, abfangen
-		// because they are not splittable into exercises.
+		// because they are not splittable into parts.
 		if(!wereDeclarationsFound()) {
 			return ;
 		}
 
 
-		// Creation of exercise objects to store in the sheet's map.
-		extractExercisesFromPlainText();
+		// Creation of part objects to store in the sheet's map.
+		extractPartsFromPlainText();
 
 	}
 
 
 
 	/**
-	 * EXTRACT EXERCISES RAW/NATIVE FORMAT
+	 * EXTRACT PARTS RAW/NATIVE FORMAT
 	 *
 	 * @throws Exception
 	 */
-//	public void extractExercisesNativeFormat() throws Exception {
-//		extractExercisesNativeFormat(null);
+//	public void extractPartsNativeFormat() throws Exception {
+//		extractPartsNativeFormat(null);
 //	}
-	public void extractExercisesNativeFormat(
+	public void extractPartsNativeFormat(
 			/*String force_source_filelink*/) throws Exception {
 
 		/*
 		DANGER: IT'S A REAL PROBLEM TO DETERMINE THE NATIVE FILETYPE
-		EXERCISE CONTENTS BY USING THE PLAIN TEXT LINE NUMBERS.
+		PART CONTENTS BY USING THE PLAIN TEXT LINE NUMBERS.
 		IS IT GUARANTEED THAT THE LINES ARE EQUIVALENT?
 		INSTEAD WE LOOK FOR THE XML NODE THAT CONTAINS THE DECLARATION.
 		TODO To support markup declarations the node surrounding also
 		needs be evaluated, see also
-		https://github.com/worlddevelopment/exercise_database/issues/1
+		https://github.com/worlddevelopment/part_database/issues/1
 
 		NOTE: Not storing raw|native content in the DB. Plain text is.
 		*/
 
 
-		// Is this sheet not splittable into exercises?
+		// Is this sheet not splittable into parts?
 		if(!wereDeclarationsFound()) {
 			return ;
 		}
@@ -809,33 +809,33 @@ public class Sheetdraft extends ContentToImage {
 //		if (force_source_filelink != null
 //				&& new File(force_source_filelink).exists()) {
 //			System.out.println("Using forced source filelink to"
-//					+ " extract exercises from instead of "
+//					+ " extract parts from instead of "
 //					+ " native format: " + force_source_filelink
 //					+ "\r\nInstead of: " + this.filelink);
 //			filelink = force_source_filelink;
 //		}
 //
-		// CREATION OF EXERCISES IN THE ORIGINAL FILE FORMAT
-		// Link to the individual .type exercises is stored in
-		// the exercise map (as keys).
+		// CREATION OF PARTS IN THE ORIGINAL FILE FORMAT
+		// Link to the individual .type parts is stored in
+		// the part map (as keys).
 		String ending = Global.extractEnding(filelink);
 		// DOC
 		if (ending.equals("doc")) {
-			extractExercisesFromDOC();
+			extractPartsFromDOC();
 		}
 		// DOCX
 		else if (ending.equals("docx")) {
 			// 1) The DOCX WordprocessingML object.
 			/*
 			Use HWPF Apache POI or DOCX4J for special tasks like
-			exercise creation.
+			part creation.
 			1) Instantiate object repr according to/for each filetype.
 			2) Find the content of the declarations in raw content.
 			3) Extract dependent XML-tags, refs, ... to another file.
 			4) Store this filelink. Eventually store the
-			sheetdraft-exercise relationship in the DB.
+			sheetdraft-part relationship in the DB.
 			*/
-			extractExercisesFromDOCX();
+			extractPartsFromDOCX();
 
 		}
 		// HTML
@@ -843,15 +843,15 @@ public class Sheetdraft extends ContentToImage {
 			/*
 			TODO Do for other formats too? For the HTML base (due to
 			thesis) currently only HTML is necessary as it's the only
-			flavour the exercises are extracted from.
+			flavour the parts are extracted from.
 			*/
-			extractExercisesFromHTML(filelink);
+			extractPartsFromHTML(filelink);
 		}
 		// ODT (OpenDocumentFormat Text)
 		else if (ending.equals("odt")) {
-			//extractExercisesFromODT();
-			//extractExercisesFromODT_ODFToolkit();
-			extractExercisesFromODT_ODFToolkitSimpleAPI();
+			//extractPartsFromODT();
+			//extractPartsFromODT_ODFToolkit();
+			extractPartsFromODT_ODFToolkitSimpleAPI();
 
 		}
 		// PDF
@@ -860,57 +860,57 @@ public class Sheetdraft extends ContentToImage {
 			// 2) Same as text files.
 			// OR
 			// 1) Convert to xHTML/tex.
-			// 2) Extract exercises like in tex/html.
-			extractExercisesFromPDF();
+			// 2) Extract parts like in tex/html.
+			extractPartsFromPDF();
 		}
 		// RTF
 		else if (ending.equals("rtf")) {
-			extractExercisesFromRTF();
+			extractPartsFromRTF();
 		}
 		// TEX
 		else if (ending.equals("tex")) {
 			// At this point a pdf file has to be generated again? TODO
 			// Similar to the plain text version, but look for begin
 			// and end tags.
-			this.setExercises(LatexCutter.cutExercises(this));
-			// Method 1) Generate PDFs out of the exercises. Then create image from these PDFs.
+			this.setParts(LatexCutter.cutParts(this));
+			// Method 1) Generate PDFs out of the parts. Then create image from these PDFs.
 			// TODO
 			// Method 2) Create an image out of the chunk of LaTex using e.g. JLatexMath/SnuggleTex,JEuclid
-			LatexCutter.createImagesForExercises(this);
+			LatexCutter.createImagesForParts(this);
 
 		}
 		// TXT
 		else if (ending.equals("txt")) {
 			// Identical to the plain text version.
-			if (allExercisesPlainText != null) {
-				allExercisesRawFormat = allExercisesPlainText;
+			if (allPartsPlainText != null) {
+				allPartsRawFormat = allPartsPlainText;
 			}
 			else {
 				/*
 				This case not really exists because in the plain text
-				exercise extraction the exercise declarations get found
+				part extraction the part declarations get found
 				*/
-				extractExercisesPlainText();
-				allExercisesRawFormat = allExercisesPlainText;
+				extractPartsPlainText();
+				allPartsRawFormat = allPartsPlainText;
 			}
 		}
 //		else if (ending.equals("php")) {
 			/*
-			PHP IS REALLY NOT USEFUL FOR EXERCISE SHEETS, ONLY FOR
+			PHP IS REALLY NOT USEFUL FOR PART SHEETS, ONLY FOR
 			PARSING/GENERATION OF SUCH SHEETS.
 			*/
 			// THE FOLLOWING RATHER BELONGS TO THE extractPlainText method:
 //			// 1) Remove/convert php related to HTML output.
 //			//TODO
 //			String html_only = "";
-//			// 2) Same as html exercise extraction. (see below)
+//			// 2) Same as html part extraction. (see below)
 //			String txt_only = html_only;
 //			// 3) Now treat it like the txt-File.
-//			this.setExercisesMap(extractExercisesFromPlainText(txt_only));
+//			this.setPartsMap(extractPartsFromPlainText(txt_only));
 //		}
 
 
-		Global.addMessage("Extracted exercises in raw format from " + filelink + ".", "success");
+		Global.addMessage("Extracted parts in raw format from " + filelink + ".", "success");
 	}
 
 
@@ -927,182 +927,182 @@ public class Sheetdraft extends ContentToImage {
 
 
 	/*
-	For each exercise(declaration) we store the way in the XML tree
+	For each part(declaration) we store the way in the XML tree
 	we took to get to this declaration in the markup.
-	Walk up the tree one by one in the waypath of THE LAST exercise
+	Walk up the tree one by one in the waypath of THE LAST part
 	to check if this same Element is in the waypath of the others too!
 	If this Element is in the waypath of the others, then we have
-	reached the parent Element of the exercises, that is the Element
+	reached the parent Element of the parts, that is the Element
 	that is the highest common/same Element containing these two
 	(or in an ideal/well created/structured/formatted document all)
-	exercises.
+	parts.
 	Check via .contains(Element) or indexOf(Element).
 	*/
 
 	/**
-	 * Determines the common parent of all exercises to know where
-	 * we have to split the document to get the exercises completely.
+	 * Determines the common parent of all parts to know where
+	 * we have to split the document to get the parts completely.
 	 *
-	 * Also the way up from the element node where the exercise
+	 * Also the way up from the element node where the part
 	 * declarations were found is revealed up to the
 	 * deepestCommonParent element. This way is stored!
 	 * This is necessary to provide means to determine the
 	 * highest still 'non-common' parent element of each
-	 * exercise (declaration). As this element is expected
-	 * between the deepest common parent of the exercise's
+	 * part (declaration). As this element is expected
+	 * between the deepest common parent of the part's
 	 * declarations and the elementWhereDeclarationWasFound
 	 * to store this partial tree only creates no problems and
 	 * the highest non-common element of one and only one
-	 * exercise declaration.
+	 * part declaration.
 	 *
-	 * @return The deepest common parent element to all exercises
-	 * (if well structured document, else the to two exercises
+	 * @return The deepest common parent element to all parts
+	 * (if well structured document, else the to two parts
 	 * first common (parent) element that occurs from bottom up).
 	 */
-	int deepestAllExercisesCommonParentElement_index = 0;
+	int deepestAllPartsCommonParentElement_index = 0;
 	// The root element at least it is.
-	int elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index = 1;
+	int elementsTraversed_deepestCommonParentElement_sChildContainingThisPart_index = 1;
 
 	public void/*org.w3c.dom.Node*/
-		determineAllExercisesDeepestCommonParentElement() {
+		determineAllPartsDeepestCommonParentElement() {
 
-		//Exercise lastExercise
-		//	= this.allExercisesRawFormat
-		//	.get(allExercisesRawFormat.size() - 1);
-		Exercise lastExercise = this.allExercisesRawFormat.get(
-				Global.replaceEnding(lastExercisePlainText.getFilelink()
+		//Part lastPart
+		//	= this.allPartsRawFormat
+		//	.get(allPartsRawFormat.size() - 1);
+		Part lastPart = this.allPartsRawFormat.get(
+				Global.replaceEnding(lastPartPlainText.getFilelink()
 				, this.getFileEnding())
 				);
-		if (lastExercise == null) {
-			System.out.print(Global.addMessage("Last exercise Raw/Native"
+		if (lastPart == null) {
+			System.out.print(Global.addMessage("Last part Raw/Native"
 						+ " Content is null!", "danger"));
 		}
 
 		// Because we travel bottom up and get alerted once the
 		// first element is encountered that is contained in
-		// the waypath/divingpath of at least two or all exercise
+		// the waypath/divingpath of at least two or all part
 		// divingpaths.
-		//int lastExercise_elementsTraversed_index
-		//	= lastExercise.sheetdraftElementsTraversed_index;
-		//int lastExercise_elementsTraversed_index
-		//	= lastExercise.sheetdraftElementsTraversed
-		//	.indexOf(lastExercise
+		//int lastPart_elementsTraversed_index
+		//	= lastPart.sheetdraftElementsTraversed_index;
+		//int lastPart_elementsTraversed_index
+		//	= lastPart.sheetdraftElementsTraversed
+		//	.indexOf(lastPart
 		//			.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat
 		//			);
-//		int lastExercise_elementsTraversed_depth
-//			= lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_depth;
+//		int lastPart_elementsTraversed_depth
+//			= lastPart.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_depth;
 
 		/*
-		Travel up the last exercise of the document's
-		waypointelements to the previously found exercise
+		Travel up the last part of the document's
+		waypointelements to the previously found part
 		declaration. USING Element.getParentElement().
 		*/
 
 
 		// Get the declaration found element (rather one
-		// level below) of the lastExercise using the
+		// level below) of the lastPart using the
 		// determined index.
 		// (Can be used because the elementsTraversed paths
-		// of the non-last exercises always are identicallay
-		// contained within the last exercise's elements
-		// traversed path because when searching for the exercise
+		// of the non-last parts always are identicallay
+		// contained within the last part's elements
+		// traversed path because when searching for the part
 		// declaration we always start at the root element no
-		// matter which exercise.)
+		// matter which part.)
 		// Node elementToCheckFor
 		// MUST BE INITIALIZED HERE TO HAVE THE CHANCE TO SKIP
 		// THE FIRST ENTRY!
-		lastExercise.deepestAllExercisesCommonParentElement
-		= lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+		lastPart.deepestAllPartsCommonParentElement
+		= lastPart.deepestAllPartsCommonParentElement_sChildContainingThisPart
 		// The when declaration found index is determined
 		// in travelUntilDeclarationFound...
-		= lastExercise.highestParentElementContainingThisExerciseOnly
-		= lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
-		//= lastExercise.sheetdraftElementsTraversed
-		//.get(lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index);
-		elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index
-		= lastExercise.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index;
+		= lastPart.highestParentElementContainingThisPartOnly
+		= lastPart.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
+		//= lastPart.sheetdraftElementsTraversed
+		//.get(lastPart.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index);
+		elementsTraversed_deepestCommonParentElement_sChildContainingThisPart_index
+		= lastPart.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index;
 
 		// Keep track of the route towards
-		// the deepestAllExercisesCommonParentElement
+		// the deepestAllPartsCommonParentElement
 		// (here still equal to its child node)
-		lastExercise.wayTowardsRoot.clear();
+		lastPart.wayTowardsRoot.clear();
 		/* This would result to adding the first element twice! */
-		//lastExercise.wayTowardsRoot
-		//	.add(lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+		//lastPart.wayTowardsRoot
+		//	.add(lastPart.deepestAllPartsCommonParentElement_sChildContainingThisPart);
 
 		// Emerge level by level:
-		//while(--lastExercise_elementsTraversed_depth > -1) {
+		//while(--lastPart_elementsTraversed_depth > -1) {
 		// As the element when the declaration was found is
 		// too deep in the XML we emerge by 1 level immediately:
-		while(lastExercise.deepestAllExercisesCommonParentElement
+		while(lastPart.deepestAllPartsCommonParentElement
 				!= null) {
 			// Emerge by one level
 
-			//int elementToCheckFor_index = lastExercise.sheetdraftElementsTraversed.indexOf(elementToCheckFor);
+			//int elementToCheckFor_index = lastPart.sheetdraftElementsTraversed.indexOf(elementToCheckFor);
 			int elementToCheckFor_index
-				= lastExercise.sheetdraftElementsTraversed
-				.indexOf(lastExercise.deepestAllExercisesCommonParentElement);
+				= lastPart.sheetdraftElementsTraversed
+				.indexOf(lastPart.deepestAllPartsCommonParentElement);
 
-			// Check all other (i.e. non-last) exercises for if this
+			// Check all other (i.e. non-last) parts for if this
 			// Element has been traversed too!
-			boolean allExercisesTraversedThisElementToCheckFor = true;
-			boolean noOtherExercisesTraversedThisElementToCheckFor = true;
-			//Element elementToCheckFor = lastExercise
+			boolean allPartsTraversedThisElementToCheckFor = true;
+			boolean noOtherPartsTraversedThisElementToCheckFor = true;
+			//Element elementToCheckFor = lastPart
 			//	.sheetdraftElementsTraversed
-			//	.get(lastExercise_elementsTraversed_index);
+			//	.get(lastPart_elementsTraversed_index);
 			//org.w3c.dom.Node elementFound = null;
 			int elementFound_index = 0;
-			// Check in all exercises for the deepest common parent element.
-			for (Exercise exerciseRF : allExercisesRawFormat.values()) {
-				// The Last Exercise is the exercise that must be the
+			// Check in all parts for the deepest common parent element.
+			for (Part partRF : allPartsRawFormat.values()) {
+				// The Last Part is the part that must be the
 				// reference, because here the waypath is the longest
 				// as many elements come before finding the declaration
-				//if (exerciseRF.equals(lastExercise)) {
-				if (exerciseRF == lastExercise) {
-					// The last exercise deepest is in the outer loop already!
+				//if (partRF.equals(lastPart)) {
+				if (partRF == lastPart) {
+					// The last part deepest is in the outer loop already!
 					continue;
 				}
 
-				// Check in this exercise's waypath if the current
-				// Element checked for from the last exercise's
+				// Check in this part's waypath if the current
+				// Element checked for from the last part's
 				// wayelements has been passed on its way to finding
-				// this currently investigated exercise's declaration.
+				// this currently investigated part's declaration.
 
 				// Possibility 1: (it's not obvious that this works
 				// fine, because it indexOf seems to use equal instead
 				// of exactly same reference!)
-				//int index = exerciseRF.sheetdraftElementsTraversed
+				//int index = partRF.sheetdraftElementsTraversed
 				//		.indexOf(elementToCheckFor);
-				int index = exerciseRF.sheetdraftElementsTraversed
-					.indexOf(lastExercise.deepestAllExercisesCommonParentElement);
+				int index = partRF.sheetdraftElementsTraversed
+					.indexOf(lastPart.deepestAllPartsCommonParentElement);
 				//if (index != -1) {
 				// Way 2: (not guaranteeing that the element is found
 				// within ONE BRANCH! as many branches have been traversed)
 				//boolean elementExists
-				//	= exerciseRF.sheetdraftElementsTraversed
+				//	= partRF.sheetdraftElementsTraversed
 				//	.get(elementToCheckFor_index) != null;
 
 				// Final method 3:
 				// Starting element is the one that was reached when
-				// this exercise's declaration was found.
+				// this part's declaration was found.
 				//org.w3c.dom.Node elementCandidate
-				exerciseRF.deepestAllExercisesCommonParentElement
-				= exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-				= exerciseRF.highestParentElementContainingThisExerciseOnly
-				= exerciseRF.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
-				// Keep track of the route towards the deepestAllExercisesCommonParentElement
-				exerciseRF.wayTowardsRoot.clear();
+				partRF.deepestAllPartsCommonParentElement
+				= partRF.deepestAllPartsCommonParentElement_sChildContainingThisPart
+				= partRF.highestParentElementContainingThisPartOnly
+				= partRF.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat;
+				// Keep track of the route towards the deepestAllPartsCommonParentElement
+				partRF.wayTowardsRoot.clear();
 				// This results in the waynode being added twice.
-				//exerciseRF.wayTowardsRoot.add(exerciseRF
-				//		.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
-				//= exerciseRF.sheetdraftElementsTraversed.get(
-				//		exerciseRF.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index
+				//partRF.wayTowardsRoot.add(partRF
+				//		.deepestAllPartsCommonParentElement_sChildContainingThisPart);
+				//= partRF.sheetdraftElementsTraversed.get(
+				//		partRF.sheetdraftElementReachedWhenDeclarationFoundInNativeFormat_index
 				//);
 
 				boolean elementExistsInPathEmergingFromBottomUp = false;
 				// Emerge up from the starting element, ie. from
 				// where declaration was found:
-				while ((exerciseRF.deepestAllExercisesCommonParentElement)
+				while ((partRF.deepestAllPartsCommonParentElement)
 						!= null) {
 				//while ((elementCandidate) != null) {//<-now double safe as emerging by 1 @end/else
 									// If we would emerge to the parent
@@ -1116,9 +1116,9 @@ public class Sheetdraft extends ContentToImage {
 					// Has to be the same reference so check this way:
 					//if (elementCandidate == elementToCheckFor) {
 					//if (elementCandidate
-					//== lastExercise.deepestAllExercisesCommonParentElement) {
-					if (exerciseRF.deepestAllExercisesCommonParentElement
-							== lastExercise.deepestAllExercisesCommonParentElement) {
+					//== lastPart.deepestAllPartsCommonParentElement) {
+					if (partRF.deepestAllPartsCommonParentElement
+							== lastPart.deepestAllPartsCommonParentElement) {
 
 						// Here we have it.
 						elementExistsInPathEmergingFromBottomUp = true;
@@ -1130,36 +1130,36 @@ public class Sheetdraft extends ContentToImage {
 						// Store this element node as a potential
 						// child. While we emerge upwards in the XML
 						// we will stop and no longer reach this
-						// assignment once the to all exercises deepest
+						// assignment once the to all parts deepest
 						// common parent element is found!
-						exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-						= exerciseRF.deepestAllExercisesCommonParentElement;//= elementCandidate;
+						partRF.deepestAllPartsCommonParentElement_sChildContainingThisPart
+						= partRF.deepestAllPartsCommonParentElement;//= elementCandidate;
 						// Keep track of the route towards the
-						// deepestAllExercisesCommonParentElement:
-						exerciseRF.wayTowardsRoot.add(exerciseRF.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+						// deepestAllPartsCommonParentElement:
+						partRF.wayTowardsRoot.add(partRF.deepestAllPartsCommonParentElement_sChildContainingThisPart);
 						/*
 						what we are interested in is rather the index
 						as this is universally valid i.e. for
-						each exercise, not only for one!
+						each part, not only for one!
 						*/
 						// And this covers the other branch so that
 						// we don't have an endless loop:
 						//elementCandidate = elementCandidate.getParentNode();
-						if (exerciseRF.deepestAllExercisesCommonParentElement
+						if (partRF.deepestAllPartsCommonParentElement
 								instanceof Child) {
-							exerciseRF.deepestAllExercisesCommonParentElement
-								= ((Child)exerciseRF
-										.deepestAllExercisesCommonParentElement)
+							partRF.deepestAllPartsCommonParentElement
+								= ((Child)partRF
+										.deepestAllPartsCommonParentElement)
 										.getParent();
 						}
-						else if (exerciseRF.deepestAllExercisesCommonParentElement
+						else if (partRF.deepestAllPartsCommonParentElement
 								instanceof JAXBElement) {
 							JAXBElement<?> e
-								= (JAXBElement<?>) exerciseRF
-								.deepestAllExercisesCommonParentElement;
+								= (JAXBElement<?>) partRF
+								.deepestAllPartsCommonParentElement;
 							if (e.getValue() instanceof Child) {
-								exerciseRF
-									.deepestAllExercisesCommonParentElement
+								partRF
+									.deepestAllPartsCommonParentElement
 									= ((Child)e.getValue()).getParent();
 
 							}
@@ -1170,68 +1170,68 @@ public class Sheetdraft extends ContentToImage {
 							}
 
 						}
-						else if (exerciseRF.deepestAllExercisesCommonParentElement
+						else if (partRF.deepestAllPartsCommonParentElement
 								instanceof org.w3c.dom.Node) {
-							exerciseRF.deepestAllExercisesCommonParentElement
-								= ((org.w3c.dom.Node)exerciseRF
-										.deepestAllExercisesCommonParentElement)
+							partRF.deepestAllPartsCommonParentElement
+								= ((org.w3c.dom.Node)partRF
+										.deepestAllPartsCommonParentElement)
 										.getParentNode();
 						}
-						//exerciseRF.deepestAllExercisesCommonParentElement
+						//partRF.deepestAllPartsCommonParentElement
 						//	= elementCandidate;// <- just a check
-						//	because one of those exercise parent is NULL
+						//	because one of those part parent is NULL
 					}
 
 				}
 
-				// Was this Element from within last exercise's
-				// emerging path found in this exercise too?
+				// Was this Element from within last part's
+				// emerging path found in this part too?
 				if (elementExistsInPathEmergingFromBottomUp) {
-//					// This element exists in this exercise's
+//					// This element exists in this part's
 //					// traverse path to declaration.
 //					// Thus we have found ONE the last's and this
-//					// exercise's COMMON PARENT.
+//					// part's COMMON PARENT.
 //					//elementFound = elementToCheckFor;
-//					elementFound = exerciseRF
-//						.deepestAllExercisesCommonParentElement;
+//					elementFound = partRF
+//						.deepestAllPartsCommonParentElement;
 					elementFound_index = elementToCheckFor_index;
-					noOtherExercisesTraversedThisElementToCheckFor
-						= false;// only working for the last exercise!
+					noOtherPartsTraversedThisElementToCheckFor
+						= false;// only working for the last part!
 					// => so another method is necessary after
 					// determineDeepestCommon..:
-					// determineHighestParentElementThatContainsOneExerciseOnly.
-					continue; // with next exercise
+					// determineHighestParentElementThatContainsOnePartOnly.
+					continue; // with next part
 				}
 				else {
-					// If only one of the exercises has not
+					// If only one of the parts has not
 					// traversed this Element, then we have to
 					// travel one level higher in the markup. This
 					// is a sign for a badly, at least not ideally
 					// and clean formatted or structured document.
 					// Let's see which software office package
 					// is most vulnerable to that.
-					allExercisesTraversedThisElementToCheckFor = false;
+					allPartsTraversedThisElementToCheckFor = false;
 					// read: Did they also traverse exactly this
 					// element (not in the loop before, but on its way
-					// |travel down to finding the exercise declaration)?
+					// |travel down to finding the part declaration)?
 				}
 
 
 
 			}
 
-			if (noOtherExercisesTraversedThisElementToCheckFor) {
-				lastExercise.highestParentElementContainingThisExerciseOnly
-					= lastExercise.deepestAllExercisesCommonParentElement;
+			if (noOtherPartsTraversedThisElementToCheckFor) {
+				lastPart.highestParentElementContainingThisPartOnly
+					= lastPart.deepestAllPartsCommonParentElement;
 			}
 
-			// Check because one of those exercise parent is NULL.
+			// Check because one of those part parent is NULL.
 			//if (elementFound != null
-			if (allExercisesTraversedThisElementToCheckFor) {
-				// The to all exercises deepest common parent element
-				deepestAllExercisesCommonParentElement_index
+			if (allPartsTraversedThisElementToCheckFor) {
+				// The to all parts deepest common parent element
+				deepestAllPartsCommonParentElement_index
 					= elementFound_index;
-				//lastExercise.deepestAllExercisesCommonParentElement
+				//lastPart.deepestAllPartsCommonParentElement
 				//	= elementFound;
 				//return elementFound;
 				return;
@@ -1240,45 +1240,45 @@ public class Sheetdraft extends ContentToImage {
 				// Store this element node as a potential child.
 				// While we emerge upwards in the XML we will stop
 				// and no longer reach this assignment once the to all
-				// exercises deepest common parent element is found!
-				lastExercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-					= lastExercise.deepestAllExercisesCommonParentElement;
+				// parts deepest common parent element is found!
+				lastPart.deepestAllPartsCommonParentElement_sChildContainingThisPart
+					= lastPart.deepestAllPartsCommonParentElement;
 				//	= elementToCheckFor;
 
 				// In the sheetdraft the index is stored because here
 				// we want to keep it object instance independent.
-				// Note: For the exercises, the index is the same,
+				// Note: For the parts, the index is the same,
 				// the object instances may be equal - nevertheless
-				// it's too risky as each exercise has its own and
+				// it's too risky as each part has its own and
 				// non-equal-reference/non-equal-address Element
 				// instances.
-				elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index
-					= lastExercise.sheetdraftElementsTraversed
-					.indexOf(lastExercise
-							.deepestAllExercisesCommonParentElement);
+				elementsTraversed_deepestCommonParentElement_sChildContainingThisPart_index
+					= lastPart.sheetdraftElementsTraversed
+					.indexOf(lastPart
+							.deepestAllPartsCommonParentElement);
 
-				// Keep track of the route towards the deepestAllExercisesCommonParentElement
-				lastExercise.wayTowardsRoot.add(lastExercise
-						.deepestAllExercisesCommonParentElement_sChildContainingThisExercise);
+				// Keep track of the route towards the deepestAllPartsCommonParentElement
+				lastPart.wayTowardsRoot.add(lastPart
+						.deepestAllPartsCommonParentElement_sChildContainingThisPart);
 
 				// Continue with the next higher (i.e. index lower)
 				// element traversed:
-				if (lastExercise
-						.deepestAllExercisesCommonParentElement
+				if (lastPart
+						.deepestAllPartsCommonParentElement
 						instanceof Child) {
-					lastExercise.deepestAllExercisesCommonParentElement
-						= ((Child)lastExercise
-								.deepestAllExercisesCommonParentElement)
+					lastPart.deepestAllPartsCommonParentElement
+						= ((Child)lastPart
+								.deepestAllPartsCommonParentElement)
 								.getParent();
 				}
-				else if (lastExercise
-						.deepestAllExercisesCommonParentElement
+				else if (lastPart
+						.deepestAllPartsCommonParentElement
 						instanceof JAXBElement) {
-					JAXBElement<?> e = (JAXBElement<?>) lastExercise
-						.deepestAllExercisesCommonParentElement;
+					JAXBElement<?> e = (JAXBElement<?>) lastPart
+						.deepestAllPartsCommonParentElement;
 					if (e.getValue() instanceof Child) {
-						lastExercise
-							.deepestAllExercisesCommonParentElement
+						lastPart
+							.deepestAllPartsCommonParentElement
 							= ((Child)e.getValue())
 							.getParent();
 
@@ -1286,18 +1286,18 @@ public class Sheetdraft extends ContentToImage {
 					else {
 						// Debug only
 						System.out.println("ROOT JAXBElement of last"
-								+ " exercise?: "
+								+ " part?: "
 								+ e.getDeclaredType().getName());
 					}
 
 				}
-				else if (lastExercise
-						.deepestAllExercisesCommonParentElement
+				else if (lastPart
+						.deepestAllPartsCommonParentElement
 						instanceof org.w3c.dom.Node) {
-					lastExercise
-						.deepestAllExercisesCommonParentElement
-						= ((org.w3c.dom.Node)lastExercise
-								.deepestAllExercisesCommonParentElement)
+					lastPart
+						.deepestAllPartsCommonParentElement
+						= ((org.w3c.dom.Node)lastPart
+								.deepestAllPartsCommonParentElement)
 								.getParentNode();
 				}
 			}
@@ -1311,160 +1311,160 @@ public class Sheetdraft extends ContentToImage {
 
 
 	/**
-	 * Determines the common parent of all exercises to know where
-	 * we have to split the document to get the exercises completely.
+	 * Determines the common parent of all parts to know where
+	 * we have to split the document to get the parts completely.
 	 *
-	 * Also the way up from the element node where the exercise
+	 * Also the way up from the element node where the part
 	 * declarations were found is revealed up to the
 	 * deepestCommonParent element. The way|path is stored!
 	 * This is necessary to provide means to determine the highest
-	 * still 'non-common' parent element of each exercise
+	 * still 'non-common' parent element of each part
 	 * (declaration). As this element is expected between the
-	 * deepest common parent of the exercise's declarations and
+	 * deepest common parent of the part's declarations and
 	 * the elementWhereDeclarationWasFound to store this partial tree
 	 * only creates no problems and the highest non-common element
-	 * of one and only one exercise declaration.
+	 * of one and only one part declaration.
 	 *
-	 * @return The deepest common parent element to all exercises
-	 * (if well structured document, else the to two exercises'
+	 * @return The deepest common parent element to all parts
+	 * (if well structured document, else the to two parts'
 	 * first common (parent) element that occurs from bottom up).
 	 */
 	public void/*org.w3c.dom.Node*/
-		determineHighestParentThatContainsOneAndOnlyOneExerciseDeclaration() {
-		int exercise_wayTowardsRoot_index;
+		determineHighestParentThatContainsOneAndOnlyOnePartDeclaration() {
+		int part_wayTowardsRoot_index;
 		int p_wayTowardsRoot_index;
-		boolean noOtherExerciseDeclarationContainedBelowCurrentElement;
+		boolean noOtherPartDeclarationContainedBelowCurrentElement;
 
 
-		for (Exercise exercise : allExercisesRawFormat.values()) {
+		for (Part part : allPartsRawFormat.values()) {
 
-			noOtherExerciseDeclarationContainedBelowCurrentElement
+			noOtherPartDeclarationContainedBelowCurrentElement
 				= true;
 			// Begin with deepest element
-			// (elementWhereExerciseDeclarationWasFound):
-			exercise_wayTowardsRoot_index
-				= exercise.wayTowardsRoot.size();// - 1;
-			if (exercise_wayTowardsRoot_index == 0) {
+			// (elementWherePartDeclarationWasFound):
+			part_wayTowardsRoot_index
+				= part.wayTowardsRoot.size();// - 1;
+			if (part_wayTowardsRoot_index == 0) {
 				System.out.print(
 						Global.addMessage("The way towards root (at"
 							+ " least until the"
-							+ " deepestCommonParentElementOfAllExercises"
+							+ " deepestCommonParentElementOfAllParts"
 							+ " is reached) is empty!\r\nHas function"
-							+ " determineDeepestAllExercisesCommonParent"
-							+ " been called?\r\nThe exercise the"
+							+ " determineDeepestAllPartsCommonParent"
+							+ " been called?\r\nThe part the"
 							+ " wayTowardsRoot belongs to: "
-							+ exercise.toString()
+							+ part.toString()
 							, "danger")
 				);
 				continue;
 			}
 
 			// Travel down the way from the
-			// deepestAllExercisesCommonParentElement to where the
-			// exercise declaration was found.
+			// deepestAllPartsCommonParentElement to where the
+			// part declaration was found.
 			/*
 			The first element added is deeper to the leaves than the
 			ones added later. So if we start from the top
-			(deepestAllExercisesCommonParentElement), we will probably
+			(deepestAllPartsCommonParentElement), we will probably
 			have a shorter way and come to an quicker end as the
-			exercise declaration for sure will be surrounded by
+			part declaration for sure will be surrounded by
 			masses of extra-markup resulting in many more elements
 			(the more we come to the leaves) between where the
 			declaration was found and the
-			highestOnlyOneExerciseDeclarationContainingElement
-			than can be expected between the deepest all exercises
+			highestOnlyOnePartDeclarationContainingElement
+			than can be expected between the deepest all parts
 			common parent element and the highest element containing
-			one, and only one, exercise declaration.
+			one, and only one, part declaration.
 			=> Start from top down.
 			*/
 			/*
 			RUNTIME-ATTENTION: This is a cross product x times x.
-			(each exercises with each exercise that is different).
+			(each parts with each part that is different).
 			*/
-			Object exerciseWayElementToCheckFor;
-			while (--exercise_wayTowardsRoot_index > -1) {
-				exerciseWayElementToCheckFor
-					= exercise.wayTowardsRoot
-					.get(exercise_wayTowardsRoot_index);
+			Object partWayElementToCheckFor;
+			while (--part_wayTowardsRoot_index > -1) {
+				partWayElementToCheckFor
+					= part.wayTowardsRoot
+					.get(part_wayTowardsRoot_index);
 				/*-------
-				1. Assume true for each new (deeper towards exercise
+				1. Assume true for each new (deeper towards part
 				declaration) way element:
 				*/
-				noOtherExerciseDeclarationContainedBelowCurrentElement
+				noOtherPartDeclarationContainedBelowCurrentElement
 					= true;
 
 
 				/*-------
-				2. Examine all other exercise declaration way elements
+				2. Examine all other part declaration way elements
 				*/
-				for (Exercise p : allExercisesRawFormat.values()) {
+				for (Part p : allPartsRawFormat.values()) {
 					// Only for performance: if already one
 					// waypointelement has been found in one content
-					// part p why then look any further in other exercises? */
-					if (!noOtherExerciseDeclarationContainedBelowCurrentElement) {
+					// part p why then look any further in other parts? */
+					if (!noOtherPartDeclarationContainedBelowCurrentElement) {
 						break;
 					}
-					// only other exercises
-					if (p == exercise
-							// Even equal exercises have to be skipped
-							|| p.equals(exercise)) {
+					// only other parts
+					if (p == part
+							// Even equal parts have to be skipped
+							|| p.equals(part)) {
 						continue;
 						/*
-						Skip the exercise p that is the identity
-						of the current exercise because if not we
+						Skip the part p that is the identity
+						of the current part because if not we
 						would not come to an end as there always
-						was another exercise declaration (an
+						was another part declaration (an
 						identical one at same position, the identity!)
 						*/
 					}
 
 					// Begin with deepest element
-					// (elementWhereExerciseDeclarationWasFound):
+					// (elementWherePartDeclarationWasFound):
 					p_wayTowardsRoot_index = p.wayTowardsRoot.size();// - 1;
 
 					if (p_wayTowardsRoot_index == 0) {
 						System.out.print(
 								Global.addMessage("[This message can occur multiple times as it's a nested loop!]"
 										+ "\r\nThe way towards root (at least until"
-										+ " the deepestCommonParentElementOfAllExercises is reached) is empty!"
-										+ " \r\nHas function determineDeepestAllExercisesCommonParent been called?"
-										+ " \r\nThe e(xercise) the wayTowardsRoot belongs to: " + exercise.toString()
+										+ " the deepestCommonParentElementOfAllParts is reached) is empty!"
+										+ " \r\nHas function determineDeepestAllPartsCommonParent been called?"
+										+ " \r\nThe e(xercise) the wayTowardsRoot belongs to: " + part.toString()
 										, "danger"
 								)
 						);
 						continue;
 					}
 
-					// Travel down the way from the deepestAllExercisesCommonParentElement to where the exercise declaration was found.
+					// Travel down the way from the deepestAllPartsCommonParentElement to where the part declaration was found.
 					while (--p_wayTowardsRoot_index > -1) {
-						//if (exercise.wayTowardsRoot.get(e_wayTowardsRoot_index) == exerciseWayElementToCheckFor) {
+						//if (part.wayTowardsRoot.get(e_wayTowardsRoot_index) == partWayElementToCheckFor) {
 						if ( XmlUtils.unwrap(p.wayTowardsRoot.get(p_wayTowardsRoot_index))
 								== /*.equals(*/XmlUtils.unwrap(
-										exerciseWayElementToCheckFor)
+										partWayElementToCheckFor)
 									/*)*/ ) {
 							// =>The element is in this waypath towards
-							// deepestAllExercisesCommonParentElement too.
-							noOtherExerciseDeclarationContainedBelowCurrentElement
+							// deepestAllPartsCommonParentElement too.
+							noOtherPartDeclarationContainedBelowCurrentElement
 								= false;
 							System.out.print(Global.addMessage(
 										"Element to check for was"
 										+ " found within the waypath"
 										+ " (elements traversed)"
-										+ " towards another exercise"
+										+ " towards another part"
 										+ " declaration! => Two"
-										+ " exercise declaration"
+										+ " part declaration"
 										+ " below this level in this"
 										+ " branch!\r\nPerhaps one"
-										+ " exercise way element to"
+										+ " part way element to"
 										+ " check for deeper in the"
 										+ " tree (more towards where"
 										+ " the declaration was found)"
 										+ " will contain one and only"
-										+ " one exercise declaration."
+										+ " one part declaration."
 										, "info"));
 							break;// Then check the next deeper level
 							// element, perhaps there is no other
-							// exercise declaration element below
+							// part declaration element below
 							// in the branch.
 						}
 					}
@@ -1475,26 +1475,26 @@ public class Sheetdraft extends ContentToImage {
 
 				/* -------
 				3. Now check whether we already reached the highest
-				only one exercise declaration (namely this!)
+				only one part declaration (namely this!)
 				*/
-				if (noOtherExerciseDeclarationContainedBelowCurrentElement) {
+				if (noOtherPartDeclarationContainedBelowCurrentElement) {
 					// The quicker we found the element the better
 					// as this nested loop is costly!
-					exercise.highestParentElementContainingThisExerciseOnly
-						= exerciseWayElementToCheckFor;
+					part.highestParentElementContainingThisPartOnly
+						= partWayElementToCheckFor;
 					break;//return; <-This woud result in only
-					// one exercise having the correct
-					// highestParentElementContainingOnlyOneExercise
+					// one part having the correct
+					// highestParentElementContainingOnlyOnePart
 					// assigned! But we need it to be correct for
-					// all exercises! =>break instead of return
+					// all parts! =>break instead of return
 				}
 				//else next round or not found
-				else if (exercise_wayTowardsRoot_index == 0) {
+				else if (part_wayTowardsRoot_index == 0) {
 					System.out.print(Global.addMessage("No highest"
 								+ " parent element containing one"
 								+ " and only one element found for"
-								+ " this exercise: "
-								+ exercise.toString(), "danger"));
+								+ " this part: "
+								+ part.toString(), "danger"));
 				}
 			}
 
@@ -1505,10 +1505,10 @@ public class Sheetdraft extends ContentToImage {
 
 
 	/**
-	 * ODT: Find and store exercises to filesystem.
+	 * ODT: Find and store parts to filesystem.
 	 * @throws Exception
 	 */
-	private void extractExercisesFromODT_ODFToolkit() throws Exception {
+	private void extractPartsFromODT_ODFToolkit() throws Exception {
 
 
 		// Unzip the openOffice Document
@@ -1534,92 +1534,92 @@ public class Sheetdraft extends ContentToImage {
 			METHOD A) SHEETDRAFT TRAVERSE ONLY, USING INDICES.(As now
 				suddenly the indexOf seems to deliver proper results.)
 				TODO redesign this approach separately.
-			METHOD B) NOW DONE FOR EACH EXERCISE INDIVIDUALLY AS
+			METHOD B) NOW DONE FOR EACH PART INDIVIDUALLY AS
 				OTHERWISE THE NODES WILL NOT BE VALID AND MIXED IF NO
-				NEW NODES ARE LOADED AND TRAVERSED FOR EACH EXERCISE!
+				NEW NODES ARE LOADED AND TRAVERSED FOR EACH PART!
 				The reason that iginited method B) was the indexOf
 				initially not working, thus removing of nodes proved
 				impossible (output file was same as input file as if
 				nothing was deleted).
-		for (Exercise exercise : allExercisesRawFormat.values()) {
+		for (Part part : allPartsRawFormat.values()) {
 
-			exercise.travelDownUntilDeclarationFound(rootElement);
+			part.travelDownUntilDeclarationFound(rootElement);
 
 		}
 
 
-		// 2) Must be timed after all exercises have been traversed.
-		determineAllExercisesDeepestCommonParentElement();
+		// 2) Must be timed after all parts have been traversed.
+		determineAllPartsDeepestCommonParentElement();
 		 */
 
 
 		// 3) From this parent element on
-		// 3a) either delete the exercise not required (following references).
-		// 3b) or extract the individual exercise's markup,
+		// 3a) either delete the part not required (following references).
+		// 3b) or extract the individual part's markup,
 		// the headers and references.
 
 		// 3a)
-		// Copy complete zip archive odt file for each exercise,
+		// Copy complete zip archive odt file for each part,
 		// delete foreign content, save.
-		for (Exercise exercise : allExercisesRawFormat.values()) {
-			Global.copy(filelink, exercise.filelink);
+		for (Part part : allPartsRawFormat.values()) {
+			Global.copy(filelink, part.filelink);
 			// Unzip the openOffice Document
-			OdfPackageDocument exercise_odfPkgDocument = OdfPackageDocument
-					.loadDocument(exercise.filelink);
-			org.w3c.dom.Document exercise_odfContent = odfPkgDocument.getFileDom("content.xml");
-			Node exercise_rootElement = odfContent.getDocumentElement();
+			OdfPackageDocument part_odfPkgDocument = OdfPackageDocument
+					.loadDocument(part.filelink);
+			org.w3c.dom.Document part_odfContent = odfPkgDocument.getFileDom("content.xml");
+			Node part_rootElement = odfContent.getDocumentElement();
 
-			// FOR THE EXERCISE ITERATE ALL ELEMENTS UNTIL DELCARATION
+			// FOR THE PART ITERATE ALL ELEMENTS UNTIL DELCARATION
 			// FOUND TO FILL THE TRAVERSED LIST
 			// 1) Therefore search for the declaration in the markup
 			// starting from the root.
-			exercise.travelDownUntilDeclarationFound(exercise_rootElement);
+			part.travelDownUntilDeclarationFound(part_rootElement);
 
-			// Figure out which exercise comes after this current one:
-			Exercise exerciseSucceding = null;
+			// Figure out which part comes after this current one:
+			Part partSucceding = null;
 			// <- null indicates guess which sibling elements still
-			// belong to this exercise's XML
-			int exerciseNumber
+			// belong to this part's XML
+			int partNumber
 				= Global
-				.extractExerciseNumberFromFilelink(exercise.filelink);
+				.extractPartNumberFromFilelink(part.filelink);
 
-			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/
+			if (partNumber < allPartsRawFormat.size() /*-1 +1*/
 					) {
 				// We start with 1 instead of 0 in the filesystem!
-				String exercise_filelink
-					= this.getFilelinkForExerciseFromPosWithoutEnding(
-							exerciseNumber + 1, exerciseNumber + 1)
-					// Here exerciseNumber equals overall position.
+				String part_filelink
+					= this.getFilelinkForPartFromPosWithoutEnding(
+							partNumber + 1, partNumber + 1)
+					// Here partNumber equals overall position.
 					+ ".odt.odt";
-				exerciseSucceding = allExercisesRawFormat.get(
-						// increase by 1 as it's the following exercise
-						exercise_filelink
+				partSucceding = allPartsRawFormat.get(
+						// increase by 1 as it's the following part
+						part_filelink
 				);
 			}
 
 			// Start at the deepest common parent element and travel
-			// down to delete all the other exercises' XML
+			// down to delete all the other parts' XML
 			// markup/content and all that is referenced AND NOT
 			// referenced by other parts.
 			// => first delete XML, then at the end delete reference
 			// content that is no longer referenced.
-			exercise.deleteAllChildrenOfExceptFor(
-					deepestAllExercisesCommonParentElement_index
-					, exerciseSucceding);
+			part.deleteAllChildrenOfExceptFor(
+					deepestAllPartsCommonParentElement_index
+					, partSucceding);
 
-			// 4) Save the exercise in native format:
+			// 4) Save the part in native format:
 			// (overwriting the one loaded from)
-			exercise_odfPkgDocument.save(exercise.filelink);
+			part_odfPkgDocument.save(part.filelink);
 
 
 		}
 
 
-		// 4) Store the newly created native filelink exercises
+		// 4) Store the newly created native filelink parts
 		// in the DB:
 		// done in action.upload.jsp because of the index also
-		// being updated inserting this raw/native format exercise
-		// data into the DB together with the plain text exercises.
+		// being updated inserting this raw/native format part
+		// data into the DB together with the plain text parts.
 
 
 		// 5) We have (hopefully) changed nothing in the
@@ -1631,25 +1631,25 @@ public class Sheetdraft extends ContentToImage {
 
 
 /**
- * Extract each exercise according to found declarations.
+ * Extract each part according to found declarations.
  */
-private void extractExercisesFromODT_ODFToolkitSimpleAPI()
+private void extractPartsFromODT_ODFToolkitSimpleAPI()
 	throws Exception {
 
 		//TextDocument textDocument = TextDocument.loadDocument(filelink);
 		//org.w3c.dom.Node rootElement = textDocument.getContentRoot();
 
-		// 0) Copy over the exercises found as plain text.
-		for (Exercise pPT : allExercisesPlainText.values()) {
+		// 0) Copy over the parts found as plain text.
+		for (Part pPT : allPartsPlainText.values()) {
 			// Create a copy
-			// TODO Better merge allExercises-PlainText, -RawContent?
+			// TODO Better merge allParts-PlainText, -RawContent?
 			String pRC_filelink
 				= Global.replaceEnding(pPT.getFilelink(), "odt");
 			ReadWrite.write("", pRC_filelink);
-			Exercise pRC
-				= new Exercise(pRC_filelink
+			Part pRC
+				= new Part(pRC_filelink
 						, pPT.getDeclaration(), pPT.getHeader());
-			allExercisesRawFormat.put(pRC_filelink, pRC);
+			allPartsRawFormat.put(pRC_filelink, pRC);
 		}
 
 
@@ -1661,163 +1661,163 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI()
 		METHOD A: SHEETDRAFT TRAVERSE ONLY AND USING INDICES.
 		(as now suddenly the indexOf seems to deliver proper results.)
 		TODO redesign this approach separately.
-		METHOD B: NOW DONE FOR EACH EXERCISE INDIVIDUALLY AS OTHERWISE
+		METHOD B: NOW DONE FOR EACH PART INDIVIDUALLY AS OTHERWISE
 		THE NODES WILL NOT BE VALID AND MIXED IF NO NEW NODES ARE
-		LOADED AND TRAVERSED FOR EACH EXERCISE!
+		LOADED AND TRAVERSED FOR EACH PART!
 		The reason that iginited method B) was the indexOf initially
 		not working, thus removing nodes proved impossible
 		(output file was same as input file as if nothing was deleted).
-		for (Exercise exercise : allExercisesRawFormat.values()) {
+		for (Part part : allPartsRawFormat.values()) {
 
-			exercise.travelDownUntilDeclarationFound(rootElement);
+			part.travelDownUntilDeclarationFound(rootElement);
 
 		}
 
 
-		// 2) Must be timed after all exercises have been traversed.
-		// (all exercises retrieve their
-		// deepestCommonParentElement_sChildElementContainingTheExercise)
-		determineAllExercisesDeepestCommonParentElement();
+		// 2) Must be timed after all parts have been traversed.
+		// (all parts retrieve their
+		// deepestCommonParentElement_sChildElementContainingThePart)
+		determineAllPartsDeepestCommonParentElement();
 		*/
 
 		// 3) From this parent element on
-		// 3a) either delete the exercise not required (following refs)
-		// 3b) or extract the individual exercise's markup, the headers
+		// 3a) either delete the part not required (following refs)
+		// 3b) or extract the individual part's markup, the headers
 		// and references.
 
 		// 3a)
 		//textDocument.close();
-		// Copy whole zip archive odt file for each exercise,
+		// Copy whole zip archive odt file for each part,
 		// delete foreign content, save:
-		for (Exercise exercise : allExercisesRawFormat.values()) {
+		for (Part part : allPartsRawFormat.values()) {
 
 			// 3a.1) Copy native file
-			//Global.copy(filelink, exercise.filelink);
+			//Global.copy(filelink, part.filelink);
 
 			// 3a.2) Reload the sheetdraft's XML. For each content part
 			// it will be saved separately. This is required as the
 			// nodes currently known are from the sheetdraft's XML
 			// and indices are not necessarily determined correctly
 			// because of indexOf(Node) not working here somehow.
-			TextDocument exercise_textDocument
+			TextDocument part_textDocument
 				= TextDocument.loadDocument(filelink);
-			org.w3c.dom.Node exercise_rootElement
-				= exercise_textDocument.getContentRoot();
+			org.w3c.dom.Node part_rootElement
+				= part_textDocument.getContentRoot();
 
 
 			// 3a.3) Retraverse it
 			// 3a.4) Figure out the content part's following part.
 			// 3a.5) Remove unused XML.
-			retraverseNativeFormatExercisesDetermineSucceedingExerciseAndRemoveUnused(
-					exercise, exercise_rootElement
+			retraverseNativeFormatPartsDetermineSucceedingPartAndRemoveUnused(
+					part, part_rootElement
 			);
 
-			// 3a.6) Save the exercise native file
-			//exercise_textDocument.getContentDom()
-			//	.replaceChild(exercise_rootElement
-			//	, exercise.deepestAllExercisesCommonParentElement);
-			//exercise_textDocument.getPackage()
-			//	.insert(exercise_textDocument
+			// 3a.6) Save the part native file
+			//part_textDocument.getContentDom()
+			//	.replaceChild(part_rootElement
+			//	, part.deepestAllPartsCommonParentElement);
+			//part_textDocument.getPackage()
+			//	.insert(part_textDocument
 			//	.getFileDom("content.xml"), "content.xml", "text/xml");
-			exercise_textDocument.getPackage().save(exercise.filelink);
-			exercise_textDocument.close();
-			//exercise_textDocument.getPackage().save(exercise.filelink);
+			part_textDocument.getPackage().save(part.filelink);
+			part_textDocument.close();
+			//part_textDocument.getPackage().save(part.filelink);
 
 
-			// 3a7) Extract plain text for each exercise.
-			exercise.extractPlainText();
+			// 3a7) Extract plain text for each part.
+			part.extractPlainText();
 
 			// 3a8) Create images native format.
-			exercise.generateImage();
+			part.generateImage();
 
 
 		}
 
 
-		// 4) Store the newly created native filelink exercises in DB:
+		// 4) Store the newly created native filelink parts in DB:
 		// Done in action.upload.jsp because of the index also being
-		// updated inserting this raw/native format exercise data
-		// into the db together with the plain text exercises.
+		// updated inserting this raw/native format part data
+		// into the db together with the plain text parts.
 
 
 	}
 
 
 
-	public void retraverseNativeFormatExercisesDetermineSucceedingExerciseAndRemoveUnused(
-			Exercise exercise, org.w3c.dom.Node exercise_rootElement)
+	public void retraverseNativeFormatPartsDetermineSucceedingPartAndRemoveUnused(
+			Part part, org.w3c.dom.Node part_rootElement)
 		throws Exception {
 
 		// 3a.3) Retraverse it
 		// 1) Search the declaration in the markup starting from root.
-		for (Exercise exer : allExercisesRawFormat.values()) {
+		for (Part exer : allPartsRawFormat.values()) {
 			exer.clearTraversedAndTextBuffer();// To prevent still
 			// having the old data in there.
-			exercise.setDeclarationsOfAllExercises(this.declarationSet);
-			// For skipping declarations if identical double exercises
+			part.setDeclarationsOfAllParts(this.declarationSet);
+			// For skipping declarations if identical double parts
 			// exist! Otherwise the first found match will be taken as
 			// correct declaration while it is the declaration of the
-			// first occurrence of the same twice existing exercise.
-			exer.travelDownUntilDeclarationFound(exercise_rootElement);
+			// first occurrence of the same twice existing part.
+			exer.travelDownUntilDeclarationFound(part_rootElement);
 		}
 		/*
-		After this loop the exercises have traversed this
-		exercise dom's nodes!
+		After this loop the parts have traversed this
+		part dom's nodes!
 		=> So now if we determine the deepest common parent element
-		we get the deepest in this current exercise containing
+		we get the deepest in this current part containing
 		only elements from within this DOM.
 		*/
-		determineAllExercisesDeepestCommonParentElement();
-		determineHighestParentThatContainsOneAndOnlyOneExerciseDeclaration();
-		//determineHighestParentElementThatContainsOneExerciseOnly();
+		determineAllPartsDeepestCommonParentElement();
+		determineHighestParentThatContainsOneAndOnlyOnePartDeclaration();
+		//determineHighestParentElementThatContainsOnePartOnly();
 
-		//exercise_rootElement.removeChild(
-		//		exercise.sheetdraftElementsTraversed
-		//		.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index));
+		//part_rootElement.removeChild(
+		//		part.sheetdraftElementsTraversed
+		//		.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisPart_index));
 
 		// IMPORTANT: Copy over the deepest common parent element.
 		/*
 		The indices are wrong due to matching in indexOf(Node).
 		TODO Override equals method for matching org.w3c.Node?
-		exercise.deepestAllExercisesCommonParentElement
-			= exercise.sheetdraftElementsTraversed
-			.get(deepestAllExercisesCommonParentElement_index);
-		exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-			= exercise.sheetdraftElementsTraversed
-			.get(deepestAllExercisesCommonParentElement_sChild_index);
+		part.deepestAllPartsCommonParentElement
+			= part.sheetdraftElementsTraversed
+			.get(deepestAllPartsCommonParentElement_index);
+		part.deepestAllPartsCommonParentElement_sChildContainingThisPart
+			= part.sheetdraftElementsTraversed
+			.get(deepestAllPartsCommonParentElement_sChild_index);
 		*/
 
-		// 3a.4) Figure out which exercise comes after this current one
+		// 3a.4) Figure out which part comes after this current one
 		// (increases performance as otherwise a cross product check
-		// if any exercise declaration comes after this exercise where
+		// if any part declaration comes after this part where
 		// we switch the delete-nodes-mode)
-		Exercise exerciseSucceding = null;
+		Part partSucceding = null;
 		// <- null indicates guess which sibling elements still belong
-		// to this exercise's xml
-		exerciseSucceding = getSuccedingExercise(exercise);
+		// to this part's xml
+		partSucceding = getSuccedingPart(part);
 
 		// 3a.5) remove unused xml.
 		// Start at the deepest common parent element and travel down
-		// to delete all the other exercises' XML markup/content and
+		// to delete all the other parts' XML markup/content and
 		// all that is referenced AND NOT referenced by other parts.
 		// => first delete XML, then at the end delete reference
 		// content that is no longer referenced.
-//		exercise.deleteAllChildrenOfExceptFor(
-//				exercise.deepestAllExercisesCommonParentElement_index, exerciseSucceding);
+//		part.deleteAllChildrenOfExceptFor(
+//				part.deepestAllPartsCommonParentElement_index, partSucceding);
 		travelUpAndRemoveAllSiblingsForEachLevel(
-				exercise, exerciseSucceding, exercise_rootElement, null);
+				part, partSucceding, part_rootElement, null);
 		/*
 		Previously just:
-		exercise.removeAllSiblingsOf(
-				(org.w3c.dom.Node)exercise
-				.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-				, exerciseSucceding
+		part.removeAllSiblingsOf(
+				(org.w3c.dom.Node)part
+				.deepestAllPartsCommonParentElement_sChildContainingThisPart
+				, partSucceding
 		);
 		(now the same is done for all levels up from the
-		highestParentElementOnlyContainingOneExercise to the root
-		or deepest to all exercises common parent element)
+		highestParentElementOnlyContainingOnePart to the root
+		or deepest to all parts common parent element)
 		*/
-		// exercise_rootElement = exercise_textDocument.getContentRoot();
+		// part_rootElement = part_textDocument.getContentRoot();
 
 	}
 
@@ -1825,117 +1825,117 @@ private void extractExercisesFromODT_ODFToolkitSimpleAPI()
 	/**
 	 * By reusing the fact that the declarations that were found in
 	 * the plain text were ordered by line number, we can easily
-	 * figure the next, i.e. succeding exercise to any other.
+	 * figure the next, i.e. succeding part to any other.
 	 *
-	 * @param exercise The declaration-found-part whose succeding
+	 * @param part The declaration-found-part whose succeding
 	 * declaration-found-part we wish to determine.
-	 * A declaration-found-part currently in the exercise database
-	 * can either be a solution or exercise.
+	 * A declaration-found-part currently in the part database
+	 * can either be a solution or part.
 	 * @return The succeding content part xor null if there was none.
 	 * @throws Exception
 	 */
-	public Exercise getSuccedingExercise(Exercise exercise)
+	public Part getSuccedingPart(Part part)
 		throws Exception {
 
-		if (allExercisesRawFormat == null) {
-			System.err.println("No succeding exercise to " + exercise
-					+ ". allExercisesRawNativeFormat was null: "
-					+ allExercisesRawFormat);
+		if (allPartsRawFormat == null) {
+			System.err.println("No succeding part to " + part
+					+ ". allPartsRawNativeFormat was null: "
+					+ allPartsRawFormat);
 			return null;
 		}
 
 
 		/*
-		Note: Since v31.13c the exercise number is no longer the
-		exercise index/position within allExercises. The reason
+		Note: Since v31.13c the part number is no longer the
+		part index/position within allParts. The reason
 		for this is that the solutions are now recognised
 		automatically too and hence contained in the same list!
-		While the exercises' and solutions' numbers are all
-		maintained separately for each kind (solution, exercise).
-		That's why for determining the succeding exercise the
+		While the parts' and solutions' numbers are all
+		maintained separately for each kind (solution, part).
+		That's why for determining the succeding part the
 		declaration index has to be used:
 		*/
 		//int declaration_index
 		//	= this.declarationSet.declarations
-		//	.indexOf(exercise.getDeclaration());
-		int exerciseSucceding_index
+		//	.indexOf(part.getDeclaration());
+		int partSucceding_index
 			= this.declarationSet.declarations
-			.indexOf(exercise.getDeclaration()) + 1;
-		// The exerciseNumber might be the same for two or more
-		// exercises but that's not true for the index.
+			.indexOf(part.getDeclaration()) + 1;
+		// The partNumber might be the same for two or more
+		// parts but that's not true for the index.
 		// => Check: Is it out of range/bounds?
-		if (exerciseSucceding_index > this.allExercisesRawFormat.size() - 1) {
-			System.err.println("No succeding exercise to " + exercise
+		if (partSucceding_index > this.allPartsRawFormat.size() - 1) {
+			System.err.println("No succeding part to " + part
 					+ " because this one is already the last.");
 			return null;
 		}
 
 ////	int solutionCounter = 0;<- as this is no loop, this can not be
 // used. There are alternative methods:
-////	int exerciseCounter = 0;
+////	int partCounter = 0;
 //		String subsequent_filelink;
-		Exercise exerciseSucceding = null;
+		Part partSucceding = null;
 
 		// EITHER: (string concatenation. Additionally the procedure
 		// might fail at certain edge cases.)
 /* NOT CHOSEN BUT SHOULD WORK IN PRINCIPLE
-		// Was exercise found by a solution pattern?
+		// Was part found by a solution pattern?
 		// <- The declaration index now ensures the correct subsequent
 		// pattern is picked.
-//		if (false && exercise.getDeclaration() != null
-//				&& exercise.getDeclaration().getMatchedPattern()
+//		if (false && part.getDeclaration() != null
+//				&& part.getDeclaration().getMatchedPattern()
 //				.isSolutionPattern()) {
-			// The solution comes after the exercise but has the same number.
+			// The solution comes after the part but has the same number.
 
 			// Note: We start with 1 instead of 0 in the filesystem!
 
-			// Was the previous exercise a solution too? (indicates
+			// Was the previous part a solution too? (indicates
 			// that it's probably only solutions in this sheet)
 			// OR
-			// Try to find the corresponding exercise that might
+			// Try to find the corresponding part that might
 			// exist (if it's a mixed sheet) or might not (if it's
 			// one kind only).
-			int exerciseNumber = Global.extractExerciseNumberFromFilelink(exercise.filelink);// Result could be arbritrary so check it!!
+			int partNumber = Global.extractPartNumberFromFilelink(part.filelink);// Result could be arbritrary so check it!!
 
 			/*
 			We ask for the number being valid, though the
-			exerciseNumber cannot exceed the declaration_index
-			and this i.e. the exerciseSucceding_index was checked.
+			partNumber cannot exceed the declaration_index
+			and this i.e. the partSucceding_index was checked.
 			Nevertheless it's theoretically possible to love.
 			* /
-			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1* /) {
+			if (partNumber < allPartsRawFormat.size() /*-1 +1* /) {
 				subsequent_filelink
-					= this.getFilelinkForExerciseFromPosWithoutEnding(
-							exerciseNumber, exerciseSucceding_index)
+					= this.getFilelinkForPartFromPosWithoutEnding(
+							partNumber, partSucceding_index)
 					+ "." + getFileEnding() + "." + getFileEnding();
 					//+ ".odt.odt";
 				/*
-				(the sheetdraft's last ending is the exercise's
+				(the sheetdraft's last ending is the part's
 				native format (2nd last ending) as it's derived
 				from that one)
 				* /
-				exerciseSucceding = allExercisesRawFormat.get(
+				partSucceding = allPartsRawFormat.get(
 						subsequent_filelink
 				);
 			}
 
 			// Was nothing found?
-			if (exerciseSucceding == null) {
+			if (partSucceding == null) {
 				// Try the other possibility: increase by 1 but flip
 				// to the opposite of this splitby pattern (which is
-				// automatically reached via the next exercise's
+				// automatically reached via the next part's
 				// declaration):
 				subsequent_filelink
-					= this.getFilelinkForExerciseFromPosWithoutEnding(
-					exerciseNumber + 1, exerciseSucceding_index)
+					= this.getFilelinkForPartFromPosWithoutEnding(
+					partNumber + 1, partSucceding_index)
 					+ "." + getFileEnding() + "." + getFileEnding();
 					//+ ".odt.odt";
 				/*
-				(the sheetdraft's last ending is the exercise's
+				(the sheetdraft's last ending is the part's
 				native format (2nd last ending) as it's derived
 				from that one)
 				* /
-				exerciseSucceding = allExercisesRawFormat.get(
+				partSucceding = allPartsRawFormat.get(
 						subsequent_filelink
 				);
 			}
@@ -1948,29 +1948,29 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 		/*
 		Attention: As a HashMap is not sorted, this not works out of
 		the box. The map has to be sorted alphabetically at least for
-		Aufgabe and Loesung as well as Exercise and Solution this
+		Aufgabe and Loesung as well as Part and Solution this
 		is true!
 		A TreeMap preserves order. It may even be given a custom
 		comparator that overrides int compare(, )
 		from implements Comparator<Object> .
 		*/
-		if (exerciseSucceding_index < allExercisesRawFormat.size()) {
+		if (partSucceding_index < allPartsRawFormat.size()) {
 			// We spare the instanceof here because we know it
-			// must be an Exercise.
-//			if (object instanceof Exercise) {
-			return (Exercise)(allExercisesRawFormat.values()
-					.toArray()[exerciseSucceding_index]);
+			// must be an Part.
+//			if (object instanceof Part) {
+			return (Part)(allPartsRawFormat.values()
+					.toArray()[partSucceding_index]);
 //			}
 		}
 
 
-		return exerciseSucceding;
+		return partSucceding;
 
 	}
 
 
 
-//	private void extractExercisesFromODT() throws Exception {
+//	private void extractPartsFromODT() throws Exception {
 //
 //		// Unzip the openOffice Document
 //		ZipFile zipFile = new ZipFile(filelink);
@@ -1991,95 +1991,95 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 //				*/
 //				//elementsTraversed = new Element[elementsCountEstimation];
 //				Element rootElement = doc.getRootElement();
-//				// Extract each exercise according to found declarations.
+//				// Extract each part according to found declarations.
 //
 //
-//				// 0) Copy over the exercises found as plain text.
-//				//for (int ei = 0; ei < allExercisesPlainText.size(); ei++) {
-//				for (Exercise pPT : allExercisesPlainText.values()) {
+//				// 0) Copy over the parts found as plain text.
+//				//for (int ei = 0; ei < allPartsPlainText.size(); ei++) {
+//				for (Part pPT : allPartsPlainText.values()) {
 //					// create a copy
-//					// TODO: Merge allExercises-PlainText, -RawContent?
+//					// TODO: Merge allParts-PlainText, -RawContent?
 //					String pRC_filelink = pPT.getFilelink().replaceAll("[.]txt$", ".odt");
 //					ReadWrite.write("", pRC_filelink);
-//					Exercise pRC = new Exercise(pRC_filelink
+//					Part pRC = new Part(pRC_filelink
 //							, pPT.getDeclaration(), pPT.getHeader());
-//					allExercisesRawFormat.put(pRC_filelink, pRC);
+//					allPartsRawFormat.put(pRC_filelink, pRC);
 //				}
 //
 //
 //				// 1) Search the declaration in markup starting at root
-//				for (Exercise exercise : allExercisesRawFormat.values()) {
+//				for (Part part : allPartsRawFormat.values()) {
 //
-//					exercise.travelDownUntilDeclarationFound(rootElement);
+//					part.travelDownUntilDeclarationFound(rootElement);
 //
 //				}
 //
 //
-//				// 2) Must be timed after all exercises have been traversed.
-//				org.w3c.dom.Node deepestToAllExercisesCommonParent
-//				= determineAllExercisesDeepestCommonParentElement();
+//				// 2) Must be timed after all parts have been traversed.
+//				org.w3c.dom.Node deepestToAllPartsCommonParent
+//				= determineAllPartsDeepestCommonParentElement();
 //
 //
 //				// 3) From this parent element on
-//				// 3a) either delete the exercise not required (following references).
-//				// 3b) or extract the individual exercise's markup, the headers and references.
+//				// 3a) either delete the part not required (following references).
+//				// 3b) or extract the individual part's markup, the headers and references.
 //
 //				// 3a)
-//				// Copy complete zip archive odt file for each exercise
-//				for (Exercise exercise : allExercisesRawFormat.values()) {
+//				// Copy complete zip archive odt file for each part
+//				for (Part part : allPartsRawFormat.values()) {
 //					// 3a.1) Copy native file
-//					Global.copy(filelink, exercise.filelink);
+//					Global.copy(filelink, part.filelink);
 //
-//					// 3a.2) Reload it, now for each exercise
-//					Document exercise_doc
+//					// 3a.2) Reload it, now for each part
+//					Document part_doc
 //						= new SAXBuilder().build(Global
 //							.getInputStream(filelink, "content.xml"));
 //
 //					// 3a.3) Retraverse it
-//					exercise.travelDownUntilDeclarationFound(doc.getRootElement());
+//					part.travelDownUntilDeclarationFound(doc.getRootElement());
 //
-//					//3a.4) Figure out which exercise comes after this current one:
-//					Exercise exerciseSucceding = null;
+//					//3a.4) Figure out which part comes after this current one:
+//					Part partSucceding = null;
 //					// <- null indicates guess which sibling elements
-//					// still belong to this exercise's XML
-//					int exerciseNumber = Global
-//						.extractExerciseNumberFromFilelink(
-//							exercise.filelink);
-//					if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
+//					// still belong to this part's XML
+//					int partNumber = Global
+//						.extractPartNumberFromFilelink(
+//							part.filelink);
+//					if (partNumber < allPartsRawFormat.size() /*-1 +1*/) {
 //						//We start with 1 instead of 0 in the filesystem!
-//						String exercise_filelink = this
-//							.getFilelinkForExerciseFromPosWithoutEnding(
-//								exerciseNumber + 1)
+//						String part_filelink = this
+//							.getFilelinkForPartFromPosWithoutEnding(
+//								partNumber + 1)
 //							+ ".odt.odt";
-//						exerciseSucceding = allExercisesRawFormat
-//							.get(//increase by 1 as it's the following exercise
-//								exercise_filelink
+//						partSucceding = allPartsRawFormat
+//							.get(//increase by 1 as it's the following part
+//								part_filelink
 //						);
 //					}
 //
 //					// 3a.5) Remove unused XML.
 //					// Start at the deepest common parent element
 //					// and travel down to delete all the other
-//					// exercises' XML markup/content and all that is referenced
+//					// parts' XML markup/content and all that is referenced
 //					// AND NOT referenced by other parts.
 //					// => first delete XML, then at the end delete
 //					// reference content that is no longer referenced.
-//					exercise.deleteAllChildrenOfExceptFor(
-//							deepestAllExercisesCommonParentElement_index
-//							, exerciseSucceding);
+//					part.deleteAllChildrenOfExceptFor(
+//							deepestAllPartsCommonParentElement_index
+//							, partSucceding);
 //
 //
-//					// 3a.6) Save the exercise native file
+//					// 3a.6) Save the part native file
 ////				new SAXOutputter().output(doc);
 //				}
 //
 //
 //				// 4) Store the newly created native filelink
-//				// exercises in the DB:
+//				// parts in the DB:
 //				// done in action.upload.jsp because of the index
 //				// also being updated inserting this raw/native
-//				// format exercise data into the DB together with
-//				// the plain text exercises.
+//				// format part data into the DB together with
+//				// the plain text parts.
 //
 //
 //				break;
@@ -2093,9 +2093,9 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 	/**
-	 * PDF: Find and store exercises to filesystem.
+	 * PDF: Find and store parts to filesystem.
 	 */
-	private void extractExercisesFromPDF() {
+	private void extractPartsFromPDF() {
 
 		//TODO
 
@@ -2103,18 +2103,18 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 	/**
-	 * RTF: Find and store exercises to filesystem.
+	 * RTF: Find and store parts to filesystem.
 	 */
-	private void extractExercisesFromRTF() {
+	private void extractPartsFromRTF() {
 
 		//TODO
 
 	}
 
 	/**
-	 * DOC: Find and store exercises to filesystem.
+	 * DOC: Find and store parts to filesystem.
 	 */
-	private void extractExercisesFromDOC() {
+	private void extractPartsFromDOC() {
 
 		//TODO
 
@@ -2123,11 +2123,11 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 	/**
-	 * DOCX: Find and store exercises to filesystem.
+	 * DOCX: Find and store parts to filesystem.
 	 *
 	 * @throws Exception
 	 */
-	private void extractExercisesFromDOCX() throws Exception {
+	private void extractPartsFromDOCX() throws Exception {
 
 
 //		WordprocessingMLPackage wMLPac = Docx4J.load(new File(filelink));
@@ -2148,23 +2148,23 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 		//Docx4J.
 
 
-		// Extract each exercise according to found declarations.
-		// 0) Copy over the exercises found as plain text.
-		//for (int ei = 0; ei < allExercisesPlainText.size(); ei++) {
-		for (Exercise pPT : allExercisesPlainText.values()) {
+		// Extract each part according to found declarations.
+		// 0) Copy over the parts found as plain text.
+		//for (int ei = 0; ei < allPartsPlainText.size(); ei++) {
+		for (Part pPT : allPartsPlainText.values()) {
 			// Create a copy
-			// TODO: Better join allExercises-PlainText, -RawContent?
+			// TODO: Better join allParts-PlainText, -RawContent?
 			String pRC_filelink = Global
 				.replaceEnding(pPT.getFilelink(), "docx");
 			ReadWrite.write("", pRC_filelink);
-			Exercise pRC = new Exercise(pRC_filelink, pPT.getDeclaration(), pPT.getHeader());
+			Part pRC = new Part(pRC_filelink, pPT.getDeclaration(), pPT.getHeader());
 			/*
 			Enable if plainText shall not be reloaded dynamically
-			for each exercise flavour format, instead only once for
+			for each part flavour format, instead only once for
 			the native format.
 			pRC.plainText = pPT.getPlainText();
 			*/
-			allExercisesRawFormat.put(pRC_filelink, pRC);
+			allPartsRawFormat.put(pRC_filelink, pRC);
 		}
 
 
@@ -2175,40 +2175,40 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 		METHOD A: SHEETDRAFT TRAVERSE ONLY AND USING INDICES.
 		(as now suddenly the indexOf seems to deliver proper results.
 		TODO redesign this approach separately ensuring equals works.)
-		METHOD B: NOW DONE FOR EACH EXERCISE INDIVIDUALLY AS
+		METHOD B: NOW DONE FOR EACH PART INDIVIDUALLY AS
 		OTHERWISE THE NODES WILL NOT BE VALID AND MIXED IF NO NEW
-		NODES ARE LOADED AND TRAVERSED FOR EACH EXERCISE!
+		NODES ARE LOADED AND TRAVERSED FOR EACH PART!
 		The reason that iginited method B) was the indexOf initially
 		not working, thus removing nodes proved impossible (output
 		file was same as input file as if nothing was deleted).
-		for (Exercise exercise : allExercisesRawFormat.values()) {
+		for (Part part : allPartsRawFormat.values()) {
 
-			exercise.travelDownUntilDeclarationFound(rootElement);
+			part.travelDownUntilDeclarationFound(rootElement);
 
 		}
 
 
-		// 2) Must be timed after all exercises have been traversed.
-		// (all exercises retrieve their
-		// deepestCommonParentElement_sChildElementContainingTheExercise)
-		determineAllExercisesDeepestCommonParentElement();
+		// 2) Must be timed after all parts have been traversed.
+		// (all parts retrieve their
+		// deepestCommonParentElement_sChildElementContainingThePart)
+		determineAllPartsDeepestCommonParentElement();
 		*/
 
 		// 3) From this parent element on
-		// 3a) either delete the exercise not required (following refs)
-		// 3b) or extract the individual exercise's markup, the
+		// 3a) either delete the part not required (following refs)
+		// 3b) or extract the individual part's markup, the
 		// headers and references.
 
 		// 3a)
 		//textDocument.close();
-		// Copy complete zip archive odt file for each exercise, delete foreign content, save.
-		for (Exercise exercise : allExercisesRawFormat.values()) {
+		// Copy complete zip archive odt file for each part, delete foreign content, save.
+		for (Part part : allPartsRawFormat.values()) {
 
 			// 3a.1) copy native file
-			//Global.copy(filelink, exercise.filelink);
+			//Global.copy(filelink, part.filelink);
 
 			// 3a.2) reload the sheetdraft's XML - now for each
-			// exercise it will be saved separately. This is required
+			// part it will be saved separately. This is required
 			// as the nodes currently known are from the sheetdraft's
 			// XML only!
 			// And indices are not necessarily determined correctly
@@ -2224,135 +2224,135 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 			Body rootElement = wmlDocumentEl.getBody();
 
 			// To prevent still having the old data in there:
-			exercise.clearTraversedAndTextBuffer();
-			//exer.travelDownUntilDeclarationFound(exercise_rootElement);
-			Exercise.Docx4JTravelCallback exercise_traveller
-				= exercise.new Docx4JTravelCallback();
-//			exercise_traveller.setDeclaration(exercise.getDeclaration());
+			part.clearTraversedAndTextBuffer();
+			//exer.travelDownUntilDeclarationFound(part_rootElement);
+			Part.Docx4JTravelCallback part_traveller
+				= part.new Docx4JTravelCallback();
+//			part_traveller.setDeclaration(part.getDeclaration());
 			// For skipping declarations if identical double
-			// exercises exist! Otherwise the first found match
+			// parts exist! Otherwise the first found match
 			// will be taken as correct declaration while it is
 			// the declaration of the first occurrence of the same
-			// twice existing exercise.
-			exercise/*_traveller*/
-				.setDeclarationsOfAllExercises(this.declarationSet);
-			new TraversalUtil(rootElement, exercise_traveller);
+			// twice existing part.
+			part/*_traveller*/
+				.setDeclarationsOfAllParts(this.declarationSet);
+			new TraversalUtil(rootElement, part_traveller);
 
 			// 3a.3) Retraverse it
-			// because for each exercise that is examined all
-			// other exercises have to be considered on exactly
+			// because for each part that is examined all
+			// other parts have to be considered on exactly
 			// the same node tree!
 			// 1) Search the declaration in markup starting from root.
-			for (Exercise exer : allExercisesRawFormat.values()) {
-				if (exer.equals(exercise)) {
+			for (Part exer : allPartsRawFormat.values()) {
+				if (exer.equals(part)) {
 					continue;
 				}
 				// To prevent still having the old data in there
 				exer.clearTraversedAndTextBuffer();
 				//exer.travelDownUntilDeclarationFound(
-				//		exercise_rootElement);
-				Exercise.Docx4JTravelCallback finder
+				//		part_rootElement);
+				Part.Docx4JTravelCallback finder
 					= exer.new Docx4JTravelCallback();
 //				finder.setDeclaration(exer.getDeclaration());
-				// Skip declarations if identical double exercises
+				// Skip declarations if identical double parts
 				// exist! Otherwise the first found match will be
 				// taken as correct declaration while it is the
 				// declaration of the first occurrence of the same
-				// twice existing exercise.
-				exercise/*finder*/.setDeclarationsOfAllExercises(
+				// twice existing part.
+				part/*finder*/.setDeclarationsOfAllParts(
 						this.declarationSet);
 				new TraversalUtil(rootElement, finder);
 			}
 			/*
-			After this loop the exercises have traversed this
-			exercise dom's nodes!
+			After this loop the parts have traversed this
+			part dom's nodes!
 			*/
 			/*
 			=> So now if we determine the deepest common parent
-			element in this current exercise containing only
+			element in this current part containing only
 			elements from within this DOM.
 			*/
-			determineAllExercisesDeepestCommonParentElement();
-			determineHighestParentThatContainsOneAndOnlyOneExerciseDeclaration();
-			//determineHighestParentElementThatContainsOneExerciseOnly();
+			determineAllPartsDeepestCommonParentElement();
+			determineHighestParentThatContainsOneAndOnlyOnePartDeclaration();
+			//determineHighestParentElementThatContainsOnePartOnly();
 
-			//exercise_rootElement.removeChild(
-			//		exercise.sheetdraftElementsTraversed
-			//		.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisExercise_index));
+			//part_rootElement.removeChild(
+			//		part.sheetdraftElementsTraversed
+			//		.get(elementsTraversed_deepestCommonParentElement_sChildContainingThisPart_index));
 
 			// IMPORTANT: copy over the deepest common parent element
 			/*
 			The indices are not determined correctly due to matching
 			in indexOf(Node)
-			exercise.deepestAllExercisesCommonParentElement
-				= exercise.sheetdraftElementsTraversed
-				.get(deepestAllExercisesCommonParentElement_index);
-			exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-				= exercise.sheetdraftElementsTraversed
-				.get(deepestAllExercisesCommonParentElement_sChild_index);
+			part.deepestAllPartsCommonParentElement
+				= part.sheetdraftElementsTraversed
+				.get(deepestAllPartsCommonParentElement_index);
+			part.deepestAllPartsCommonParentElement_sChildContainingThisPart
+				= part.sheetdraftElementsTraversed
+				.get(deepestAllPartsCommonParentElement_sChild_index);
 			*/
 
-			// 3a.4) Figure out which exercise comes after this:
-			Exercise exerciseSucceding = getSuccedingExercise(exercise);
+			// 3a.4) Figure out which part comes after this:
+			Part partSucceding = getSuccedingPart(part);
 			// <- null indicates guess which sibling elements still
-			// belong to this exercise's XML
-//			int exerciseNumber = Global
-//				.extractExerciseNumberFromFilelink(exercise.filelink);
-//			if (exerciseNumber < allExercisesRawFormat.size() /*-1 +1*/) {
+			// belong to this part's XML
+//			int partNumber = Global
+//				.extractPartNumberFromFilelink(part.filelink);
+//			if (partNumber < allPartsRawFormat.size() /*-1 +1*/) {
 //				// We start with 1 instead of 0 in the filesystem!
-//				String exercise_filelink = this
-//					.getFilelinkForExerciseFromPosWithoutEnding(
-//						exerciseNumber + 1, exerciseNumber + 1)
+//				String part_filelink = this
+//					.getFilelinkForPartFromPosWithoutEnding(
+//						partNumber + 1, partNumber + 1)
 //					+ ".docx.docx";
-//				exerciseSucceding = allExercisesRawFormat
+//				partSucceding = allPartsRawFormat
 //					.get(
 //						// inc by 1 as it's the following content part
-//						exercise_filelink
+//						part_filelink
 //				);
 //			}
 
 
 			// 3a.5) Remove unused XML.
 			// Start at the deepest common parent element and travel
-			// down to delete all the other exercises' XML
+			// down to delete all the other parts' XML
 			// markup/content and all that is referenced AND NOT
 			// referenced by other parts.
 			// => first delete XML, then at the end delete reference
 			// content that is no longer referenced.
-//			exercise.deleteAllChildrenOfExceptFor(
-//					exercise.deepestAllExercisesCommonParentElement_index
-//					, exerciseSucceding);
-			travelUpAndRemoveAllSiblingsForEachLevel(exercise
-					, exerciseSucceding, rootElement, exercise_traveller);
+//			part.deleteAllChildrenOfExceptFor(
+//					part.deepestAllPartsCommonParentElement_index
+//					, partSucceding);
+			travelUpAndRemoveAllSiblingsForEachLevel(part
+					, partSucceding, rootElement, part_traveller);
 
-			//exercise_rootElement = exercise_textDocument.getContentRoot();
+			//part_rootElement = part_textDocument.getContentRoot();
 
-			// 3a.6) Save the exercise native file
-			//exercise_textDocument.getContentDom().replaceChild(
-			//		exercise_rootElement
-			//		, exercise.deepestAllExercisesCommonParentElement);
-			//exercise_textDocument.getPackage().insert(exercise_textDocument.getFileDom("content.xml"), "content.xml", "text/xml");
-			Docx4J.save(wMLPac, new File(exercise.filelink)
+			// 3a.6) Save the part native file
+			//part_textDocument.getContentDom().replaceChild(
+			//		part_rootElement
+			//		, part.deepestAllPartsCommonParentElement);
+			//part_textDocument.getPackage().insert(part_textDocument.getFileDom("content.xml"), "content.xml", "text/xml");
+			Docx4J.save(wMLPac, new File(part.filelink)
 					, Docx4J.FLAG_NONE);
-			//exercise_textDocument.close();
-			//exercise_textDocument.getPackage()
-			//	.save(exercise.filelink);
+			//part_textDocument.close();
+			//part_textDocument.getPackage()
+			//	.save(part.filelink);
 			HeaderFooterRemove.removeHFFromFile(
 					new File(filelink));// TODO necessary or redundant?
 
-			// 3a7) Extract plain text for each exercise.
-			exercise.extractPlainText();
+			// 3a7) Extract plain text for each part.
+			part.extractPlainText();
 
 			// 3a8) Create images native format.
-			exercise.generateImage();
+			part.generateImage();
 
 		}
 
 
-		// 4) Store the newly created native filelink exercises in DB:
+		// 4) Store the newly created native filelink parts in DB:
 		// done in action.upload.jsp because of the index also being
-		// updated inserting this raw/native format exercise
-		// data into the DB together with the plain text exercises.
+		// updated inserting this raw/native format part
+		// data into the DB together with the plain text parts.
 
 
 //		Using XPath
@@ -2398,20 +2398,20 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 	public void travelUpAndRemoveAllSiblingsForEachLevel(
-			Exercise exercise, Exercise exerciseSucceding
+			Part part, Part partSucceding
 			, Object rootElement
-			, Exercise.Docx4JTravelCallback exercise_traveller)
+			, Part.Docx4JTravelCallback part_traveller)
 		throws Exception {
 
 		// Old approach is in versioning system, the difference is
 		// the call of the remove function multiple times for each
-		// element from highestOnlyOneExerciseContainingElement up
+		// element from highestOnlyOnePartContainingElement up
 		// until root.
-		// 1 Start with this exercise's
-		// highestOnlyOneExerciseDeclarationContainingWayToWhereDeclarationFoundElement
+		// 1 Start with this part's
+		// highestOnlyOnePartDeclarationContainingWayToWhereDeclarationFoundElement
 		//  as the current element.
 		Object elementNotToRemove
-			= exercise.highestParentElementContainingThisExerciseOnly;
+			= part.highestParentElementContainingThisPartOnly;
 
 		while (elementNotToRemove != null
 				/*
@@ -2420,7 +2420,7 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 				*/
 				&& !XmlUtils.unwrap(elementNotToRemove)
 				.equals(XmlUtils.unwrap(
-						exercise.deepestAllExercisesCommonParentElement
+						part.deepestAllPartsCommonParentElement
 						))
 				/* Cancel to keep all non-content related settings. */
 				&& !XmlUtils.unwrap(elementNotToRemove)
@@ -2448,12 +2448,12 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 				// Debug Information:
 				if (Global.debug) {
 					System.out.println("DeepestCommon_sChildElement: "
-							+ exercise
-							.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
+							+ part
+							.deepestAllPartsCommonParentElement_sChildContainingThisPart
 							//.getClass()
-							+ " \r\nHighestContainingOnlyOneExercise: "
-							+ exercise
-							.highestParentElementContainingThisExerciseOnly);
+							+ " \r\nHighestContainingOnlyOnePart: "
+							+ part
+							.highestParentElementContainingThisPartOnly);
 				}
 				// Remove:
 				//TraversalUtil.getChildrenImpl(
@@ -2464,25 +2464,25 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 			*/
 			/*
 			THIS IS REQUIRED FOR THE SPECIAL CASE THAT MANY HEADINGS
-			AND PARAGRAPHS OF DIFFERENT EXERCISES ARE WITHIN THE
+			AND PARAGRAPHS OF DIFFERENT PARTS ARE WITHIN THE
 			SAME PARENT ELEMENT.
 			*/
-			if (exercise_traveller != null) {
-				exercise_traveller.removeAllSiblingsOf(
-					//exercise.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-					//exercise.highestParentElementContainingThisExerciseOnly
+			if (part_traveller != null) {
+				part_traveller.removeAllSiblingsOf(
+					//part.deepestAllPartsCommonParentElement_sChildContainingThisPart
+					//part.highestParentElementContainingThisPartOnly
 					elementNotToRemove
-					, exerciseSucceding
+					, partSucceding
 				);
 			}
 			else {
-				exercise.removeAllSiblingsOf(
-						//(org.w3c.dom.Node)exercise
-						//	.deepestAllExercisesCommonParentElement_sChildContainingThisExercise
-						//(org.w3c.dom.Node)exercise
-						//	.highestParentElementContainingThisExerciseOnly
+				part.removeAllSiblingsOf(
+						//(org.w3c.dom.Node)part
+						//	.deepestAllPartsCommonParentElement_sChildContainingThisPart
+						//(org.w3c.dom.Node)part
+						//	.highestParentElementContainingThisPartOnly
 						(org.w3c.dom.Node)elementNotToRemove
-						, exerciseSucceding
+						, partSucceding
 				);
 			}
 
@@ -2504,8 +2504,8 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 		}
 
-		// 4 Terminate. All non-this-exercise-related content is
-		// removed (besides the to all exercises common content:
+		// 4 Terminate. All non-this-part-related content is
+		// removed (besides the to all parts common content:
 		// only if Optional condition).
 		//return;
 	}
@@ -2516,17 +2516,17 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 	/**
-	 * HTML: Find and store exercises to filesystem.
+	 * HTML: Find and store parts to filesystem.
 	 *
 	 * @throws Exception
 	 * @throws FileNotFoundException
 	 */
-	private void extractExercisesFromHTML()
+	private void extractPartsFromHTML()
 		throws FileNotFoundException, Exception {
-		extractExercisesFromHTML(this.filelink);
+		extractPartsFromHTML(this.filelink);
 	}
 
-	private void extractExercisesFromHTML(String filelink) throws FileNotFoundException, Exception {
+	private void extractPartsFromHTML(String filelink) throws FileNotFoundException, Exception {
 
 		// Achieve a JDOM or DOM representation after cleaning and
 		// tidying up the HTML to XHTML:
@@ -2571,92 +2571,92 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 
-		// 0) Copy over the exercises found as plain text.
-		//for (int ei = 0; ei < allExercisesPlainText.size(); ei++) {
-		for (Exercise pPT : allExercisesPlainText.values()) {
+		// 0) Copy over the parts found as plain text.
+		//for (int ei = 0; ei < allPartsPlainText.size(); ei++) {
+		for (Part pPT : allPartsPlainText.values()) {
 			// Create a copy
-			// TODO: Merge allExercises-PlainText, -Raw/NativeContent?
+			// TODO: Merge allParts-PlainText, -Raw/NativeContent?
 			String pRC_filelink
 				= Global.replaceEnding(pPT.getFilelink(), "html");
 			ReadWrite.write("", pRC_filelink);
-			Exercise pRC = new Exercise(pRC_filelink
+			Part pRC = new Part(pRC_filelink
 					, pPT.getDeclaration(), pPT.getHeader());
-			allExercisesRawFormat.put(pRC_filelink, pRC);
+			allPartsRawFormat.put(pRC_filelink, pRC);
 		}
 
 
 		// 3) From this parent element on either
-		// 3a) delete the exercise not required (following refs) or
-		// 3b) extract the individual exercise's markup,
+		// 3a) delete the part not required (following refs) or
+		// 3b) extract the individual part's markup,
 		// the headers and references.
 
 		// 3a)
 		//textDocument.close();
-		// Copy complete zip archive odt file for each exercise,
+		// Copy complete zip archive odt file for each part,
 		// delete foreign content, save.
-		for (Exercise exercise : allExercisesRawFormat.values()) {
+		for (Part part : allPartsRawFormat.values()) {
 
 			// 3a.1) copy native file
-			//Global.copy(filelink, exercise.filelink);
+			//Global.copy(filelink, part.filelink);
 
 			// 3a.2) reload the sheetdraft's xml - now for each
-			// exercise it will be saved separately. This is required
+			// part it will be saved separately. This is required
 			// as the nodes currently known are from the sheetdraft's
 			// XML only!
 			// and indices are not necessarily determined correctly
 			// because of indexOf(Node) not working here somehow.
 			TagNode rootTagNode = cleaner.clean(new File(filelink));
 			// <-this.filelink is absolute.
-			org.w3c.dom.Document exercise_document
+			org.w3c.dom.Document part_document
 				= new DomSerializer(props, true).createDOM(rootTagNode);
-			org.w3c.dom.Node exercise_rootElement
-				= exercise_document.getDocumentElement();
+			org.w3c.dom.Node part_rootElement
+				= part_document.getDocumentElement();
 
 
 			// 3a.3) Retraverse it
-			// 3a.4) Figure out the exercise's following exercise.
+			// 3a.4) Figure out the part's following part.
 			// 3a.5) Remove unused xml.
-			retraverseNativeFormatExercisesDetermineSucceedingExerciseAndRemoveUnused(
-					exercise, exercise_rootElement
+			retraverseNativeFormatPartsDetermineSucceedingPartAndRemoveUnused(
+					part, part_rootElement
 			);
 
-			// 3a.6) save the exercise native file
+			// 3a.6) save the part native file
 			// TODO Wants a TagNode so after serialization we will
 			// have to use another method to save.
 			//new SimpleHtmlSerializer(props)
-			//	.writeToFile(exercise_rootElement, exercise.filelink);
+			//	.writeToFile(part_rootElement, part.filelink);
 			javax.xml.transform.Transformer transformer
 				= javax.xml.transform
 				.TransformerFactory.newInstance().newTransformer();
 
 			javax.xml.transform.Result target
 				= new javax.xml.transform.stream
-				.StreamResult(new File(exercise.filelink));
+				.StreamResult(new File(part.filelink));
 			// For testing use System.out
 			javax.xml.transform.Source source
 				= new javax.xml.transform.dom
-				.DOMSource(exercise_document);
+				.DOMSource(part_document);
 
 			transformer.transform(source, target);
-			//exercise_document.getPackage().save(exercise.filelink);
-//			exercise_document.close();
+			//part_document.getPackage().save(part.filelink);
+//			part_document.close();
 
 
-			// 3a7) Extract plain text for each exercise.
-			exercise.extractPlainText();
+			// 3a7) Extract plain text for each part.
+			part.extractPlainText();
 
 			// 3a8) Create images native format.
-			exercise.generateImage();
+			part.generateImage();
 
 
 		}
 
 
-		// 4) Store the newly created native filelink exercises
+		// 4) Store the newly created native filelink parts
 		// in the DB:
 		// done in action.upload.jsp because of the index also being
-		// updated. Inserting this raw/native format exercise data
-		// into the DB together/with the plain text exercises.
+		// updated. Inserting this raw/native format part data
+		// into the DB together/with the plain text parts.
 
 
 	}
@@ -2674,10 +2674,10 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 	 * with what has been there at the beginning at all.
 	 * @param sheet Sheetdraft, to split into content parts.
 	 */
-	private void extractExercisesFromPlainText() {
-		extractExercisesFromPlainText(this.getPlainText());
+	private void extractPartsFromPlainText() {
+		extractPartsFromPlainText(this.getPlainText());
 	}
-	private void extractExercisesFromPlainText(String[] plainText) {
+	private void extractPartsFromPlainText(String[] plainText) {
 		/*
 		TODO If the filtering of double declarations leads to
 		removed content (so if the declaration may be equal but
@@ -2691,7 +2691,7 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 		*/
 
 		// Creates for all texts between 2 declarations a new
-		// exercise, i.e. all but from last declaration to the end.
+		// part, i.e. all but from last declaration to the end.
 		String header_of_its_sheet = "";
 		String ex_filelink;
 		int ex_count_and_pos = -1;
@@ -2708,41 +2708,41 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 							dec_count_and_pos + 1)
 						.getLineNumber() - declarationSet.declarations
 						.get(dec_count_and_pos).getLineNumber());
-			String[] exerciseText
+			String[] partText
 				= new String[ex_row_count_according_declarations];
-			//TODOString[] exerciseRaw = new String[exercise_count_according_declarations];
-//			String lineBeforeNewExerciseDeclaration;
+			//TODOString[] partRaw = new String[part_count_according_declarations];
+//			String lineBeforeNewPartDeclaration;
 //			// Prevent out of bounds:
 //			if (!(sheetsDeclarations.get(i).getLine() < 0)) {
-//				lineBeforeNewExerciseDeclaration
-//					= this.getRawContent()[exercise_count_according_declarations];
+//				lineBeforeNewPartDeclaration
+//					= this.getRawContent()[part_count_according_declarations];
 //			}
 			// From the line of the declaration copy into String[]:
 			for (int j = 0; j < ex_row_count_according_declarations
 					; j++) {
 				int nextLine = j + declarationSet.declarations
 					.get(dec_count_and_pos).getLineNumber();
-				exerciseText[j] = plainText[nextLine];
-				//TODOexerciseRaw[j] = this.getRawContent()[nextLine];
+				partText[j] = plainText[nextLine];
+				//TODOpartRaw[j] = this.getRawContent()[nextLine];
 				/*
-				ATTENTION: The first|last exercise-raw-content-lines
+				ATTENTION: The first|last part-raw-content-lines
 					have to overlap because there is potential content
-					of the previous|next exercise in the same
+					of the previous|next part in the same
 					line as the declaration's.
 				*/
 			}
-//			String lineAfterNewExerciseDeclaration;
+//			String lineAfterNewPartDeclaration;
 //			if (this.getRawContent().length
-//					> exercise_count_according_declarations) {
-//				lineAfterNewExerciseDeclaration = this
-//					.getRawContent()[exercise_count_according_declarations];
+//					> part_count_according_declarations) {
+//				lineAfterNewPartDeclaration = this
+//					.getRawContent()[part_count_according_declarations];
 //			}
 			// Create a new content part object:
-			// Increment here because we start the exercise count
+			// Increment here because we start the part count
 			// human readable with 1 instead of 0.
 			// DEPENDS ON IF IT'S A SOLUTION DECLARATION OR
-			// AN EXERCISE DECLARATION.
-			// Note: The Exercise-class is to be renamed to Part!
+			// AN PART DECLARATION.
+			// Note: The Part-class is to be renamed to Part!
 			// TODO Add more pairs or replace by dynamic method, e.g.
 			// populate variables dynamically: pair_member_{a,b} and
 			// use them in the following code (distinction is
@@ -2751,35 +2751,35 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 					.getMatchedPattern().isSolutionPattern()) {
 				// => Solution.
 				ex_filelink
-					= getFilelinkForExerciseFromPosWithoutEnding(
+					= getFilelinkForPartFromPosWithoutEnding(
 							++solution_count_and_pos + 1
 							, dec_count_and_pos + 1)
 					+ /*"-Lsg" +*/ "." + this.getFileEnding() + ".txt";
 			}
 			else {
-				// => Exercise declaration:
+				// => Part declaration:
 				ex_filelink
-					= getFilelinkForExerciseFromPosWithoutEnding(
+					= getFilelinkForPartFromPosWithoutEnding(
 							++ex_count_and_pos + 1
 							, dec_count_and_pos + 1)
 					+ "." + this.getFileEnding() + ".txt";
 			}
-			//TODOString[] exerciseRawPlusExtraNextLine
-			//	= new String[exerciseRaw.length + 1];
-			//System.arraycopy(exerciseRaw, 0
-			//		, exerciseRawPlusExtraNextLine
-			//		, 0, exerciseRaw.length);
-			Exercise loopExercise = new Exercise(
+			//TODOString[] partRawPlusExtraNextLine
+			//	= new String[partRaw.length + 1];
+			//System.arraycopy(partRaw, 0
+			//		, partRawPlusExtraNextLine
+			//		, 0, partRaw.length);
+			Part loopPart = new Part(
 					ex_filelink
 					, declarationSet.declarations.get(dec_count_and_pos)
-					, exerciseText
-					//, exerciseRaw
+					, partText
+					//, partRaw
 					, header_of_its_sheet
 			);
-			allExercisesPlainText.put(ex_filelink, loopExercise);
+			allPartsPlainText.put(ex_filelink, loopPart);
 
 			// Write to filesystem.
-			//ReadWrite.write(exerciseText, ex_filelink);
+			//ReadWrite.write(partText, ex_filelink);
 
 		}
 
@@ -2795,16 +2795,16 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 			.get(declarationSet.declarations.size() - 1);
 
 		// Find earlier line to stop at/before:
-		System.out.println("[Extract plain text last exercise]"
+		System.out.println("[Extract plain text last part]"
 				+ "\r\nTrying to find an earlier line to stop at"
 				+ " (more precisely:before)"
 				//+ " than the whole end of the text. The reason"
 				//+ " is that content might be double and then all"
 				//+ " this double content would be included in the"
-				//+ " last exercise."
+				//+ " last part."
 		);
 		// + 1 because we must not start on this line as this matches
-		// all the time as it's the last exercise's dec's line:
+		// all the time as it's the last part's dec's line:
 		int line_relative = -1 + 1;
 		// Only overridden if all text is in 1 line (unlikely here):
 		int woerter_to_analyse_maximum = 4;
@@ -2841,7 +2841,7 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 				System.out.println(message);
 				boolean matches =
 //						Muster.getMusterByName(Global
-//						.extractSplitterFromFilelink(exercise_filelink))
+//						.extractSplitterFromFilelink(part_filelink))
 						lastDec
 						.getMatchedPattern()
 						.getPattern().matcher(wort).matches();
@@ -2857,64 +2857,64 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 			}
 		}
 
-		int exercise_row_count_according_declarations
+		int part_row_count_according_declarations
 			= lineToStopBefore - lastDec.getLineNumber();
-		String[] exerciseText
-			= new String[exercise_row_count_according_declarations];
-		//String[] exerciseRaw
-		//	= new String[exercise_count_according_declarations];
-		//String[] exerciseRawPlusExtraNextLine
-		//	= new String[exerciseRaw.length + 1];
+		String[] partText
+			= new String[part_row_count_according_declarations];
+		//String[] partRaw
+		//	= new String[part_count_according_declarations];
+		//String[] partRawPlusExtraNextLine
+		//	= new String[partRaw.length + 1];
 		//TODO probably overflow here:System.arraycopy(
-		//			exerciseRaw, 0
-		//			, exerciseRawPlusExtraNextLine, 0
-		//			, exerciseRaw.length);
-		for (int j = 0; j < exerciseText.length; j++) {
+		//			partRaw, 0
+		//			, partRawPlusExtraNextLine, 0
+		//			, partRaw.length);
+		for (int j = 0; j < partText.length; j++) {
 			int nextLine = j + lastDec.getLineNumber();
-			exerciseText[j] = this.getPlainText()[nextLine];
-			//exerciseRaw[j] = this.getRawContent()[nextLine];
+			partText[j] = this.getPlainText()[nextLine];
+			//partRaw[j] = this.getRawContent()[nextLine];
 			/*
-			ATTENTION: The first (or last) exercise-raw-content-lines
+			ATTENTION: The first (or last) part-raw-content-lines
 			have to overlap because there is potential content of the
-			previous|next exercise in the line of the declaration's.
+			previous|next part in the line of the declaration's.
 			*/
 		}
-		// Create a new exercise object:
+		// Create a new part object:
 		// Increment by 1 because we start with 1 instead of 0:
 		if (lastDec.getMatchedPattern().isSolutionPattern()) {
 			// => Solution.
-			ex_filelink = getFilelinkForExerciseFromPosWithoutEnding(
+			ex_filelink = getFilelinkForPartFromPosWithoutEnding(
 					++solution_count_and_pos + 1
 					, dec_count_and_pos + 1)
 				+ /*"-Lsg" +*/ "." + this.getFileEnding() + ".txt";
 		}
 		else {
-			// => Exercise declaration:
-			ex_filelink = getFilelinkForExerciseFromPosWithoutEnding(
+			// => Part declaration:
+			ex_filelink = getFilelinkForPartFromPosWithoutEnding(
 					++ex_count_and_pos + 1, dec_count_and_pos + 1)
 				+ "." + this.getFileEnding() + ".txt";
 		}
-		Exercise loopExercise = new Exercise(
+		Part loopPart = new Part(
 				ex_filelink
 				, lastDec
-				, exerciseText
-				//, exerciseRaw
+				, partText
+				//, partRaw
 				// Not working because the file not yet written to disk
 				//, PartDB.extractRawContentDependingOnFiletype(
 				//		filelink)
 				, header_of_its_sheet
 		);
-		this.lastExercisePlainText = loopExercise;
-		allExercisesPlainText.put(ex_filelink, loopExercise);
+		this.lastPartPlainText = loopPart;
+		allPartsPlainText.put(ex_filelink, loopPart);
 
 		// Write to filesystem.
-		//ReadWrite.write(exerciseText, ex_filelink);
+		//ReadWrite.write(partText, ex_filelink);
 
 		/*
 		Sort alphabetically as it's needed for
-		determiningSuccedingExercise since solutions are supported
+		determiningSuccedingPart since solutions are supported
 		(v31.13c). Alphabetically because Aufgabe comes before
-		Loesung and Exercise before Solution. TODO This has to be
+		Loesung and Part before Solution. TODO This has to be
 		differentiated between languages where this order is not valid.
 		*/
 
@@ -2944,50 +2944,50 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 	/**
-	 * SET EXERCISES MAP
+	 * SET PARTS MAP
 	 *
-	 * @param exercisesMapListToSet
+	 * @param partsMapListToSet
 	 */
-	public void setExercisesMap(Map<String, Exercise> exercisesMapToSet
+	public void setPartsMap(Map<String, Part> partsMapToSet
 			) {
 
-		// Clearing old exercise list:
-		this.allExercisesRawFormat = exercisesMapToSet;
+		// Clearing old part list:
+		this.allPartsRawFormat = partsMapToSet;
 
 	}
 
 
 
-	public void setExercisesPlainTextMap(Map<String
-			, Exercise> exercisesMapToSet) {
+	public void setPartsPlainTextMap(Map<String
+			, Part> partsMapToSet) {
 
-		// Clearing old exercise list
-		this.allExercisesPlainText = exercisesMapToSet;
+		// Clearing old part list
+		this.allPartsPlainText = partsMapToSet;
 
 	}
 
 
 
 	/**
-	 * To avoid a false exercise count, plain text and raw format
-	 * content exercises are stored separately.
+	 * To avoid a false part count, plain text and raw format
+	 * content parts are stored separately.
 	 */
-	public void setExercises(ArrayList<Exercise> exercisesListToSet) {
-		// Clearing old exercises!? TODO investigate what better
-		this.allExercisesRawFormat = new TreeMap<String, Exercise>();
-		for (Exercise p : exercisesListToSet) {
-			this.allExercisesRawFormat.put(e.filelink, p);
+	public void setParts(ArrayList<Part> partsListToSet) {
+		// Clearing old parts!? TODO investigate what better
+		this.allPartsRawFormat = new TreeMap<String, Part>();
+		for (Part p : partsListToSet) {
+			this.allPartsRawFormat.put(e.filelink, p);
 		}
 
 	}
 
 
 
-	public void setExercisesPlainText(ArrayList<Exercise> exercisesListToSet) {
-		//Clearing old exercises!? TODO investigate what better
-		this.allExercisesPlainText = new TreeMap<String, Exercise>();
-		for (Exercise e : exercisesListToSet) {
-			this.allExercisesPlainText.put(e.filelink, e);
+	public void setPartsPlainText(ArrayList<Part> partsListToSet) {
+		//Clearing old parts!? TODO investigate what better
+		this.allPartsPlainText = new TreeMap<String, Part>();
+		for (Part e : partsListToSet) {
+			this.allPartsPlainText.put(e.filelink, e);
 		}
 
 	}
@@ -3101,54 +3101,54 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 
-	public Map<String, Exercise> getAllExercises() {
-		return allExercisesRawFormat;
+	public Map<String, Part> getAllParts() {
+		return allPartsRawFormat;
 	}
 
-	public void setAllExercisesRawFormat(Map<String, Exercise> newAllExercisesRawFormat) {
-		allExercisesRawFormat = newAllExercisesRawFormat;
-	}
-
-
-
-	public Map<String, Exercise> getAllExercisesCommonFormat() {
-		return allExercisesCommonFormat;
-	}
-
-	public void setAllExercisesCommonFormat(Map<String, Exercise> newAllExercisesCommonFormat) {
-		allExercisesCommonFormat = newAllExercisesCommonFormat;
+	public void setAllPartsRawFormat(Map<String, Part> newAllPartsRawFormat) {
+		allPartsRawFormat = newAllPartsRawFormat;
 	}
 
 
 
-	public List<String> getAllExerciseFilelinksAsList() {
-		List<String> allExerciseFilelinks = new ArrayList<String>();
-		allExerciseFilelinks.addAll(allExercisesRawFormat.keySet());
-		return allExerciseFilelinks;
+	public Map<String, Part> getAllPartsCommonFormat() {
+		return allPartsCommonFormat;
+	}
+
+	public void setAllPartsCommonFormat(Map<String, Part> newAllPartsCommonFormat) {
+		allPartsCommonFormat = newAllPartsCommonFormat;
 	}
 
 
 
-	public Exercise getExerciseByFilelink(String key_filelink) {
-		if (allExercisesRawFormat.get(key_filelink) == null) {
+	public List<String> getAllPartFilelinksAsList() {
+		List<String> allPartFilelinks = new ArrayList<String>();
+		allPartFilelinks.addAll(allPartsRawFormat.keySet());
+		return allPartFilelinks;
+	}
+
+
+
+	public Part getPartByFilelink(String key_filelink) {
+		if (allPartsRawFormat.get(key_filelink) == null) {
 			return null;
 		}
-		return allExercisesRawFormat.get(key_filelink);
+		return allPartsRawFormat.get(key_filelink);
 	}
 
 
 
-	public Map<String, Exercise> getAllExercisesPlainText() {
-		return allExercisesPlainText;
+	public Map<String, Part> getAllPartsPlainText() {
+		return allPartsPlainText;
 	}
 
 
 
-	public String getFilelinkForExerciseFromPosWithoutEnding(
-			int exercise_num_and_position, int declaration_index) {
+	public String getFilelinkForPartFromPosWithoutEnding(
+			int part_num_and_position, int declaration_index) {
 
-		return getFilelinkForExerciseFromPosWithoutEnding(
-				exercise_num_and_position
+		return getFilelinkForPartFromPosWithoutEnding(
+				part_num_and_position
 				, this.declarationSet.declarations
 				.get(declaration_index - 1));
 
@@ -3156,22 +3156,22 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 
-	public String getFilelinkForExerciseFromPosWithoutEnding(
-			int exercise_num_and_position, Declaration declaration) {
+	public String getFilelinkForPartFromPosWithoutEnding(
+			int part_num_and_position, Declaration declaration) {
 
 		// For now we keep the . experimentally. If this turns out
 		// robust on all systems this is a better solution than __
 		// because we then directly can use filelink.
 		String to_append_to_filename = //"."/*"__"*/ +
 				getFileEnding() // simply add ending instead of . --> _
-				+ "__Exercise_" + exercise_num_and_position
+				+ "__Part_" + part_num_and_position
 				+ // ((declaration != null) ?
 				//"__splitby_" + this
 				//.getSplitterRepresentation(declaration)
 				//:
 				/*
 				Declarations are the same for this sheet/draft's
-				plain text AND raw format exercises!
+				plain text AND raw format parts!
 				*/
 				//"__splitby_" + this.getSplitterRepresentation(
 				//		this.declarationSet.declarations
@@ -3253,21 +3253,21 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 	 * @throws SQLException
 	 */
 	public Sheetdraft
-		loadAssignedAndReferencedSingleSourceExercisesFromDatabase()
+		loadAssignedAndReferencedSingleSourcePartsFromDatabase()
 		throws IOException, SQLException {
 
 		String query = "SELECT *"
-				+ " FROM draftexerciseassignment, exercise"
+				+ " FROM draftpartassignment, part"
 				+ " WHERE sheetdraft_filelink = "/*id*/ + getFilelink()
-				+ " AND exercise_filelink = exercise.filelink";
+				+ " AND part_filelink = part.filelink";
 
 		ResultSet res = Global.query(query);
-		// Instantiate, add all exercises:
+		// Instantiate, add all parts:
 		while (res.next()) {
-			allExercisesRawFormat.put(
-					res.getString("exercise_filelink"),
-					new Exercise(
-						//origin_sheetdraft_filelink this exercise belongs to
+			allPartsRawFormat.put(
+					res.getString("part_filelink"),
+					new Part(
+						//origin_sheetdraft_filelink this part belongs to
 						res.getString("filelink")
 						, new Declaration(Global
 							.determinePatternBestFittingToSplitterHint(
@@ -3294,7 +3294,7 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 	/**
 	 * WRITE TO DISK
 	 * Writes the content of this sheetdraft to the filesystem/disk.
-	 * For now it only creates two files for each exercise:
+	 * For now it only creates two files for each part:
 	 * raw content and plain text.
 	 * The reason for two and not only one raw content and on the fly
 	 * extraction of plain text is that there are images to be
@@ -3308,7 +3308,7 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 		// RAW CONTENT: is directly created by either the upload
 		// or the file conversion library.
 		// => SO THIS IS NOT NECESSARY AT ALL. It could be necessary
-		// for exercise contents though.
+		// for part contents though.
 
 		/*
 		Ends on '__ext.ext' because then we know its original filetype!
@@ -3374,9 +3374,9 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 
 	/**
-	 * WRITE EXERCISES TO DISK
-	 * Writes the exercises of this sheetdraft to the filesystem
-	 * |harddisk. For now it only creates two files for each exercise:
+	 * WRITE PARTS TO DISK
+	 * Writes the parts of this sheetdraft to the filesystem
+	 * |harddisk. For now it only creates two files for each part:
 	 * raw content and plain text.
 	 * The reason for two and not only one raw content and on the fly
 	 * extraction of plain text is that there are images to be
@@ -3384,7 +3384,7 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 	 * Even more important is the use of the plain text for finding
 	 * declarations. This way the line numbers of plainText and
 	 * rawContent are always the equivalent.
-	 * This makes exercise extraction for rawContent way easier:
+	 * This makes part extraction for rawContent way easier:
 	 * begin &amp; end are given by the plain text version
 	 * (where highest score declarations have been found).
 	 * TODO Propagation to the next enclosing tag ends is missing.
@@ -3392,14 +3392,14 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 	 * @throws IOException
 	 * @state completely rewritten
 	 */
-	public void writeExercisesToHarddisk(
-			Map<String, Exercise> exerciseMap) throws IOException {
+	public void writePartsToHarddisk(
+			Map<String, Part> partMap) throws IOException {
 
-		//int allExercisesL = allExercises.keySet().size();
-		//Exercise[] allExercises_array
-		//	= (Exercise[])(allExercises.values().toArray());
+		//int allPartsL = allParts.keySet().size();
+		//Part[] allParts_array
+		//	= (Part[])(allParts.values().toArray());
 		int pos = 0;
-		for (Exercise exercise : exerciseMap.values()) {
+		for (Part part : partMap.values()) {
 
 //			String dirs_reversed
 //				= new StringBuffer(Global.extractPathTo(filelink))
@@ -3419,7 +3419,7 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 			/*
 			We use the original filelink! Why changing it?
-			Why not only add an exercise suffix?
+			Why not only add an part suffix?
 			*/
 			String ext = Global.extractEnding(filelink);
 			// No longer use a subdirectory for practical reasons.
@@ -3429,17 +3429,17 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 //				f.mkdir(); // create folder with name, format of file
 //			}
 
-			// For building the exercise filelink string.
-			// Positioned before assign as exercises start at 1.
+			// For building the part filelink string.
+			// Positioned before assign as parts start at 1.
 			pos++;
 			// Already generated before
-			String exercise_filelink_generated_for_pos = exercise.filelink;
-			//= getFilelinkForExerciseFromPosWithoutEnding(pos);
+			String part_filelink_generated_for_pos = part.filelink;
+			//= getFilelinkForPartFromPosWithoutEnding(pos);
 
 
-			//ReadWrite.writeText(allExercises_array[pos]
+			//ReadWrite.writeText(allParts_array[pos]
 			//	.getRawContent()
-			//	, exercise_filelink_generated_for_pos + "." + ext);
+			//	, part_filelink_generated_for_pos + "." + ext);
 			// The above is no longer adequate, because we not only
 			// deal with one-file fileformats, but with archived
 			// XML too. Therefore we create copies in the filesystem
@@ -3448,11 +3448,11 @@ NOT CHOSEN BUT SHOULD WORK IN PRICIPLE -END */
 
 			// Create a plain text representation because we also
 			// need to generate images for plain text.
-			//ReadWrite.writeText(allExercises_array[pos]
+			//ReadWrite.writeText(allParts_array[pos]
 			//	.getPlainText()
-			//	, exercise_filelink_generated_for_pos  + ".txt");
-			ReadWrite.writeText(exercise.getPlainText()
-					, exercise_filelink_generated_for_pos/* + ".txt"*/);
+			//	, part_filelink_generated_for_pos  + ".txt");
+			ReadWrite.writeText(part.getPlainText()
+					, part_filelink_generated_for_pos/* + ".txt"*/);
 
 		}
 

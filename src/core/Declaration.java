@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 
 /**
- * Class representing a an exercise declaration.
+ * Class representing a an part declaration.
  *
  * @author Schweiner, J.R.I.B.-W., worlddevelopment
  *
@@ -35,7 +35,7 @@ public class Declaration {
 	private String lineContent = "";
 
 	/**
-	 * Stores the first words of the exercise following the declaration:
+	 * Stores the first words of the part following the declaration:
 	 */
 	private String[] head;
 	private boolean hasHead = false;
@@ -146,11 +146,11 @@ public class Declaration {
 
 
 	/**
-	 * @return Null if no word contains a potential exercise numbering.
+	 * @return Null if no word contains a potential part numbering.
 	 */
 	public String getWordContainingNumbering() {
 		// First check if it can be parsed to integer then check if this
-		// parsed value is greater than the next exercise's numbering:
+		// parsed value is greater than the next part's numbering:
 		if (Global.containsInt(firstWord)) {
 			return firstWord;
 		}

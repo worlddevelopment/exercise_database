@@ -40,8 +40,8 @@ public enum Language {
 		aMap = new HashMap<String, String>();
 		aMap.clear();
 
-//		aMap.put("exercise_sheettype", "exercise");//for distinction simply add '_sheettype'
-//		aMap.put("exercises_sheettype", "exercise_sheets");
+//		aMap.put("part_sheettype", "part");//for distinction simply add '_sheettype'
+//		aMap.put("parts_sheettype", "part_sheets");
 
 		english = Collections.unmodifiableMap(aMap);
 		//translations[Language.ENGLISH.ordinal()]
@@ -64,7 +64,7 @@ public enum Language {
 		aMap.put("german", "Deutsch");
 		aMap.put("french", "Franz&ouml;sisch");
 
-		aMap.put("exercise database", "Aufgaben Datenbank");
+		aMap.put("part database", "Aufgaben Datenbank");
 
 		aMap.put("semester", "Semester");
 		aMap.put("course", "Kurs");
@@ -81,16 +81,16 @@ public enum Language {
 		aMap.put("filetype", "Dateityp");
 		aMap.put("content", "Inhalt");
 
-		//aMap.put("exercise", "\u00DCbung");
+		//aMap.put("part", "\u00DCbung");
 		//TODO Redo this completely, search within all languages!
 		aMap.put("sheet", "\u00DCbungsblatt");
 		aMap.put("sheet_solution", "\u00DCbungsblattl\u00F6sung");
 		aMap.put("spreadsheet", "\u00DCbungsblatt");
 		aMap.put("spreadsheet_solution", "\u00DCbungsblattl\u00F6sung");
-		aMap.put("exercise_sheet", "\u00DCbungsblatt");
-		aMap.put("exercise_sheet_solution", "\u00DCbungsl\u00F6sung");
-		aMap.put("exercise_solution", "\u00DCbungsl\u00F6sung");
-		aMap.put("exercises_solution", "\u00DCbungsl\u00F6sung");
+		aMap.put("part_sheet", "\u00DCbungsblatt");
+		aMap.put("part_sheet_solution", "\u00DCbungsl\u00F6sung");
+		aMap.put("part_solution", "\u00DCbungsl\u00F6sung");
+		aMap.put("parts_solution", "\u00DCbungsl\u00F6sung");
 		aMap.put("exam", "Klausur");
 		aMap.put("exam_solution", "Klausurl\u00F6sung");
 
@@ -98,11 +98,11 @@ public enum Language {
 		aMap.put("sheets", "Bl\u00E4tter");
 		aMap.put("draft", "Entwurf");
 		aMap.put("drafts", "Entw\u00FCrfe");
-		aMap.put("exercise", "Aufgabe");
-		aMap.put("exercises", "Aufgaben");
-		aMap.put("exercise_sheettype", "\u00DCbung");
+		aMap.put("part", "Aufgabe");
+		aMap.put("parts", "Aufgaben");
+		aMap.put("part_sheettype", "\u00DCbung");
 		// for distinction simply add '_sheettype'
-		aMap.put("exercises_sheettype", "\u00DCbungen");
+		aMap.put("parts_sheettype", "\u00DCbungen");
 
 		aMap.put("upload", "hochladen");
 		aMap.put("send", "abschicken");
@@ -248,7 +248,7 @@ public enum Language {
 		aMap.put("german", "allemand");
 		aMap.put("french", "francais");
 
-		aMap.put("exercise database", "Base de Données d'Exercice");
+		aMap.put("part database", "Base de Données d'Exercice");
 
 		aMap.put("semester", "semestre");
 		aMap.put("course", "cours");
@@ -269,12 +269,12 @@ public enum Language {
 		aMap.put("sheet_solution", "solution de la feuille d'exercice");
 		aMap.put("spreadsheet", "feuille d'exercice");
 		aMap.put("spreadsheet_solution", "solution de la feuille d'exercice");
-		aMap.put("exercise_sheet", "feuille d'exercice");
+		aMap.put("part_sheet", "feuille d'exercice");
 		//TODO Redo this completely, search within all languages!
-		aMap.put("exercise_sheet_solution"
+		aMap.put("part_sheet_solution"
 				, "solution de la feuille d'exercice");
-		aMap.put("exercise_solution", "solution d'exercice");
-		aMap.put("exercises_solution"
+		aMap.put("part_solution", "solution d'exercice");
+		aMap.put("parts_solution"
 				, "solution de la feuille d'exercice");
 		aMap.put("exam", "exam");
 		aMap.put("exam_solution", "exam solution");
@@ -283,11 +283,11 @@ public enum Language {
 		aMap.put("sheets", "feuilles");
 		aMap.put("draft", "ébauche");
 		aMap.put("drafts", "ébauches");
-		aMap.put("exercise", "exercice");
-		aMap.put("exercises", "exercice");
-		aMap.put("exercise_sheettype", "feuille d'exercice");
+		aMap.put("part", "exercice");
+		aMap.put("parts", "exercice");
+		aMap.put("part_sheettype", "feuille d'exercice");
 		// for distinction simply add '_sheettype'
-		aMap.put("exercises_sheettype", "feuilles d'exercice");
+		aMap.put("parts_sheettype", "feuilles d'exercice");
 
 		aMap.put("upload", "télécharger");
 		aMap.put("send", "envoyer");

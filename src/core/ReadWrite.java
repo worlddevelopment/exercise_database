@@ -52,49 +52,49 @@ public class ReadWrite {
 
 
 	/**
-	 * Write 'Exercise Raw Content' to disk.
+	 * Write 'Part Raw Content' to disk.
 	 *
-	 * @param exercise
+	 * @param part
 	 * @throws IOException
 	 */
-	//static void writeRawContentToDiskDependingOnEnding(Exercise exercise) throws IOException {
-	static void writeRawContentToDiskDependingOnEnding(Exercise exercise)
+	//static void writeRawContentToDiskDependingOnEnding(Part part) throws IOException {
+	static void writeRawContentToDiskDependingOnEnding(Part part)
 		throws IOException {
 
 		/*
-		At this point we have a rough idea of an exercise
+		At this point we have a rough idea of an part
 		and want to create it on the harddisk.
 		The idea is to copy the complete 'mother' sheet docx/zip/tex
 		to a new filename in the same directory and to delete
-		the parts not belonging to the exercise.
+		the parts not belonging to the part.
 		*/
-		String ext = Global.extractEnding(exercise.filelink);
+		String ext = Global.extractEnding(part.filelink);
 
 		// DOCX
 		if (ext.equals("docx")) {
-			// 1) determine mother sheet to this exercise
-			String motherfilelink = Global.extractFilelinkOfMothersheet(exercise.filelink);
-			File mothersheetToExerciseFile = new File(motherfilelink);
-			if (!mothersheetToExerciseFile.exists()) {
+			// 1) determine mother sheet to this part
+			String motherfilelink = Global.extractFilelinkOfMothersheet(part.filelink);
+			File mothersheetToPartFile = new File(motherfilelink);
+			if (!mothersheetToPartFile.exists()) {
 				Global.addMessage("Warning: No mother sheet '"
 						+ motherfilelink + "' found for the"
-						+ " given exercise: '" + exercise.filelink
+						+ " given part: '" + part.filelink
 						+ "' ! => So no copy can be created"
-						+ " to obtain the exercise by deleting"
-						+ " obsolete (for the specific exercise)"
+						+ " to obtain the part by deleting"
+						+ " obsolete (for the specific part)"
 						+ " conten.", "warning");
-				//mothersheetToExerciseFile.mkdirs();
+				//mothersheetToPartFile.mkdirs();
 				return;
 			}
 
-			// 2) copy this sheet's docx to new exercise.filelink.docx
+			// 2) copy this sheet's docx to new part.filelink.docx
 			// Requires NIO - NewIO - delivered with JDK7:
-//			Files.copy(targetFilelink, exercise.filelink
+//			Files.copy(targetFilelink, part.filelink
 //					, REPLACE_EXISTING/*NOFOLLOW_LINKS*/);
-			File exerciseFilelinkFile = new File(exercise.filelink);
-			if (exerciseFilelinkFile.exists()) {
-				Global.addMessage("Warning: Exercise '"
-						+ exercise.filelink + " to create"
+			File partFilelinkFile = new File(part.filelink);
+			if (partFilelinkFile.exists()) {
+				Global.addMessage("Warning: Part '"
+						+ part.filelink + " to create"
 						+ " already exists.", "warning");
 				// For now do not overwrite any files:TODO Overwrite it?
 				return;
@@ -102,25 +102,25 @@ public class ReadWrite {
 			else {
 				Global.addMessage("Creating directories for storing"
 						+ " files of content parts.", "info");
-				if (exerciseFilelinkFile.mkdirs()) {
+				if (partFilelinkFile.mkdirs()) {
 					Global.addMessage("- No folder had to be created."
 							, "success");
 				}
 			}
-			Global.addMessage("Copying mother sheet file to exercise"
+			Global.addMessage("Copying mother sheet file to part"
 					+ " destination filelink.", "info");
-			copyFileUsingStream(mothersheetToExerciseFile
-					, exerciseFilelinkFile);
+			copyFileUsingStream(mothersheetToPartFile
+					, partFilelinkFile);
 
 			// 3) Open this newly created archive and delete content
 			// that's not needed.
 			// e.g. replace the document.xml-Body with the extracted
-			// exercise rawContent and
+			// part rawContent and
 			// * KEEP HEADERS!
 			// * Delete line per line,
 			// * follow references, delete those no longer in use.
 			// Note this is an early outline before it was
-			// coded in Exercise.
+			// coded in Part.
 
 
 		}
@@ -139,9 +139,9 @@ public class ReadWrite {
 		else {
 			// Write it to a single file for: PLAIN TEXT, PDF
 			ReadWrite.writeText(
-					readInputStreamAsLines(exercise.filelink)
-					, exercise.filelink.replaceAll(
-						Global.extractEnding(exercise.filelink)
+					readInputStreamAsLines(part.filelink)
+					, part.filelink.replaceAll(
+						Global.extractEnding(part.filelink)
 						+ "$", "txt")
 			);
 		}

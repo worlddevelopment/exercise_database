@@ -26,13 +26,13 @@ public class PartDB {
 	private static Sheetdraft latestChangedDraft;
 
 	// To allow for switching the context. So native, common and plaintext
-	// exercises are stored:
+	// parts are stored:
 	public static DocType commonFormat = DocType.HTML; // <-- HTML has been chosen common storage format.
 
 
 	//======= METHODS
 	/**
-	 * Extracts the individual exercises from the given sheet.
+	 * Extracts the individual parts from the given sheet.
 	 * Depending on the inputFile it delivers other files too.
 	 * <br />
 	 * Attention: This method writes (besides on RTF) no files to disk!
@@ -40,7 +40,7 @@ public class PartDB {
 	 * <br />
 	 * Attention: It is assumed that a PDF file also exists in the same
 	 * folder with the same filename if a TEX is given to this method.
-	 * The PDF is required for finding the exercise heads as the style
+	 * The PDF is required for finding the part heads as the style
 	 * of TEX files can vary very much.
 	 *
 	 * @param filePath Filelink
@@ -126,7 +126,7 @@ public class PartDB {
 
 
 		// Here follow the methods for dealing with the original files,
-		// the filetype or content is being converted, the exercises are
+		// the filetype or content is being converted, the parts are
 		// cut out.
 		// 0) create flavours of this document.
 		List<String> flavoursCreated_filelinks
@@ -162,7 +162,7 @@ public class PartDB {
 					+ " extracted from Sheet. ----", "success"));
 
 
-		// 2) The search for exercise declarations.
+		// 2) The search for part declarations.
 		int declarationsFoundCount = 0;
 		sheetdraft.setDeclarationSet(
 				DeclarationFinder.findeDeklarationen(sheetdraft));
@@ -171,7 +171,7 @@ public class PartDB {
 				= sheetdraft.getDeclarationSet().declarations.size();
 		}
 		System.out.println(
-				Global.addMessage("[ready] Exercise and solution"
+				Global.addMessage("[ready] Part and solution"
 					+ " declarations have been searched. Found "
 					+ declarationsFoundCount + " in the set with the"
 					+ " highest score (total count, may contain mixed"
@@ -183,7 +183,7 @@ public class PartDB {
 		if (Global.extractEnding(sheetdraft.getFilelinkRelative())
 				.equals("rtf")
 				&& sheetdraft.getClass().toString().equals("Sheetdraft")
-				) {// sheetdraft only! not exercise
+				) {// sheetdraft only! not part
 
 			System.out.println("Looking for identifiers in the given"
 					+ " RTF document.");
@@ -191,11 +191,11 @@ public class PartDB {
 		}
 
 
-		// 3) Create exercises. Look for solutions for each exercise
-		// (within the exercise's content).
-		sheetdraft.extractExercisesPlainText();
+		// 3) Create parts. Look for solutions for each part
+		// (within the part's content).
+		sheetdraft.extractPartsPlainText();
 		/*
-		TODO either split into Exercise and Solution at once or
+		TODO either split into Part and Solution at once or
 		otherwise employ an algorithm that besides for Loesung/Solution
 		splitting keywords checks for repeating content (must support
 		formulas) too.
@@ -207,7 +207,7 @@ public class PartDB {
 				);
 
 		//Native format:
-		sheetdraft.extractExercisesNativeFormat();
+		sheetdraft.extractPartsNativeFormat();
 		System.out.println(Global.addMessage("[ready] Einzelaufgaben"
 					+ " (Nativ Format) wurden erstellt. ----", "success"
 					)
@@ -219,17 +219,17 @@ public class PartDB {
 		sheetdraft.setFilelink(common_filelink);
 		// <- overwrite, because the only alternative is to pass around
 		// arguments, and that proved vulnerable here.
-		// b1) store the old native format exercise collection before
+		// b1) store the old native format part collection before
 		// overriding:
-		Map<String, Exercise> allExercisesRawFormat
-			= sheetdraft.getAllExercises();
+		Map<String, Part> allPartsRawFormat
+			= sheetdraft.getAllParts();
 		// Operate on the common basis (common format).
-		sheetdraft.setAllExercisesRawFormat(
-				sheetdraft.getAllExercisesCommonFormat());
+		sheetdraft.setAllPartsRawFormat(
+				sheetdraft.getAllPartsCommonFormat());
 
 		// Not the same as above as the context changed,
 		// i.e. the sheetdraft's filelink:
-		sheetdraft.extractExercisesNativeFormat(/*html_filelink*/);
+		sheetdraft.extractPartsNativeFormat(/*html_filelink*/);
 		System.out.println(Global.addMessage("[ready] Einzelaufgaben"
 					+ " (Common Format, i.e. " + commonFormat.name()
 					+") wurden erstellt. ----", "success"));
@@ -239,18 +239,18 @@ public class PartDB {
 		// a2) restore the native filelink: (We never operate fully on
 		// HTML basis. This way fusion can choose between both.)
 		sheetdraft.setFilelink(native_filelink); // prefer native format
-		// fusion if all exercises are of one type.
+		// fusion if all parts are of one type.
 
-		// b2) restore native format exercises:
-		sheetdraft.setAllExercisesCommonFormat(
-				sheetdraft.getAllExercisesCommonFormat());
-		sheetdraft.setAllExercisesRawFormat(allExercisesRawFormat);
+		// b2) restore native format parts:
+		sheetdraft.setAllPartsCommonFormat(
+				sheetdraft.getAllPartsCommonFormat());
+		sheetdraft.setAllPartsRawFormat(allPartsRawFormat);
 
 
 		// 4) synchronize filesystem/harddrive
-		sheetdraft.writeExercisesToHarddisk(
-				sheetdraft.getAllExercisesPlainText());
-		//sheetdraft.writeExercisesToHarddisk(sheetdraft.getAllExercises());
+		sheetdraft.writePartsToHarddisk(
+				sheetdraft.getAllPartsPlainText());
+		//sheetdraft.writePartsToHarddisk(sheetdraft.getAllParts());
 		System.out.println(
 				Global.addMessage("[ready] Einzelaufgaben wurden"
 					+ " auf Festplatte geschrieben. ----", "success"));
@@ -297,14 +297,14 @@ public class PartDB {
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public static void loadAllSheetdrafts() // thus also the exercises
+	public static void loadAllSheetdrafts() // thus also the parts
 		throws SQLException, IOException {
 
 		loadAllSheetdrafts((String)Global.session.getAttribute("user"), false);
 
 	}
 
-	public static void loadAllSheetdrafts( // thus also the exercises
+	public static void loadAllSheetdrafts( // thus also the parts
 			boolean includeSheetsWhereUserIsLecturer)
 		throws SQLException, IOException {
 
@@ -313,7 +313,7 @@ public class PartDB {
 
 	}
 
-	public static void loadAllSheetdrafts( // thus also the exercises
+	public static void loadAllSheetdrafts( // thus also the parts
 			String user, boolean includeSheetsWhereUserIsLecturer)
 			throws SQLException, IOException {
 
@@ -474,14 +474,14 @@ public class PartDB {
 
 
 		// Delete preview images from storage medium:
-		str_query = "SELECT filelink FROM exercise"
+		str_query = "SELECT filelink FROM part"
 			+ " WHERE sheetdraft_filelink ='" + filelink + "';";
 		ResultSet res0 = Global.query(str_query);
 		while (res0.next()) {
 			File f = new File(Global.root + Global.convertToImageLink(
 						res0.getString("filelink")));
 			if (Global.deleteFile(f)) {
-				message += "<p>The picture to exercise "
+				message += "<p>The picture to part "
 					+ Global.extractFilename(filelink)
 					+ " was deleted successfully.</p>";
 			}
@@ -503,132 +503,132 @@ public class PartDB {
 
 
 
-		// Delete draft exercises:
-		str_query = "DELETE FROM draftexerciseassignment"
+		// Delete draft parts:
+		str_query = "DELETE FROM draftpartassignment"
 			+ " WHERE sheetdraft_filelink ='" + filelink + "';";
 		// This should be the case for drafts only (is_draft == 1).
 		Global.query(str_query);
 
-		// Delete sheet|draft exercises:
+		// Delete sheet|draft parts:
 		// TODO: Should the originsheedraft_filelink be reset to N.A.?
-		// IMPORTANT: Do not delete exercises that are still referenced
+		// IMPORTANT: Do not delete parts that are still referenced
 		// by drafts! (*)
 //		str_query = "DELETE FROM"
-//					+ " (SELECT COUNT(*) AS referencecount, exercise_filelink"
-//					+ " FROM draftexerciseassignment, exercise"
-//					+ " WHERE exercise.sheetdraft_filelink = '" + filelink + "'"
-//					+ " AND draftexerciseassignment.exercise_filelink = exercise.filelink)"
-//					+ " AS referenced"//=> no hits if no exercise is referenced!
-//					+ ", exercise"//if it IS NOT 0 then we keep it as other sheets reference it
+//					+ " (SELECT COUNT(*) AS referencecount, part_filelink"
+//					+ " FROM draftpartassignment, part"
+//					+ " WHERE part.sheetdraft_filelink = '" + filelink + "'"
+//					+ " AND draftpartassignment.part_filelink = part.filelink)"
+//					+ " AS referenced"//=> no hits if no part is referenced!
+//					+ ", part"//if it IS NOT 0 then we keep it as other sheets reference it
 //				+ " WHERE"
 //				//+ " referenced.referencecount IS 0" /*(*)that's what we deal with here!*/
-//				+ " AND exercise.sheetdraft_filelink = '" + filelink + "'"//all exercises of this sheetdraft
-//				+ " AND exercise.filelink <> referenced.exercise_filelink"//exercises of this sheetdraft without those that are referenced!
-//				//+ " OR referenced.referencecount IS 0 OR referenced IS NULL);"//referenced.exercise_filelink IS NULL
-//				//+ " AND exercise.sheetdraft_filelink = refs.sheetdraft_filelink;"
+//				+ " AND part.sheetdraft_filelink = '" + filelink + "'"//all parts of this sheetdraft
+//				+ " AND part.filelink <> referenced.part_filelink"//parts of this sheetdraft without those that are referenced!
+//				//+ " OR referenced.referencecount IS 0 OR referenced IS NULL);"//referenced.part_filelink IS NULL
+//				//+ " AND part.sheetdraft_filelink = refs.sheetdraft_filelink;"
 //		;
 		// Because DELETE queries don't like nested queries.
-		// Select all exercises that are not referenced in a draft:
-		str_query = " SELECT exercise.filelink"
-		+ " FROM exercise"
-		+ " INNER JOIN (" /* LEFT JOIN would keep all exercises
+		// Select all parts that are not referenced in a draft:
+		str_query = " SELECT part.filelink"
+		+ " FROM part"
+		+ " INNER JOIN (" /* LEFT JOIN would keep all parts
 					instead of only the not referenced ones. */
-				+ " SELECT exercise_filelink"
-				+ " FROM draftexerciseassignment, exercise"
-				+ " WHERE exercise.sheetdraft_filelink='"
-				+ filelink + "'"// => all exercises of this sheetdraft
-				+ " AND draftexerciseassignment.exercise_filelink"
-				+ " = exercise.filelink"/* => exercises of this
+				+ " SELECT part_filelink"
+				+ " FROM draftpartassignment, part"
+				+ " WHERE part.sheetdraft_filelink='"
+				+ filelink + "'"// => all parts of this sheetdraft
+				+ " AND draftpartassignment.part_filelink"
+				+ " = part.filelink"/* => parts of this
 					sheetdraft without those that are referenced! */
 		+ " ) referenced"
-		+ " ON exercise.filelink <> referenced.exercise_filelink";
+		+ " ON part.filelink <> referenced.part_filelink";
 		// <-- filters out the referenced ones! The others remain.
 
-		//SELECT exercise.filelink FROM exercise INNER JOIN ( SELECT exercise_filelink FROM draftexerciseassignment, exercise WHERE exercise.sheetdraft_filelink='uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx' AND draftexerciseassignment.exercise_filelink = exercise.filelink) referenced ON exercise.filelink <> referenced.exercise_filelink
+		//SELECT part.filelink FROM part INNER JOIN ( SELECT part_filelink FROM draftpartassignment, part WHERE part.sheetdraft_filelink='uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx' AND draftpartassignment.part_filelink = part.filelink) referenced ON part.filelink <> referenced.part_filelink
 		//<-- this turned out to not work in all cases
 		//So here comes another way:
-		str_query = " SELECT exercise.filelink"
-				+ " FROM exercise"
-				+ " WHERE exercise.sheetdraft_filelink='"+ filelink + "'"
+		str_query = " SELECT part.filelink"
+				+ " FROM part"
+				+ " WHERE part.sheetdraft_filelink='"+ filelink + "'"
 				+ " AND NOT EXISTS("/* <--whether to get the not
 						referenced or the referenced ones (ie.those
 						from the subquery for the latter) */
-					+ " SELECT exercise_filelink"
-					+ " FROM draftexerciseassignment"
-					+ " WHERE exercise.sheetdraft_filelink='" + filelink + "'"
-					+ " AND draftexerciseassignment.exercise_filelink = exercise.filelink"
+					+ " SELECT part_filelink"
+					+ " FROM draftpartassignment"
+					+ " WHERE part.sheetdraft_filelink='" + filelink + "'"
+					+ " AND draftpartassignment.part_filelink = part.filelink"
 				+ ")"
-				+ " AND exercise.filelink <> '';"
+				+ " AND part.filelink <> '';"
 				;
-		ResultSet res_exercises_not_referenced = Global.query(str_query);
-		res_exercises_not_referenced.beforeFirst();
-		String filelinks_of_exercises_not_referenced = "";
+		ResultSet res_parts_not_referenced = Global.query(str_query);
+		res_parts_not_referenced.beforeFirst();
+		String filelinks_of_parts_not_referenced = "";
 		String comma_or_not = "";
-		// Chain all exercises that are not referenced for deletion.
+		// Chain all parts that are not referenced for deletion.
 		// <-holocaust is horrible :/
-		while (res_exercises_not_referenced.next()) {
-			// On the other hand less exercises in homework makes
+		while (res_parts_not_referenced.next()) {
+			// On the other hand less parts in homework makes
 			// little fox's pupils happier? :)
-			filelinks_of_exercises_not_referenced = comma_or_not + "'"
-					+ res_exercises_not_referenced.getString("filelink") + "'";
+			filelinks_of_parts_not_referenced = comma_or_not + "'"
+					+ res_parts_not_referenced.getString("filelink") + "'";
 			comma_or_not = ","; /* using this idea we can skip one|the
 			first entry, why did I only get to it now, it's so easy! */
 		}
 
-		res_exercises_not_referenced.last();
-		int exercises_not_referenced_count = res_exercises_not_referenced.getRow();
+		res_parts_not_referenced.last();
+		int parts_not_referenced_count = res_parts_not_referenced.getRow();
 		// Tackle memory leaks by closing result set and its statement:
-		Global.queryTidyUp(res_exercises_not_referenced);
+		Global.queryTidyUp(res_parts_not_referenced);
 
 
-		str_query = "DELETE FROM exercise WHERE sheetdraft_filelink = '"
+		str_query = "DELETE FROM part WHERE sheetdraft_filelink = '"
 			+ filelink + "'";
-		// Any exercises that are referenced by other sheets|drafts?
-		if (exercises_not_referenced_count > 1) {
+		// Any parts that are referenced by other sheets|drafts?
+		if (parts_not_referenced_count > 1) {
 			// Then restrict delete action on those.
-			str_query += " AND filelink IN(" + filelinks_of_exercises_not_referenced + ")";
+			str_query += " AND filelink IN(" + filelinks_of_parts_not_referenced + ")";
 		}
-		else if (exercises_not_referenced_count > 0) {
-			// Then restrict delete action on this exercise.
-			str_query += " AND filelink = '" + filelinks_of_exercises_not_referenced + "'";
+		else if (parts_not_referenced_count > 0) {
+			// Then restrict delete action on this part.
+			str_query += " AND filelink = '" + filelinks_of_parts_not_referenced + "'";
 		}
-		//else all exercises of this sheetdraft that is being deleted
+		//else all parts of this sheetdraft that is being deleted
 		// can be deleted too.
 		Global.query(str_query);
 
 		/*
-		ATTENTION: Eventually make all exercise assignments real where
+		ATTENTION: Eventually make all part assignments real where
 		the sheetdraft to be deleted is set as originsheetdraft!
 		ie. reference -> instance.
 		*/
-		// Fetch the sheetdraft to which the exercise has been assigned
+		// Fetch the sheetdraft to which the part has been assigned
 		// to/been referenced from:
-		str_query = "SELECT draftexerciseassignment.sheetdraft_filelink, exercise_filelink"
-				+ " FROM draftexerciseassignment, exercise"
-				+ " WHERE exercise.sheetdraft_filelink = '" + filelink + "'"
-				+ " AND exercise.filelink = draftexerciseassignment.exercise_filelink";
-		//SELECT draftexerciseassignment.sheetdraft_filelink, exercise_filelink FROM draftexerciseassignment, exercise WHERE exercise.sheetdraft_filelink = 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx' AND exercise.filelink = draftexerciseassignment.exercise_filelink
+		str_query = "SELECT draftpartassignment.sheetdraft_filelink, part_filelink"
+				+ " FROM draftpartassignment, part"
+				+ " WHERE part.sheetdraft_filelink = '" + filelink + "'"
+				+ " AND part.filelink = draftpartassignment.part_filelink";
+		//SELECT draftpartassignment.sheetdraft_filelink, part_filelink FROM draftpartassignment, part WHERE part.sheetdraft_filelink = 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx' AND part.filelink = draftpartassignment.part_filelink
 
-		// Iterate over all referenced exercises:
+		// Iterate over all referenced parts:
 		// (The others are already deleted at this point.)
-		ResultSet res_exercises_referenced = Global.query(str_query);
-		Map<String, List<String>> map_exercise_to_sheetdraftsThatReferenceThisExercise = new HashMap<String, List<String>>();
+		ResultSet res_parts_referenced = Global.query(str_query);
+		Map<String, List<String>> map_part_to_sheetdraftsThatReferenceThisPart = new HashMap<String, List<String>>();
 		List<String> referencingSheetdrafts = new ArrayList<String>();
-		String exercise_filelink_previously = "";
-		if (res_exercises_referenced.next()) {
-			int exercises_referenced_count = res_exercises_referenced.getRow();
-			res_exercises_referenced.beforeFirst();
-			while (res_exercises_referenced.next()) {
+		String part_filelink_previously = "";
+		if (res_parts_referenced.next()) {
+			int parts_referenced_count = res_parts_referenced.getRow();
+			res_parts_referenced.beforeFirst();
+			while (res_parts_referenced.next()) {
 
 				//get the filelinks from the result set:
-				String exercise_filelink = res_exercises_referenced.getString("exercise_filelink");
-				String sheetdraft_that_references_filelink = res_exercises_referenced.getString("sheetdraft_filelink");
+				String part_filelink = res_parts_referenced.getString("part_filelink");
+				String sheetdraft_that_references_filelink = res_parts_referenced.getString("sheetdraft_filelink");
 
-				if (!exercise_filelink_previously.equals(exercise_filelink)) {
+				if (!part_filelink_previously.equals(part_filelink)) {
 					// If they are not equal we have to react:
 					// Store away the list as a copy, then clear it.
-					map_exercise_to_sheetdraftsThatReferenceThisExercise.put(
-							exercise_filelink_previously, new ArrayList<String>(referencingSheetdrafts)
+					map_part_to_sheetdraftsThatReferenceThisPart.put(
+							part_filelink_previously, new ArrayList<String>(referencingSheetdrafts)
 							);
 					// Now that we have copied the values over
 					// clear the helper list:
@@ -638,62 +638,62 @@ public class PartDB {
 				// Fill in the current entry
 				referencingSheetdrafts.add(sheetdraft_that_references_filelink);
 
-				// Always store the previous exercise filelink:
-				exercise_filelink_previously = exercise_filelink;
+				// Always store the previous part filelink:
+				part_filelink_previously = part_filelink;
 
 			}
 			// not to forget to handle the last entry:
-			res_exercises_referenced.last();
-			String lastEntry_exercise_filelink = res_exercises_referenced.getString("exercise_filelink");
-			if (!exercise_filelink_previously.equals(lastEntry_exercise_filelink)) {
+			res_parts_referenced.last();
+			String lastEntry_part_filelink = res_parts_referenced.getString("part_filelink");
+			if (!part_filelink_previously.equals(lastEntry_part_filelink)) {
 				// => only 1 element in the referencingSheetdrafts list
-				map_exercise_to_sheetdraftsThatReferenceThisExercise.put(
-						lastEntry_exercise_filelink, new ArrayList<String>(referencingSheetdrafts)
+				map_part_to_sheetdraftsThatReferenceThisPart.put(
+						lastEntry_part_filelink, new ArrayList<String>(referencingSheetdrafts)
 				);
 			}
 			else {
-				// As this and previous exercise filelink are equal, it
+				// As this and previous part filelink are equal, it
 				// has been added to the list already. Remains only
 				// to put this now complete list into the map:
-				map_exercise_to_sheetdraftsThatReferenceThisExercise.put(
-						exercise_filelink_previously, new ArrayList<String>(referencingSheetdrafts)
+				map_part_to_sheetdraftsThatReferenceThisPart.put(
+						part_filelink_previously, new ArrayList<String>(referencingSheetdrafts)
 				);
 			}
 		}
 		// Tackle memory leaks by closing result set and its statement:
-		Global.queryTidyUp(res_exercises_referenced);
+		Global.queryTidyUp(res_parts_referenced);
 		// React on that: select the best fitting, new sheetdraft owners
-		// i. e. for the exercises of one and the same deleted
+		// i. e. for the parts of one and the same deleted
 		// sheetdraft the new owner should be the owner of as many of
-		// those referenced exercises as possible. TODO
+		// those referenced parts as possible. TODO
 
 
 		// This is the short way, that interestingly was what I had
 		// created first:
-		str_query = "UPDATE exercise, draftexerciseassignment"
-				+ " SET exercise.sheetdraft_filelink = draftexerciseassignment.sheetdraft_filelink"
-				+ " WHERE exercise.sheetdraft_filelink = '" + filelink + "'"
-				+ " AND exercise.filelink = draftexerciseassignment.exercise_filelink";
+		str_query = "UPDATE part, draftpartassignment"
+				+ " SET part.sheetdraft_filelink = draftpartassignment.sheetdraft_filelink"
+				+ " WHERE part.sheetdraft_filelink = '" + filelink + "'"
+				+ " AND part.filelink = draftpartassignment.part_filelink";
 		/* My debug sequence: (J. R.I.B. Wein)
 
-		// Insert reference to exercise 3: (If more than 1 reference the
-		// same exercise,e.g.3, this is no problem as it does not matter
-		// which exercise becomes the new owner of this exercise!)
-		INSERT INTO draftexerciseassignment VALUES('uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.odt.odt', 0, 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx__Exercise_3__splitby_INTDOT.docx.txt');
+		// Insert reference to part 3: (If more than 1 reference the
+		// same part,e.g.3, this is no problem as it does not matter
+		// which part becomes the new owner of this part!)
+		INSERT INTO draftpartassignment VALUES('uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.odt.odt', 0, 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx__Part_3__splitby_INTDOT.docx.txt');
 
-		// Insert reference to exercise 2: (a tex sheetdraft references)
-		INSERT INTO draftexerciseassignment VALUES('uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.tex.tex', 0, 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx__Exercise_2__splitby_INTDOT.docx.txt');
+		// Insert reference to part 2: (a tex sheetdraft references)
+		INSERT INTO draftpartassignment VALUES('uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.tex.tex', 0, 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx__Part_2__splitby_INTDOT.docx.txt');
 
-		// Reset exercises:
-		UPDATE exercise SET exercise.sheetdraft_filelink = 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx';
+		// Reset parts:
+		UPDATE part SET part.sheetdraft_filelink = 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx';
 
 		// The test (whether each from different draft (tex vs. odt)
-		// referenced exercise gets the correct new sheetdraft_filelink
+		// referenced part gets the correct new sheetdraft_filelink
 		// value):
-		UPDATE exercise, draftexerciseassignment SET exercise.sheetdraft_filelink = draftexerciseassignment.sheetdraft_filelink WHERE exercise.sheetdraft_filelink = 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx' AND exercise.filelink = draftexerciseassignment.exercise_filelink;
+		UPDATE part, draftpartassignment SET part.sheetdraft_filelink = draftpartassignment.sheetdraft_filelink WHERE part.sheetdraft_filelink = 'uploads/WS_2013/Mateh/Gauss/Uebung/Blatt7.docx.docx' AND part.filelink = draftpartassignment.part_filelink;
 
 		=> It works in this test! The correct sheetdraft_filelink is
-		written to the referenced exercise. Success.
+		written to the referenced part. Success.
 		*/
 		// Now that it's safe to use this query, let's use it:
 		Global.query(str_query);
@@ -706,9 +706,9 @@ public class PartDB {
 
 
 		/*
-		AT THIS POINT THE EXERCISES THAT ARE NO LONGER REFERENCED
+		AT THIS POINT THE PARTS THAT ARE NO LONGER REFERENCED
 		ARE DELETED.
-		THE SHEETDRAFT TO WHICH THE STILL REFERENCED EXERCISES
+		THE SHEETDRAFT TO WHICH THE STILL REFERENCED PARTS
 		BELONG TO HAVE BEEN REASSIGNED.
 		=> TODO move those in the filesystem too.
 		*/
@@ -716,13 +716,13 @@ public class PartDB {
 		// in the failed complicated attempt)
 		// 2) Iterate them,
 		// 3) get the newly assigned sheetdraft_filelink and
-		// 4) rename all exercise flavours of this referenced exercise!
-		for (String exercise_filelink : map_exercise_to_sheetdraftsThatReferenceThisExercise.keySet()) {
+		// 4) rename all part flavours of this referenced part!
+		for (String part_filelink : map_part_to_sheetdraftsThatReferenceThisPart.keySet()) {
 
 			// 3) Fetch the newly assigned sheetdraft filelink:
 			str_query = "SELECT sheetdraft_filelink, filelink"
-					+ " FROM exercise"
-					+ " WHERE filelink = '" + exercise_filelink + "'"
+					+ " FROM part"
+					+ " WHERE filelink = '" + part_filelink + "'"
 					;
 			ResultSet res_new_sheetdraft_filelink = Global.query(str_query);
 			// Make this (hopefully 1) sheetdraft_filelink available
@@ -734,16 +734,16 @@ public class PartDB {
 			Global.queryTidyUp(res_new_sheetdraft_filelink);
 
 
-			// 4) Rename all exercise flavours of this referenced
-			// exercise in the filesystem:
+			// 4) Rename all part flavours of this referenced
+			// part in the filesystem:
 			if (sheetdraft_filelink != null) {
 				String sheetdraft_directory = new File(Global.root + sheetdraft_filelink).getParentFile().getAbsolutePath();
 				String destination = sheetdraft_directory + System.getProperty("file.separator")
-						+ Global.extractFilename(exercise_filelink) + "." + Global.extractEnding(exercise_filelink);
-				Global.renameFile(Global.root + exercise_filelink, destination);
+						+ Global.extractFilename(part_filelink) + "." + Global.extractEnding(part_filelink);
+				Global.renameFile(Global.root + part_filelink, destination);
 
 				// All derivatives and flavours and its images:
-				Global.renameAllDerivativesOfFilelink(exercise_filelink, sheetdraft_directory);
+				Global.renameAllDerivativesOfFilelink(part_filelink, sheetdraft_directory);
 			}
 
 		}
@@ -812,8 +812,8 @@ public class PartDB {
 			);
 		}
 
-		// Delete folder that contained the exercises:
-		String exercise_dir =  ""; // the same directory as sheetdraft's
+		// Delete folder that contained the parts:
+		String part_dir =  ""; // the same directory as sheetdraft's
 		if (delete_highest_level_folder) {
 			Global.deleteDir(
 					f
@@ -853,8 +853,8 @@ public class PartDB {
 	 * @throws IOException
 	 */
 	public static void clearDatabaseAllButLecturer() throws IOException {
-		clearTable("draftexerciseassignment");
-		clearTable("exercise");
+		clearTable("draftpartassignment");
+		clearTable("part");
 		clearTable("sheetdraft");
 	}
 	public static void clearDatabase() throws IOException {
