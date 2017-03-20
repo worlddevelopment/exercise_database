@@ -334,6 +334,16 @@ public class Declaration {
 	}
 
 
+
+	/**
+	 * Set the node where this declaration has been found.
+	 */
+	public org.w3c.dom.Node setNode(org.w3c.dom.Node node) {
+		this.node = node;
+	}
+
+
+
 	/**
 	 * Get a string representation of the declaration.
 	 *
